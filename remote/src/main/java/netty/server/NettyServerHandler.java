@@ -1,7 +1,7 @@
 package netty.server;
 
 import Message.Message;
-import Message.MessageType;
+import Message.MessageStatusEnum;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -17,7 +17,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
-        Message ack = new Message(MessageType.SUCCESS);
+        Message ack = new Message(MessageStatusEnum.SUCCESS);
         ctx.channel().writeAndFlush(ack);
     }
 

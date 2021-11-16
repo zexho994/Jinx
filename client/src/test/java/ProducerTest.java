@@ -1,6 +1,6 @@
 
 import Message.Message;
-import Message.MessageType;
+import Message.MessageStatusEnum;
 import producer.Producer;
 
 /**
@@ -17,7 +17,7 @@ public class ProducerTest {
     public void startProducer() {
         Producer producer = new Producer("127.0.0.1");
         producer.start();
-        Message message = new Message(MessageType.ERROR);
+        Message message = new Message(MessageStatusEnum.SUCCESS);
         while (true) {
             try {
                 producer.sendMessageSync(message);

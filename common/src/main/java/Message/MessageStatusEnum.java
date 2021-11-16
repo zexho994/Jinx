@@ -4,7 +4,7 @@ package Message;
  * @author Zexho
  * @date 2021/11/11 8:10 下午
  */
-public enum MessageType {
+public enum MessageStatusEnum {
     /**
      * 成功
      */
@@ -17,7 +17,7 @@ public enum MessageType {
 
     final int code;
 
-    MessageType(int code) {
+    MessageStatusEnum(int code) {
         this.code = code;
     }
 }
