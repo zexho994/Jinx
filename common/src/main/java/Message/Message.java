@@ -26,7 +26,7 @@ public class Message implements Serializable {
     private String topic;
 
     /**
-     * 消息属性列表
+     * 消息扩展属性
      */
     private final Map<String, String> properties;
 
@@ -35,10 +35,15 @@ public class Message implements Serializable {
      */
     private byte[] body;
 
-    public Message(MessageStatusEnum messageStatusEnum) {
-        this.transactionId = UUID.randomUUID().toString();
+    public Message() {
+        this(UUID.randomUUID().toString(), null, null);
+    }
+
+    public Message(String transactionId, String topic, byte[] body) {
         this.properties = new HashMap<>();
-        this.properties.put("status", String.valueOf(messageStatusEnum.code));
+        this.transactionId = transactionId;
+        this.topic = topic;
+        this.body = body;
     }
 
     public String getTransactionId() {
