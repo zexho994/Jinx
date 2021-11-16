@@ -14,4 +14,12 @@
     <packaging>jar</packaging>
     <name>common ${project.version}</name>
 
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>remote</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
 </project>

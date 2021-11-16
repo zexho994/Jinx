@@ -1,7 +1,5 @@
 package netty.server;
 
-import Message.Message;
-import Message.MessageStatusEnum;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -14,12 +12,6 @@ import lombok.extern.log4j.Log4j2;
 @ChannelHandler.Sharable
 @Log4j2
 public class NettyServerHandler extends ChannelInboundHandlerAdapter {
-
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) {
-        Message ack = new Message(MessageStatusEnum.SUCCESS);
-        ctx.channel().writeAndFlush(ack);
-    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
