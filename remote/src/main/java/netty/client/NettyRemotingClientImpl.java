@@ -1,10 +1,7 @@
 package netty.client;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
@@ -25,11 +22,16 @@ public class NettyRemotingClientImpl implements IRemotingService {
 
     private final NettyClientConfig clientConfig;
     private final EventLoopGroup eventLoopGroupWorker;
-    private ChannelFuture future;
+    private Channel channel;
     private NettyClientHandler clientHandler;
 
     public NettyRemotingClientImpl(final NettyClientConfig config) {
+        this(config, null);
+    }
+
+    public NettyRemotingClientImpl(final NettyClientConfig config, NettyClientHandler handler) {
         this.clientConfig = config;
+        this.clientHandler = handler;
         this.eventLoopGroupWorker = new NioEventLoopGroup(1, new ThreadFactory() {
             private final AtomicInteger threadIndex = new AtomicInteger(0);
 
@@ -38,6 +40,7 @@ public class NettyRemotingClientImpl implements IRemotingService {
                 return new Thread(r, String.format("PushClient_%d", this.threadIndex.incrementAndGet()));
             }
         });
+
     }
 
     @Override
@@ -47,8 +50,13 @@ public class NettyRemotingClientImpl implements IRemotingService {
         }
 
         Bootstrap bootstrap = createBootstrap();
-        this.future = bootstrap.connect().addListener(new ConnectionListener(this));
-        log.info("客户端启动成功");
+        try {
+            ChannelFuture sync = bootstrap.connect().sync();
+            this.channel = sync.addListener(new ConnectionListener(this)).channel();
+            log.info("客户端启动成功");
+        } catch (InterruptedException e) {
+            log.warn("client 启动失败");
+        }
     }
 
     private Bootstrap createBootstrap() {
@@ -72,4 +80,9 @@ public class NettyRemotingClientImpl implements IRemotingService {
     public void shutdown() {
         this.eventLoopGroupWorker.shutdownGracefully();
     }
+
+    public Channel getChannel() {
+        return this.channel;
+    }
+
 }

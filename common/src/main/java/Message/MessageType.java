@@ -8,7 +8,12 @@ public enum MessageType {
     /**
      * 成功
      */
-    SUCCESS(200);
+    SUCCESS(200),
+
+    /**
+     * 失败
+     */
+    ERROR(500);
 
     final int code;
 

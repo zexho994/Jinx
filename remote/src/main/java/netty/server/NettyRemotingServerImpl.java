@@ -1,7 +1,8 @@
 package netty.server;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -27,9 +28,14 @@ public class NettyRemotingServerImpl implements IRemotingService {
     private final NettyServerConfig nettyServerConfig;
     private final EventLoopGroup eventLoopGroupBoss;
     private final EventLoopGroup eventLoopGroupSelector;
-    private final ChannelInboundHandlerAdapter serverHandler;
+    private NettyServerHandler serverHandler;
+    private Channel channel;
 
-    public NettyRemotingServerImpl(NettyServerConfig config, ChannelInboundHandlerAdapter handler) {
+    public NettyRemotingServerImpl(NettyServerConfig config) {
+        this(config, null);
+    }
+
+    public NettyRemotingServerImpl(NettyServerConfig config, NettyServerHandler handler) {
         this.serverHandler = handler;
         this.nettyServerConfig = config;
         this.serverBootstrap = new ServerBootstrap();
@@ -69,7 +75,8 @@ public class NettyRemotingServerImpl implements IRemotingService {
                     }
                 });
         try {
-            this.serverBootstrap.bind().sync();
+            ChannelFuture sync = this.serverBootstrap.bind().sync();
+            this.channel = sync.channel();
             log.info("服务端启动成功");
         } catch (InterruptedException e) {
             throw new RuntimeException("bind fail. " + e);
@@ -84,6 +91,14 @@ public class NettyRemotingServerImpl implements IRemotingService {
         } catch (InterruptedException e) {
             throw new RuntimeException("PushServer 服务停止异常, " + e);
         }
+    }
+
+    public Channel getChannel() {
+        return this.channel;
+    }
+
+    public void setServerHandler(NettyServerHandler handler) {
+        this.serverHandler = handler;
     }
 
 }

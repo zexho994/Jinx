@@ -15,7 +15,11 @@ import java.util.concurrent.TimeUnit;
 @ChannelHandler.Sharable
 @Log4j2
 public class NettyClientHandler extends ChannelInboundHandlerAdapter {
-    protected final NettyRemotingClientImpl client;
+    protected NettyRemotingClientImpl client;
+
+    public NettyClientHandler() {
+
+    }
 
     public NettyClientHandler(NettyRemotingClientImpl client) {
         this.client = client;
@@ -30,7 +34,10 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         log.info("客户端断开连接");
-        ctx.channel().eventLoop().schedule(client::start, 3L, TimeUnit.SECONDS);
+        if (this.client != null) {
+            log.info("自动重新连接...");
+            ctx.channel().eventLoop().schedule(client::start, 3L, TimeUnit.SECONDS);
+        }
         super.channelInactive(ctx);
     }
 
