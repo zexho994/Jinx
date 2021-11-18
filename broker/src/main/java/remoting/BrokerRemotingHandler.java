@@ -2,6 +2,7 @@ package remoting;
 
 import Message.Message;
 import Message.PropertiesKeys;
+import enums.ClientType;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 import netty.server.NettyServerHandler;
@@ -20,8 +21,8 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      * @throws Exception
      */
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        log.info("新的客户端接入");
+    public void channelActive(ChannelHandlerContext ctx) {
+        log.info("NEW CLIENT CONNECTION");
     }
 
     /**
@@ -32,13 +33,39 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      * @throws Exception
      */
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Message message = (Message) msg;
         log.info("receive request => {}", message);
 
         String clientType = message.getProperty(PropertiesKeys.CLIENT_TYPE);
+        if (clientType == null) {
+            return;
+        }
 
+        ClientType clientTypeObj = ClientType.get(clientType);
+        if (ClientType.Producer == clientTypeObj) {
+            doProducerMessage(message);
+        } else if (ClientType.Consumer == clientTypeObj) {
+            doConsumerMessage(message);
+        }
+    }
 
+    /**
+     * 处理生产者的消息
+     *
+     * @param message 生产者发送的消息
+     */
+    public void doProducerMessage(Message message) {
+        log.info("process producer's message");
+    }
+
+    /**
+     * 处理消费者的消息
+     *
+     * @param message 消费者发送的消息
+     */
+    public void doConsumerMessage(Message message) {
+        log.info("process consumer's message");
     }
 
 }

@@ -1,5 +1,7 @@
 package enums;
 
+import java.util.Objects;
+
 /**
  * @author Zexho
  * @date 2021/11/18 4:50 下午
@@ -18,5 +20,14 @@ public enum ClientType {
 
     ClientType(String type) {
         this.type = type;
+    }
+
+    public static ClientType get(String type) {
+        for (ClientType t : ClientType.values()) {
+            if (Objects.equals(t.type, type)) {
+                return t;
+            }
+        }
+        return null;
     }
 }
