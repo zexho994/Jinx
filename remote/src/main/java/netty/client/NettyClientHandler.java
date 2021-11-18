@@ -18,7 +18,6 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
     protected NettyRemotingClientImpl client;
 
     public NettyClientHandler() {
-
     }
 
     public NettyClientHandler(NettyRemotingClientImpl client) {

@@ -1,7 +1,7 @@
 package consumer;
 
-import netty.server.NettyRemotingServerImpl;
-import netty.server.NettyServerConfig;
+import netty.client.NettyClientConfig;
+import netty.client.NettyRemotingClientImpl;
 
 /**
  * @author Zexho
@@ -9,22 +9,21 @@ import netty.server.NettyServerConfig;
  */
 public class Consumer {
 
-    private final NettyRemotingServerImpl nettyRemotingServer;
+    private final NettyRemotingClientImpl consumerClient;
     private ConsumerListener consumerListener;
 
-    public Consumer() {
-        NettyServerConfig config = new NettyServerConfig();
-        this.nettyRemotingServer = new NettyRemotingServerImpl(config);
+    public Consumer(String host) {
+        this.consumerClient = new NettyRemotingClientImpl(new NettyClientConfig(host));
     }
 
     public void start() {
         ConsumerHandler consumerHandler = new ConsumerHandler(this.consumerListener);
-        this.nettyRemotingServer.setServerHandler(consumerHandler);
-        this.nettyRemotingServer.start();
+        this.consumerClient.setClientHandler(consumerHandler);
+        this.consumerClient.start();
     }
 
     public void shutdown() {
-        this.nettyRemotingServer.shutdown();
+        this.consumerClient.shutdown();
     }
 
     public void setConsumerListener(ConsumerListener consumerListener) {

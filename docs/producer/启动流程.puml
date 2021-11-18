@@ -1,0 +1,7 @@
+@startuml
+participant producer
+
+autonumber
+producer -> producer : 获取broker地址
+producer -> producer : 基于producer_config启动
+@enduml

@@ -11,7 +11,7 @@ public class ConsumerTest {
     }
 
     public void startConsumer() {
-        Consumer consumer = new Consumer();
+        Consumer consumer = new Consumer("127.0.0.1");
         consumer.setConsumerListener(System.out::println);
         consumer.start();
     }

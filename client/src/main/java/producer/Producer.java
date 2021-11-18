@@ -44,6 +44,4 @@ public class Producer implements RemotingService {
             throw new InterruptedException("send message fail." + e);
         }
     }
-
-
 }

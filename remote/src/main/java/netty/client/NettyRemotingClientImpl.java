@@ -85,4 +85,7 @@ public class NettyRemotingClientImpl implements IRemotingService {
         return this.channel;
     }
 
+    public void setClientHandler(NettyClientHandler clientHandler) {
+        this.clientHandler = clientHandler;
+    }
 }

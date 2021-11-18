@@ -29,17 +29,11 @@ public class NettyClientConfig {
      * 接受缓存
      */
     private final int clientSocketRcvBufSize = 65535;
+
     /**
-     * 监听url，根据不同环境进行修改
-     * 开发: push-netty.server-dev.test.maxhub.vip
-     * 测试: push-netty.server.test.maxhub.vip
-     * 生产: join.maxhub.com/netty.server/ps/v2
+     *
      */
     private String listenHost;
-    /**
-     * 环境
-     */
-    private int env;
 
     public NettyClientConfig(String host) {
         this.listenHost = host;

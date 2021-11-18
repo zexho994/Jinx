@@ -1,0 +1,27 @@
+@startuml
+''' Node
+rectangle Producer{
+}
+
+rectangle Broker{
+    component Remoting{
+    }
+    component Mapping{
+    }
+    component Dispatcher{
+    }
+}
+
+rectangle Consumer{
+}
+
+''' relation
+Producer --> Remoting : 发送消息
+
+Remoting --> Dispatcher : 提交请求
+Dispatcher --> Mapping : 获取consumer&topic的订阅信息
+
+Dispatcher ..> Remoting : 提交发送消费消息请求
+Remoting -> Consumer : 发送消费消息
+
+@enduml
