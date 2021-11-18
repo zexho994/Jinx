@@ -37,10 +37,9 @@ public class NettyRemotingClientImpl implements IRemotingService {
 
             @Override
             public Thread newThread(Runnable r) {
-                return new Thread(r, String.format("PushClient_%d", this.threadIndex.incrementAndGet()));
+                return new Thread(r, String.format("NettyClientThread_%d", this.threadIndex.incrementAndGet()));
             }
         });
-
     }
 
     @Override
@@ -53,9 +52,8 @@ public class NettyRemotingClientImpl implements IRemotingService {
         try {
             ChannelFuture sync = bootstrap.connect().sync();
             this.channel = sync.addListener(new ConnectionListener(this)).channel();
-            log.info("客户端启动成功");
         } catch (InterruptedException e) {
-            log.warn("client 启动失败");
+            log.warn("启动失败");
         }
     }
 

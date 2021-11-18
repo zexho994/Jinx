@@ -10,7 +10,9 @@ import Message.Message;
 public interface ConsumerListener {
 
     /**
-     * 消费
+     * 消息消费处理
+     *
+     * @param message 要处理的消息对象
      */
     void consume(Message message);
 

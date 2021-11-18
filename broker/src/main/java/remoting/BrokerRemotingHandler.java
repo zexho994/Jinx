@@ -1,5 +1,7 @@
 package remoting;
 
+import Message.Message;
+import Message.PropertiesKeys;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 import netty.server.NettyServerHandler;
@@ -31,6 +33,12 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        log.info("receive request => {}", msg);
+        Message message = (Message) msg;
+        log.info("receive request => {}", message);
+
+        String clientType = message.getProperty(PropertiesKeys.CLIENT_TYPE);
+
+
     }
+
 }

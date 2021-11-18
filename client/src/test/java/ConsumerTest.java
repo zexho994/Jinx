@@ -13,6 +13,8 @@ public class ConsumerTest {
     public void startConsumer() {
         Consumer consumer = new Consumer("127.0.0.1");
         consumer.setConsumerListener(System.out::println);
+        consumer.setTopic("topic_1");
+        consumer.setConsumerGroup("consumer_group_1");
         consumer.start();
     }
 }

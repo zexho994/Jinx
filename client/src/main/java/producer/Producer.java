@@ -1,6 +1,9 @@
 package producer;
 
 import Message.Message;
+import Message.PropertiesKeys;
+import enums.ClientType;
+import enums.MessageType;
 import io.netty.channel.Channel;
 import lombok.extern.log4j.Log4j2;
 import netty.client.NettyClientConfig;
@@ -31,8 +34,20 @@ public class Producer implements RemotingService {
         this.nettyRemotingClient.shutdown();
     }
 
-    public void sendMessageSync(Message message) throws InterruptedException {
+    @Override
+    public void sendMessage(Message message) {
+        try {
+            this.sendMessageSync(message);
+        } catch (InterruptedException e) {
+            log.warn("send message error. message = {} \n {}", message, e);
+        }
+    }
+
+    private void sendMessageSync(Message message) throws InterruptedException {
         log.info("SEND MESSAGE => {}", message);
+        message.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Producer.type);
+        message.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Message.type);
+
         Channel channel = this.nettyRemotingClient.getChannel();
         if (!channel.isActive()) {
             log.warn("channel is inactive");

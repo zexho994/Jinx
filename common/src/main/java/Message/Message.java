@@ -25,6 +25,8 @@ public class Message implements Serializable {
      */
     private String topic;
 
+    private String consumerGroup;
+
     /**
      * 消息扩展属性
      */
@@ -33,7 +35,7 @@ public class Message implements Serializable {
     /**
      * 消息体
      */
-    private byte[] body;
+    private Object body;
 
     public Message() {
         this(UUID.randomUUID().toString(), null, null);
@@ -70,11 +72,19 @@ public class Message implements Serializable {
         this.properties.put(key, val);
     }
 
-    public byte[] getBody() {
+    public String getConsumerGroup() {
+        return consumerGroup;
+    }
+
+    public void setConsumerGroup(String consumerGroup) {
+        this.consumerGroup = consumerGroup;
+    }
+
+    public Object getBody() {
         return body;
     }
 
-    public void setBody(byte[] body) {
-        this.body = body;
+    public void setBody(Object data) {
+        this.body = data;
     }
 }

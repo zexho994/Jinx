@@ -16,13 +16,12 @@ public class ProducerTest {
     public void startProducer() {
         Producer producer = new Producer("127.0.0.1");
         producer.start();
+
         Message message = new Message();
+        message.setTopic("topic_1");
+        message.setConsumerGroup("consumer_group_1");
         while (true) {
-            try {
-                producer.sendMessageSync(message);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            producer.sendMessage(message);
             try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
