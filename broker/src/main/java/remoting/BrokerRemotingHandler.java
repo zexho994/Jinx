@@ -3,10 +3,12 @@ package remoting;
 import Message.Message;
 import Message.PropertiesKeys;
 import enums.ClientType;
+import enums.MessageType;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 import netty.server.NettyServerHandler;
 import queue.MessageManager;
+import topic.TopicManager;
 
 /**
  * @author Zexho
@@ -58,7 +60,12 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      */
     public void doProducerMessage(Message message) {
         log.info("process producer's message");
-        MessageManager.putMessage(message);
+        MessageType messageType = MessageType.get(message.getProperty(PropertiesKeys.MESSAGE_TYPE));
+        if (messageType == MessageType.Message) {
+            MessageManager.putMessage(message);
+        } else if (messageType == MessageType.Registered_Topic) {
+            TopicManager.addNewTopic(message.getTopic());
+        }
     }
 
     /**
@@ -69,17 +76,10 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      */
     public void doConsumerMessage(Message message, ChannelHandlerContext ctx) {
         log.info("process consumer's message");
-        // 检查消息订阅的topic
         String topic = message.getTopic();
-
-        // 检查 consumerGroup
         String consumerGroup = message.getConsumerGroup();
-
-        // 检查未读消息
         Message pullMessage = MessageManager.pullMessage(topic, consumerGroup);
-
         if (pullMessage != null) {
-            // 发送未读消息给消费者
             ctx.writeAndFlush(pullMessage);
         }
 

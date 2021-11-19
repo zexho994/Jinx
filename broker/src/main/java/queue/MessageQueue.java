@@ -11,14 +11,17 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class MessageQueue {
 
-    private String consumerGroup;
+    private final String consumerGroup;
     private final Queue<Message> queue = new LinkedBlockingQueue<>();
 
+    public MessageQueue(String consumerGroup) {
+        this.consumerGroup = consumerGroup;
+    }
+
     public void put(Message message) {
-        if (!consumerGroup.equals(message.getConsumerGroup())) {
-            throw new RuntimeException("consumerGroup is not match");
+        if (!this.queue.offer(message)) {
+            throw new RuntimeException("MessageQueue offer message error");
         }
-        this.queue.offer(message);
     }
 
     public Message poll() {

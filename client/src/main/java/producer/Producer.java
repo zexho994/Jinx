@@ -35,6 +35,11 @@ public class Producer implements RemotingService {
     }
 
     public void registeredTopic(String topic) {
+        Message message = new Message();
+        message.setTopic(topic);
+        message.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Producer.type);
+        message.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Registered_Topic.type);
+        this.sendMessage(message);
     }
 
     @Override

@@ -16,9 +16,7 @@ public class ProducerTest {
     public void startProducer() {
         Producer producer = new Producer("127.0.0.1");
         producer.start();
-
-        Message registerGroup = new Message();
-        producer.registeredTopic("topic");
+        producer.registeredTopic("topic_1");
 
         Message message = new Message();
         message.setTopic("topic_1");
