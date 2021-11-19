@@ -17,9 +17,11 @@ public class ProducerTest {
         Producer producer = new Producer("127.0.0.1");
         producer.start();
 
+        Message registerGroup = new Message();
+        producer.registeredTopic("topic");
+
         Message message = new Message();
         message.setTopic("topic_1");
-        message.setConsumerGroup("consumer_group_1");
         while (true) {
             producer.sendMessage(message);
             try {

@@ -2,7 +2,7 @@
 autonumber
 
 producer -> broker : send message
-broker -> broker : parse -> 'topic' and 'consumer_group'
+broker -> broker : parse -> 'topic'
 broker -> broker : find all of consumer_group by topic
 broker -> broker : find one of consumer in each consumer_group
 broker -> consumer : send message

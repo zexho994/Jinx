@@ -34,6 +34,9 @@ public class Producer implements RemotingService {
         this.nettyRemotingClient.shutdown();
     }
 
+    public void registeredTopic(String topic) {
+    }
+
     @Override
     public void sendMessage(Message message) {
         try {
