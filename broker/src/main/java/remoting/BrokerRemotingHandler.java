@@ -38,8 +38,6 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Message message = (Message) msg;
-        log.info("receive request => {}", message);
-
         String clientType = message.getProperty(PropertiesKeys.CLIENT_TYPE);
         if (clientType == null) {
             return;
@@ -59,7 +57,6 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      * @param message 生产者发送的消息
      */
     public void doProducerMessage(Message message) {
-        log.info("process producer's message");
         MessageType messageType = MessageType.get(message.getProperty(PropertiesKeys.MESSAGE_TYPE));
         if (messageType == MessageType.Message) {
             MessageManager.putMessage(message);
@@ -75,7 +72,6 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      * @param message 消费者发送的消息
      */
     public void doConsumerMessage(Message message, ChannelHandlerContext ctx) {
-        log.info("process consumer's message");
         String topic = message.getTopic();
         String consumerGroup = message.getConsumerGroup();
         Message pullMessage = MessageManager.pullMessage(topic, consumerGroup);

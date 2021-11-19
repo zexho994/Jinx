@@ -20,7 +20,6 @@ public class ConsumerHandler extends NettyClientHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        log.info("Channel Read => {}", msg);
         this.consumerListener.consume((Message) msg);
     }
 }

@@ -21,8 +21,6 @@ public class PullConsumer {
      * @param consumer
      */
     public void pullMessageTask(Consumer consumer) {
-        log.info("MESSAGE PULL TASK START");
-
         Message pullRequest = new Message();
         pullRequest.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Pull_Message.type);
         pullRequest.setTopic(consumer.getTopic());
