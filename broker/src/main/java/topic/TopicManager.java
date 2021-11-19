@@ -16,6 +16,11 @@ public class TopicManager {
 
     private static final Map<String, List<MessageQueue>> TOPIC_CACHE = new HashMap<>();
 
+    /**
+     * 添加一个主题
+     *
+     * @param topic 要添加的主题名称
+     */
     public static void addNewTopic(String topic) {
         if (TOPIC_CACHE.containsKey(topic)) {
             return;
@@ -23,6 +28,12 @@ public class TopicManager {
         TOPIC_CACHE.put(topic, new LinkedList<>());
     }
 
+    /**
+     * 给topic添加一个订阅者消费组
+     *
+     * @param topic        topic 名称
+     * @param consumeGroup 消费组名称
+     */
     public static void addSubscriber(String topic, String consumeGroup) {
         List<MessageQueue> messageQueues = TOPIC_CACHE.get(topic);
         if (messageQueues == null) {
@@ -37,6 +48,12 @@ public class TopicManager {
         }
     }
 
+    /**
+     * 获取 topic 的所有订阅者
+     *
+     * @param topic 主题名称
+     * @return 订阅了 {@param topic} 的所有消费组的队列
+     */
     public static List<MessageQueue> getTopicSubscriber(String topic) {
         if (!TOPIC_CACHE.containsKey(topic)) {
             return Collections.emptyList();
