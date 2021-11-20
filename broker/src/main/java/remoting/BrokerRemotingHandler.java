@@ -38,11 +38,12 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Message message = (Message) msg;
+
+        // 获取客户端类型
         String clientType = message.getProperty(PropertiesKeys.CLIENT_TYPE);
         if (clientType == null) {
             return;
         }
-
         ClientType clientTypeObj = ClientType.get(clientType);
         if (ClientType.Producer == clientTypeObj) {
             doProducerMessage(message);
@@ -78,7 +79,6 @@ public class BrokerRemotingHandler extends NettyServerHandler {
         if (pullMessage != null) {
             ctx.writeAndFlush(pullMessage);
         }
-
     }
 
 }

@@ -16,16 +16,18 @@ public class ConsumerTest {
         Consumer consumer = new Consumer("127.0.0.1");
         consumer.setConsumerListener(msg -> System.out.println("consumer 1 "));
         consumer.setTopic("topic_1");
-        consumer.setConsumerGroup("consumer_group_1");
+        System.out.println("consumer 1 , time = " + System.currentTimeMillis());
         consumer.start();
     }
 
     public void startConsumer2() {
         System.out.println("start consumer 2");
         Consumer consumer = new Consumer("127.0.0.1");
-        consumer.setConsumerListener(msg -> System.out.println("consumer 2"));
+        consumer.setConsumerListener(msg -> {
+            System.out.println("consumer 2 , time = " + System.currentTimeMillis());
+        });
         consumer.setTopic("topic_1");
-        consumer.setConsumerGroup("consumer_group_2");
+        consumer.setConsumerGroup("consumer_group_1");
         consumer.start();
     }
 

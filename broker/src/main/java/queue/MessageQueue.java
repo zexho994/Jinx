@@ -11,10 +11,12 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class MessageQueue {
 
+    private final String topic;
     private final String consumerGroup;
     private final Queue<Message> queue = new LinkedBlockingQueue<>();
 
-    public MessageQueue(String consumerGroup) {
+    public MessageQueue(String topic, String consumerGroup) {
+        this.topic = topic;
         this.consumerGroup = consumerGroup;
     }
 
@@ -29,7 +31,11 @@ public class MessageQueue {
     }
 
     public String consumerGroup() {
-        return consumerGroup;
+        return this.consumerGroup;
+    }
+
+    public String topic() {
+        return this.topic;
     }
 
 }

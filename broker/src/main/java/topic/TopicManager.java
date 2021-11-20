@@ -14,7 +14,7 @@ import java.util.*;
 @Log4j2
 public class TopicManager {
 
-    private static final Map<String, List<MessageQueue>> TOPIC_CACHE = new HashMap<>();
+    private static final Map<String, List<MessageQueue>> TOPIC_CONSUMER_GROUP_CACHE = new HashMap<>();
 
     /**
      * 添加一个主题
@@ -22,10 +22,10 @@ public class TopicManager {
      * @param topic 要添加的主题名称
      */
     public static void addNewTopic(String topic) {
-        if (TOPIC_CACHE.containsKey(topic)) {
+        if (TOPIC_CONSUMER_GROUP_CACHE.containsKey(topic)) {
             return;
         }
-        TOPIC_CACHE.put(topic, new LinkedList<>());
+        TOPIC_CONSUMER_GROUP_CACHE.put(topic, new LinkedList<>());
     }
 
     /**
@@ -35,15 +35,15 @@ public class TopicManager {
      * @param consumeGroup 消费组名称
      */
     public static void addSubscriber(String topic, String consumeGroup) {
-        List<MessageQueue> messageQueues = TOPIC_CACHE.get(topic);
+        List<MessageQueue> messageQueues = TOPIC_CONSUMER_GROUP_CACHE.get(topic);
         if (messageQueues == null) {
             List<MessageQueue> messageQueueList = new LinkedList<>();
-            messageQueueList.add(new MessageQueue(consumeGroup));
-            TOPIC_CACHE.put(topic, messageQueueList);
+            messageQueueList.add(new MessageQueue(topic, consumeGroup));
+            TOPIC_CONSUMER_GROUP_CACHE.put(topic, messageQueueList);
         } else if (messageQueues.stream().anyMatch(queue -> Objects.equals(queue.consumerGroup(), consumeGroup))) {
             log.info("consumeGroup already exists");
         } else {
-            MessageQueue messageQueue = new MessageQueue(consumeGroup);
+            MessageQueue messageQueue = new MessageQueue(topic, consumeGroup);
             messageQueues.add(messageQueue);
         }
     }
@@ -55,10 +55,10 @@ public class TopicManager {
      * @return 订阅了 {@param topic} 的所有消费组的队列
      */
     public static List<MessageQueue> getTopicSubscriber(String topic) {
-        if (!TOPIC_CACHE.containsKey(topic)) {
+        if (!TOPIC_CONSUMER_GROUP_CACHE.containsKey(topic)) {
             return Collections.emptyList();
         }
-        return TOPIC_CACHE.get(topic);
+        return TOPIC_CONSUMER_GROUP_CACHE.get(topic);
     }
 
 
