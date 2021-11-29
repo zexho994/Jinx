@@ -55,6 +55,7 @@ public enum Commitlog {
     public boolean storeMessage(Message message) {
         MappedFile mappedFile = this.getMappedFile();
         try {
+            mappedFile.append(message);
             mappedFile.flush();
         } catch (IOException e) {
             log.error("Failed to store message " + message, e);

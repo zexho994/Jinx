@@ -15,13 +15,12 @@ import java.util.Optional;
 @Log4j2
 public enum MessageManager {
 
-
     /**
      * 实例对象
      */
     Instance;
 
-    private Commitlog commitlog;
+    private final Commitlog commitlog = Commitlog.Instance;
 
     /**
      * Key : topic
