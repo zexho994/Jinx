@@ -45,23 +45,21 @@ public enum Commitlog {
 
     }
 
-
     /**
      * 存储消息
      *
      * @param message 要存储的消息对象
      * @return 存储结果
      */
-    public boolean storeMessage(Message message) {
+    public void storeMessage(Message message) throws IOException {
         MappedFile mappedFile = this.getMappedFile();
         try {
-            mappedFile.append(message);
-            mappedFile.flush();
+            // 追加消息
+            mappedFile.appendThenFlush(message);
         } catch (IOException e) {
             log.error("Failed to store message " + message, e);
-            return false;
+            throw e;
         }
-        return true;
     }
 
     /**

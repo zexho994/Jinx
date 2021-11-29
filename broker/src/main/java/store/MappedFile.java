@@ -47,7 +47,7 @@ public class MappedFile {
         boolean initSuccess = false;
         try {
             this.fileChannel = new RandomAccessFile(this.file, "rw").getChannel();
-            this.byteBuffer = ByteBuffer.allocate(1024 * 1024);
+            this.byteBuffer = ByteBuffer.allocate(4 * MemoryCapacity.MB);
             initSuccess = true;
         } catch (FileNotFoundException e) {
             log.error("Failed to create file " + this.fileName, e);
@@ -88,9 +88,34 @@ public class MappedFile {
         }
     }
 
+    /**
+     * 执行刷盘
+     *
+     * @throws IOException
+     */
     public void flush() throws IOException {
         lock.lock();
         try {
+            this.fileChannel.force(false);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * 追加消息，然后存储到文件中
+     *
+     * @param message 存储的消息
+     * @throws IOException
+     */
+    public void appendThenFlush(final Message message) throws IOException {
+        lock.lock();
+        try {
+            final byte[] data = message.toString().getBytes();
+            this.byteBuffer.put(data);
+            this.byteBuffer.flip();
+            this.fileChannel.write(this.byteBuffer);
+            this.byteBuffer.clear();
             this.fileChannel.force(false);
         } finally {
             lock.unlock();

@@ -5,6 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import store.Commitlog;
 import topic.TopicManager;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,10 +42,11 @@ public enum MessageManager {
      * 投递消息
      */
     public void putMessage(Message message) {
-        // 落盘
-        boolean storeFlag = commitlog.storeMessage(message);
-        if (!storeFlag) {
-            log.warn("Failed to store message to file");
+        try {
+            // 持久化
+            commitlog.storeMessage(message);
+        } catch (IOException e) {
+            log.error(e);
         }
 
         // 获取主题的所有消费组，所有消费组队列添加此消息
