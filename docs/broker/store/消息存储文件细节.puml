@@ -1,0 +1,16 @@
+@startuml
+autonumber
+
+participant broker
+participant mappedFilesManager
+participant commitlog
+
+broker -> mappedFilesManager ++: 获取最新的一个commitlog文件
+return commitlog
+broker -> mappedFilesManager : 检查 commitlog 剩余大小
+opt 不够
+mappedFilesManager -> mappedFilesManager : 创建新的 commitlog 文件
+end
+broker -> commitlog : 保存文件到 commitlog
+
+@enduml

@@ -17,6 +17,8 @@ import topic.TopicManager;
 @Log4j2
 public class BrokerRemotingHandler extends NettyServerHandler {
 
+    private MessageManager messageManager = MessageManager.Instance;
+
     /**
      * 有新的producer或者consumer接入
      *
@@ -60,7 +62,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     public void doProducerMessage(Message message) {
         MessageType messageType = MessageType.get(message.getProperty(PropertiesKeys.MESSAGE_TYPE));
         if (messageType == MessageType.Message) {
-            MessageManager.putMessage(message);
+            messageManager.putMessage(message);
         } else if (messageType == MessageType.Registered_Topic) {
             TopicManager.addNewTopic(message.getTopic());
         }
@@ -75,7 +77,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     public void doConsumerMessage(Message message, ChannelHandlerContext ctx) {
         String topic = message.getTopic();
         String consumerGroup = message.getConsumerGroup();
-        Message pullMessage = MessageManager.pullMessage(topic, consumerGroup);
+        Message pullMessage = messageManager.pullMessage(topic, consumerGroup);
         if (pullMessage != null) {
             ctx.writeAndFlush(pullMessage);
         }
