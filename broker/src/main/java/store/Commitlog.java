@@ -51,11 +51,16 @@ public enum Commitlog {
      * @param message 要存储的消息对象
      * @return 存储结果
      */
-    public void storeMessage(Message message) throws IOException {
+    public void storeMessage(Message message, FlushModel model) throws IOException {
         MappedFile mappedFile = this.getMappedFile();
         try {
-            // 追加消息
-            mappedFile.appendThenFlush(message);
+            if (model == FlushModel.SYNC) {
+                // 同步刷盘消息
+                mappedFile.appendThenFlush(message);
+            } else {
+                // 异步刷盘
+
+            }
         } catch (IOException e) {
             log.error("Failed to store message " + message, e);
             throw e;

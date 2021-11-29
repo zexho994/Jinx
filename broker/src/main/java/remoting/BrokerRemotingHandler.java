@@ -8,6 +8,7 @@ import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 import netty.server.NettyServerHandler;
 import queue.MessageManager;
+import store.FlushModel;
 import topic.TopicManager;
 
 /**
@@ -62,7 +63,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     public void doProducerMessage(Message message) {
         MessageType messageType = MessageType.get(message.getProperty(PropertiesKeys.MESSAGE_TYPE));
         if (messageType == MessageType.Message) {
-            messageManager.putMessage(message);
+            messageManager.putMessage(message, FlushModel.SYNC);
         } else if (messageType == MessageType.Registered_Topic) {
             TopicManager.addNewTopic(message.getTopic());
         }

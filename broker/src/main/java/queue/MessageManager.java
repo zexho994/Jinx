@@ -3,6 +3,7 @@ package queue;
 import Message.Message;
 import lombok.extern.log4j.Log4j2;
 import store.Commitlog;
+import store.FlushModel;
 import topic.TopicManager;
 
 import java.io.IOException;
@@ -41,10 +42,9 @@ public enum MessageManager {
     /**
      * 投递消息
      */
-    public void putMessage(Message message) {
+    public void putMessage(Message message, FlushModel model) {
         try {
-            // 持久化
-            commitlog.storeMessage(message);
+            commitlog.storeMessage(message, model);
         } catch (IOException e) {
             log.error(e);
         }
