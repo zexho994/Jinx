@@ -1,6 +1,5 @@
 package store;
 
-import Message.Message;
 import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
 
@@ -10,6 +9,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -23,59 +23,61 @@ import java.util.concurrent.locks.ReentrantLock;
 public class MappedFile {
 
     public static final int DEFAULT_FILE_SIZE = MemoryCapacity.GB;
-    private String fileName;
-    private int fileSize;
-    private File file;
-    private long fileFormOffset;
     private FileChannel fileChannel;
     private ByteBuffer byteBuffer;
     private final Lock lock = new ReentrantLock();
+    private final Commitlog commitlog;
 
-    public MappedFile(final String fileName, final int fileSize) throws IOException {
+    /**
+     * 当前文件剩余字节大小
+     */
+    private final AtomicInteger remainFileSize = new AtomicInteger(0);
+
+
+    public MappedFile(final String fileName, Commitlog commitlog) throws IOException {
+        this(fileName, DEFAULT_FILE_SIZE, commitlog);
+    }
+
+    public MappedFile(final String fileName, final int fileSize, Commitlog commitlog) throws IOException {
         init(fileName, fileSize);
+        this.commitlog = commitlog;
     }
 
     private void init(final String fileName, final int fileSize) throws IOException {
-        this.fileSize = fileSize;
-        this.fileName = fileName;
+        this.remainFileSize.getAndAdd(fileSize);
         String filePath = Commitlog.FOLDER_COMMIT.getAbsolutePath() + File.separator + fileName + ".log";
-        this.file = new File(filePath);
-        this.fileFormOffset = Long.parseLong(fileName);
+        File file = new File(filePath);
 
         ensureDirOk(file.getParent());
 
         boolean initSuccess = false;
         try {
-            this.fileChannel = new RandomAccessFile(this.file, "rw").getChannel();
-            this.byteBuffer = ByteBuffer.allocate(4 * MemoryCapacity.MB);
+            this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
+            this.byteBuffer = ByteBuffer.allocate(MemoryCapacity.MB);
             initSuccess = true;
         } catch (FileNotFoundException e) {
-            log.error("Failed to create file " + this.fileName, e);
+            log.error("Failed to create file " + fileName, e);
             throw e;
         } finally {
             if (!initSuccess && this.fileChannel != null) {
                 this.fileChannel.close();
             }
         }
-
     }
 
     /**
      * 追加消息到文件末尾
      *
-     * @param message 要追加的消息
+     * @param data 要追加的数据
      */
-    public void append(final Message message) throws IOException {
-        lock.lock();
-        try {
-            final byte[] data = message.toString().getBytes();
-            this.byteBuffer.put(data);
-            this.byteBuffer.flip();
-            this.fileChannel.write(this.byteBuffer);
-            this.byteBuffer.clear();
-        } finally {
-            lock.unlock();
-        }
+    public void append(final byte[] data) throws IOException {
+        this.byteBuffer.put(data);
+        this.byteBuffer.flip();
+        this.fileChannel.write(this.byteBuffer);
+        this.byteBuffer.clear();
+
+        this.commitlog.getFileFormOffset().getAndUpdate(n -> n + data.length);
+        this.remainFileSize.getAndUpdate(n -> n - data.length);
     }
 
     private void ensureDirOk(final String dirName) {
@@ -94,31 +96,28 @@ public class MappedFile {
      * @throws IOException
      */
     public void flush() throws IOException {
-        lock.lock();
-        try {
-            this.fileChannel.force(false);
-        } finally {
-            lock.unlock();
-        }
+        this.fileChannel.force(false);
     }
 
     /**
      * 追加消息，然后存储到文件中
      *
-     * @param message 存储的消息
+     * @param data 存储的消息
      * @throws IOException
      */
-    public void appendThenFlush(final Message message) throws IOException {
+    public void appendThenFlush(final byte[] data) throws IOException {
         lock.lock();
         try {
-            final byte[] data = message.toString().getBytes();
-            this.byteBuffer.put(data);
-            this.byteBuffer.flip();
-            this.fileChannel.write(this.byteBuffer);
-            this.byteBuffer.clear();
-            this.fileChannel.force(false);
+            this.append(data);
+            this.flush();
         } finally {
             lock.unlock();
         }
     }
+
+    public boolean checkFileRemainSize(int size) {
+        return this.remainFileSize.get() > size;
+    }
+
+
 }

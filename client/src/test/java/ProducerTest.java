@@ -10,10 +10,10 @@ public class ProducerTest {
 
     public static void main(String[] args) {
         ProducerTest test = new ProducerTest();
-        test.startProducer1();
+        test.startProducer1(2000);
     }
 
-    public void startProducer1() {
+    public void startProducer1(int sleep) {
         Producer producer = new Producer("127.0.0.1");
         producer.start();
         producer.registeredTopic("topic_1");
@@ -27,7 +27,7 @@ public class ProducerTest {
             producer.sendMessage(message1);
             producer.sendMessage(message2);
             try {
-                Thread.sleep(3000);
+                Thread.sleep(sleep);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

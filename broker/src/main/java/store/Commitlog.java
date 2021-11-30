@@ -1,12 +1,13 @@
 package store;
 
 import Message.Message;
+import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Stack;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Zexho
@@ -14,12 +15,10 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 @Log4j2
 public enum Commitlog {
-
     /**
      * CommitLog对象
      */
     Instance;
-
     /**
      * commit文件夹路径 $HOME/jinx/commit
      */
@@ -28,35 +27,60 @@ public enum Commitlog {
      * 文件夹对象
      */
     public static File FOLDER_COMMIT;
-    private final Queue<MappedFile> mappedFileQueue = new LinkedBlockingQueue<>();
+    /**
+     * 存储 mappedFile 队列
+     */
+    private final Stack<MappedFile> mappedFileStack = new Stack<>();
+    /**
+     * 所有文件总字节偏移量
+     */
+    private final AtomicInteger fileFormOffset = new AtomicInteger(0);
+
 
     /**
      * 初始化时候创建文件夹
      */
-    public void init() throws IOException {
+    public boolean init() {
         FOLDER_COMMIT = new File(COMMIT_DIR_PATH);
         if (!FOLDER_COMMIT.exists()) {
-            FOLDER_COMMIT.mkdirs();
+            if (!FOLDER_COMMIT.mkdirs()) {
+                log.error("Failed to mkdir commitlog");
+                return false;
+            }
         }
 
-        // 创建第一个文件
-        MappedFile mappedFile = new MappedFile("0", MappedFile.DEFAULT_FILE_SIZE);
-        mappedFileQueue.offer(mappedFile);
+        try {
+            MappedFile mappedFile = new MappedFile("0", 2 * MemoryCapacity.KB, this);
+            mappedFileStack.push(mappedFile);
+        } catch (IOException e) {
+            log.error("Failed create new MappedFile", e);
+            return false;
+        }
 
+        return true;
     }
 
     /**
      * 存储消息
      *
      * @param message 要存储的消息对象
-     * @return 存储结果
      */
     public void storeMessage(Message message, FlushModel model) throws IOException {
-        MappedFile mappedFile = this.getMappedFile();
+        MappedFile mappedFile = this.getLastMappedFile();
+        byte[] data = message.toString().getBytes();
         try {
+            // 同步刷盘消息
             if (model == FlushModel.SYNC) {
-                // 同步刷盘消息
-                mappedFile.appendThenFlush(message);
+                if (mappedFile.checkFileRemainSize(data.length)) {
+                    // 如果剩余空间足够
+                    mappedFile.appendThenFlush(data);
+                } else {
+                    // 旧数据存储到旧文件
+                    mappedFile.flush();
+                    // 新数据存储到新文件
+                    this.createNewMappedFile();
+                    this.getLastMappedFile().appendThenFlush(data);
+                }
             } else {
                 // 异步刷盘
 
@@ -67,12 +91,21 @@ public enum Commitlog {
         }
     }
 
+    public void createNewMappedFile() throws IOException {
+        MappedFile mappedFile = new MappedFile(String.valueOf(this.fileFormOffset.incrementAndGet()), 2 * MemoryCapacity.KB, this);
+        this.mappedFileStack.push(mappedFile);
+    }
+
     /**
      * 获取当前可用的文件
      *
-     * @return
+     * @return 当前最新可用的文件
      */
-    public MappedFile getMappedFile() {
-        return this.mappedFileQueue.peek();
+    public MappedFile getLastMappedFile() {
+        return this.mappedFileStack.peek();
+    }
+
+    public AtomicInteger getFileFormOffset() {
+        return fileFormOffset;
     }
 }

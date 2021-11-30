@@ -1,0 +1,39 @@
+@startuml
+autonumber
+
+participant BrokerRemotingHandler
+participant MessageManager
+participant Commitlog
+participant MappedFile
+participant MappedFile.append
+participant MappedFile.flush
+
+-> BrokerRemotingHandler ++: new msg
+BrokerRemotingHandler -> MessageManager ++: 调用 putMessage() 存储消息
+MessageManager -> Commitlog ++: invoke storeMessage()
+Commitlog -> MappedFile ++: getMappedFile()
+return mappedFile
+Commitlog -> Commitlog : 检查文件空间是否足够
+opt 足够
+    Commitlog -> MappedFile ++: appendThenFlush()
+    MappedFile -> MappedFile : lock()
+    MappedFile -> MappedFile.append ++: append()
+    MappedFile.append -> MappedFile.append : 执行 wirte() 数据写入 fileChannel 中
+    MappedFile.append -> MappedFile.append : 更新 commit.fileFormOffset
+    MappedFile.append -> MappedFile.append : 更新 remainFileSize
+    return ok
+    MappedFile -> MappedFile.flush ++: 执行 fileChannel.force()
+    return ok
+    MappedFile -> MappedFile : unlock()
+    return ok
+else 不够
+    Commitlog -> MappedFile.flush ++:  执行 fileChannel.force()
+    return ok
+    Commitlog -> Commitlog : 创建新的 mappedFile 文件
+    Commitlog -> MappedFile ++: 执行 appendThenFlush()
+    return ok
+end
+return ok
+return ok
+
+@enduml
