@@ -6,10 +6,13 @@ import lombok.extern.log4j.Log4j2;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 /**
  * @author Zexho
@@ -24,7 +27,7 @@ public enum Commitlog {
     /**
      * commit文件夹路径 $HOME/jinx/commit
      */
-    private final String COMMIT_DIR_PATH = System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog";
+    public static final String COMMIT_DIR_PATH = System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog";
     /**
      * 文件夹对象
      */
@@ -36,7 +39,7 @@ public enum Commitlog {
     /**
      * 所有文件总字节偏移量
      */
-    private final AtomicInteger fileFormOffset = new AtomicInteger(0);
+    private AtomicInteger fileFormOffset = new AtomicInteger(0);
     private final Lock lock = new ReentrantLock();
 
 
@@ -45,19 +48,46 @@ public enum Commitlog {
      */
     public boolean init() {
         FOLDER_COMMIT = new File(COMMIT_DIR_PATH);
-        if (!FOLDER_COMMIT.exists()) {
+        int count = 0;
+        if (FOLDER_COMMIT.exists()) {
+            // 文件夹存在
+            File[] files = FOLDER_COMMIT.listFiles();
+            if (files != null) {
+                List<File> fileList = Arrays.stream(files).filter(file -> file.getName().contains(".log")).collect(Collectors.toList());
+                count = fileList.size();
+                fileList.stream().sorted((o1, o2) -> {
+                            int end1 = o1.getName().lastIndexOf('.');
+                            int end2 = o2.getName().lastIndexOf('.');
+                            int offset1 = Integer.parseInt(o1.getName().substring(0, end1));
+                            int offset2 = Integer.parseInt(o2.getName().substring(0, end2));
+                            return offset1 - offset2;
+                        })
+                        .forEach(file -> {
+                            try {
+                                this.mappedFileStack.push(new MappedFile(file, 2 * MemoryCapacity.KB, this));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                String lastFileName = this.mappedFileStack.peek().getFileName();
+                int logIdx = lastFileName.lastIndexOf('.');
+                this.fileFormOffset = new AtomicInteger(Integer.parseInt(lastFileName.substring(0, logIdx)));
+            }
+        } else {
+            // 文件夹不存在
             if (!FOLDER_COMMIT.mkdirs()) {
                 log.error("Failed to mkdir commitlog");
                 return false;
             }
         }
 
-        try {
-            MappedFile mappedFile = new MappedFile("0", 2 * MemoryCapacity.KB, this);
-            mappedFileStack.push(mappedFile);
-        } catch (IOException e) {
-            log.error("Failed create new MappedFile", e);
-            return false;
+        if (count == 0) {
+            try {
+                this.createFirstMappedFile(2 * MemoryCapacity.KB);
+            } catch (IOException e) {
+                log.error("Failed create new MappedFile", e);
+                return false;
+            }
         }
 
         return true;
@@ -97,8 +127,12 @@ public enum Commitlog {
     }
 
     public void createNewMappedFile() throws IOException {
-        MappedFile mappedFile = new MappedFile(String.valueOf(this.fileFormOffset.incrementAndGet()), 2 * MemoryCapacity.KB, this);
+        MappedFile mappedFile = new MappedFile(this.fileFormOffset.incrementAndGet() + ".log", 2 * MemoryCapacity.KB, this);
         this.mappedFileStack.push(mappedFile);
+    }
+
+    public void createFirstMappedFile(int fileSize) throws IOException {
+        this.mappedFileStack.push(new MappedFile("0.log", fileSize, this));
     }
 
     /**

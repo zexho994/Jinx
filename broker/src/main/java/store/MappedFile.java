@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MappedFile {
 
     public static final int DEFAULT_FILE_SIZE = MemoryCapacity.GB;
+    private final File file;
     private FileChannel fileChannel;
     private ByteBuffer byteBuffer;
     private final Commitlog commitlog;
@@ -30,22 +31,20 @@ public class MappedFile {
      */
     private final AtomicInteger remainFileSize = new AtomicInteger(0);
 
-
-    public MappedFile(final String fileName, Commitlog commitlog) throws IOException {
-        this(fileName, DEFAULT_FILE_SIZE, commitlog);
-    }
-
     public MappedFile(final String fileName, final int fileSize, Commitlog commitlog) throws IOException {
-        init(fileName, fileSize);
-        this.commitlog = commitlog;
+        this(new File(Commitlog.COMMIT_DIR_PATH + fileName), fileSize, commitlog);
     }
 
-    private void init(final String fileName, final int fileSize) throws IOException {
-        this.remainFileSize.getAndAdd(fileSize);
-        String filePath = Commitlog.FOLDER_COMMIT.getAbsolutePath() + File.separator + fileName + ".log";
-        File file = new File(filePath);
+    public MappedFile(final File file, final int fileSize, Commitlog commitlog) throws IOException {
+        this.commitlog = commitlog;
+        this.file = file;
+        init(fileSize);
+    }
 
-        ensureDirOk(file.getParent());
+
+    private void init(final int fileSize) throws IOException {
+        this.remainFileSize.getAndAdd(fileSize);
+        ensureDirOk(this.file.getParent());
 
         boolean initSuccess = false;
         try {
@@ -53,7 +52,7 @@ public class MappedFile {
             this.byteBuffer = ByteBuffer.allocate(MemoryCapacity.MB);
             initSuccess = true;
         } catch (FileNotFoundException e) {
-            log.error("Failed to create file " + fileName, e);
+            log.error("Failed to create file " + file.getName(), e);
             throw e;
         } finally {
             if (!initSuccess && this.fileChannel != null) {
@@ -111,5 +110,8 @@ public class MappedFile {
         return this.remainFileSize.get() > size;
     }
 
+    public String getFileName() {
+        return this.file.getName();
+    }
 
 }
