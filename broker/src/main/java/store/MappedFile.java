@@ -10,8 +10,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 磁盘文件的映射
@@ -25,7 +23,6 @@ public class MappedFile {
     public static final int DEFAULT_FILE_SIZE = MemoryCapacity.GB;
     private FileChannel fileChannel;
     private ByteBuffer byteBuffer;
-    private final Lock lock = new ReentrantLock();
     private final Commitlog commitlog;
 
     /**
@@ -106,13 +103,8 @@ public class MappedFile {
      * @throws IOException
      */
     public void appendThenFlush(final byte[] data) throws IOException {
-        lock.lock();
-        try {
-            this.append(data);
-            this.flush();
-        } finally {
-            lock.unlock();
-        }
+        this.append(data);
+        this.flush();
     }
 
     public boolean checkFileRemainSize(int size) {

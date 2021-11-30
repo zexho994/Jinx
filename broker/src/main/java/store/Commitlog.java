@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Zexho
@@ -35,6 +37,7 @@ public enum Commitlog {
      * 所有文件总字节偏移量
      */
     private final AtomicInteger fileFormOffset = new AtomicInteger(0);
+    private final Lock lock = new ReentrantLock();
 
 
     /**
@@ -66,9 +69,10 @@ public enum Commitlog {
      * @param message 要存储的消息对象
      */
     public void storeMessage(Message message, FlushModel model) throws IOException {
-        MappedFile mappedFile = this.getLastMappedFile();
-        byte[] data = message.toString().getBytes();
+        lock.lock();
         try {
+            MappedFile mappedFile = this.getLastMappedFile();
+            byte[] data = message.toString().getBytes();
             // 同步刷盘消息
             if (model == FlushModel.SYNC) {
                 if (mappedFile.checkFileRemainSize(data.length)) {
@@ -83,11 +87,12 @@ public enum Commitlog {
                 }
             } else {
                 // 异步刷盘
-
             }
         } catch (IOException e) {
             log.error("Failed to store message " + message, e);
             throw e;
+        } finally {
+            lock.unlock();
         }
     }
 
