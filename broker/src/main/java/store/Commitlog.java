@@ -27,7 +27,7 @@ public enum Commitlog {
     /**
      * commit文件夹路径 $HOME/jinx/commit
      */
-    public static final String COMMIT_DIR_PATH = System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog";
+    public static final String COMMIT_DIR_PATH = System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator;
     /**
      * 文件夹对象
      */
@@ -41,7 +41,7 @@ public enum Commitlog {
      */
     private AtomicInteger fileFormOffset = new AtomicInteger(0);
     private final Lock lock = new ReentrantLock();
-
+    private final int DEFAULT_MAPPED_FILE_SIZE = MemoryCapacity.KB;
 
     /**
      * 初始化时候创建文件夹
@@ -53,25 +53,26 @@ public enum Commitlog {
             // 文件夹存在
             File[] files = FOLDER_COMMIT.listFiles();
             if (files != null) {
-                List<File> fileList = Arrays.stream(files).filter(file -> file.getName().contains(".log")).collect(Collectors.toList());
+                List<File> fileList = Arrays.stream(files).filter(file -> !file.getName().contains(".")).collect(Collectors.toList());
                 count = fileList.size();
                 fileList.stream().sorted((o1, o2) -> {
-                            int end1 = o1.getName().lastIndexOf('.');
-                            int end2 = o2.getName().lastIndexOf('.');
-                            int offset1 = Integer.parseInt(o1.getName().substring(0, end1));
-                            int offset2 = Integer.parseInt(o2.getName().substring(0, end2));
-                            return offset1 - offset2;
-                        })
-                        .forEach(file -> {
-                            try {
-                                this.mappedFileStack.push(new MappedFile(file, 2 * MemoryCapacity.KB, this));
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        });
-                String lastFileName = this.mappedFileStack.peek().getFileName();
-                int logIdx = lastFileName.lastIndexOf('.');
-                this.fileFormOffset = new AtomicInteger(Integer.parseInt(lastFileName.substring(0, logIdx)));
+                    int offset1 = Integer.parseInt(o1.getName());
+                    int offset2 = Integer.parseInt(o2.getName());
+                    return offset1 - offset2;
+                }).forEach(file -> {
+                    try {
+                        int fileOffset = Integer.parseInt(file.getName());
+                        int size = fileOffset - this.fileFormOffset.get();
+                        this.mappedFileStack.push(new MappedFile(file, DEFAULT_MAPPED_FILE_SIZE, this));
+                        this.fileFormOffset.set(fileOffset);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+                if (!this.mappedFileStack.isEmpty()) {
+                    String lastFileName = this.mappedFileStack.peek().getFileName();
+                    this.fileFormOffset = new AtomicInteger(Integer.parseInt(lastFileName));
+                }
             }
         } else {
             // 文件夹不存在
@@ -83,7 +84,7 @@ public enum Commitlog {
 
         if (count == 0) {
             try {
-                this.createFirstMappedFile(2 * MemoryCapacity.KB);
+                this.createFirstMappedFile(DEFAULT_MAPPED_FILE_SIZE);
             } catch (IOException e) {
                 log.error("Failed create new MappedFile", e);
                 return false;
@@ -127,12 +128,12 @@ public enum Commitlog {
     }
 
     public void createNewMappedFile() throws IOException {
-        MappedFile mappedFile = new MappedFile(this.fileFormOffset.incrementAndGet() + ".log", 2 * MemoryCapacity.KB, this);
+        MappedFile mappedFile = new MappedFile(String.valueOf(this.fileFormOffset.incrementAndGet()), DEFAULT_MAPPED_FILE_SIZE, this);
         this.mappedFileStack.push(mappedFile);
     }
 
     public void createFirstMappedFile(int fileSize) throws IOException {
-        this.mappedFileStack.push(new MappedFile("0.log", fileSize, this));
+        this.mappedFileStack.push(new MappedFile("0", fileSize, this));
     }
 
     /**

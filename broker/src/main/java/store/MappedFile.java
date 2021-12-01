@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Log4j2
 public class MappedFile {
 
-    public static final int DEFAULT_FILE_SIZE = MemoryCapacity.GB;
     private final File file;
     private FileChannel fileChannel;
     private ByteBuffer byteBuffer;
@@ -29,21 +28,21 @@ public class MappedFile {
     /**
      * 当前文件剩余字节大小
      */
-    private final AtomicInteger remainFileSize = new AtomicInteger(0);
+    private final AtomicInteger remainFileSize;
 
     public MappedFile(final String fileName, final int fileSize, Commitlog commitlog) throws IOException {
         this(new File(Commitlog.COMMIT_DIR_PATH + fileName), fileSize, commitlog);
     }
 
-    public MappedFile(final File file, final int fileSize, Commitlog commitlog) throws IOException {
+    public MappedFile(final File file, final int remainFileSize, Commitlog commitlog) throws IOException {
         this.commitlog = commitlog;
         this.file = file;
-        init(fileSize);
+        this.remainFileSize = new AtomicInteger(remainFileSize);
+        init();
     }
 
 
-    private void init(final int fileSize) throws IOException {
-        this.remainFileSize.getAndAdd(fileSize);
+    private void init() throws IOException {
         ensureDirOk(this.file.getParent());
 
         boolean initSuccess = false;
