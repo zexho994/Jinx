@@ -25,6 +25,10 @@ public class MappedFile {
     private ByteBuffer byteBuffer;
     private final Commitlog commitlog;
 
+    private final String fileName;
+    private final int fileFormOffset;
+    private final AtomicInteger wrotePos;
+
     /**
      * 当前文件剩余字节大小
      */
@@ -37,6 +41,9 @@ public class MappedFile {
     public MappedFile(final File file, final int remainFileSize, Commitlog commitlog) throws IOException {
         this.commitlog = commitlog;
         this.file = file;
+        this.fileName = file.getName();
+        this.wrotePos = new AtomicInteger(0);
+        this.fileFormOffset = Integer.parseInt(fileName);
         this.remainFileSize = new AtomicInteger(remainFileSize);
         init();
     }
@@ -71,6 +78,7 @@ public class MappedFile {
         this.fileChannel.write(this.byteBuffer);
         this.byteBuffer.clear();
 
+        this.wrotePos.updateAndGet(n -> n + data.length);
         this.commitlog.getFileFormOffset().getAndUpdate(n -> n + data.length);
         this.remainFileSize.getAndUpdate(n -> n - data.length);
     }
@@ -110,7 +118,10 @@ public class MappedFile {
     }
 
     public String getFileName() {
-        return this.file.getName();
+        return this.fileName;
     }
 
+    public int getFileFormOffset() {
+        return this.fileFormOffset;
+    }
 }

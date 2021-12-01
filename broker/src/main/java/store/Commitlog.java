@@ -140,7 +140,7 @@ public enum Commitlog {
     /**
      * 创建第一个新文件
      *
-     * @param fileSize
+     * @param fileSize 文件大小
      * @throws IOException
      */
     public void createFirstMappedFile(int fileSize) throws IOException {
