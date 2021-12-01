@@ -31,7 +31,7 @@ public enum Commitlog {
     /**
      * 文件夹对象
      */
-    public static File FOLDER_COMMIT;
+    public static File COMMITLOG_FOLDER;
     /**
      * 存储 mappedFile 队列
      */
@@ -47,11 +47,11 @@ public enum Commitlog {
      * 初始化时候创建文件夹
      */
     public boolean init() {
-        FOLDER_COMMIT = new File(COMMIT_DIR_PATH);
+        COMMITLOG_FOLDER = new File(COMMIT_DIR_PATH);
         int count = 0;
-        if (FOLDER_COMMIT.exists()) {
+        if (COMMITLOG_FOLDER.exists()) {
             // 文件夹存在
-            File[] files = FOLDER_COMMIT.listFiles();
+            File[] files = COMMITLOG_FOLDER.listFiles();
             if (files != null) {
                 List<File> fileList = Arrays.stream(files).filter(file -> !file.getName().contains(".")).collect(Collectors.toList());
                 count = fileList.size();
@@ -76,7 +76,7 @@ public enum Commitlog {
             }
         } else {
             // 文件夹不存在
-            if (!FOLDER_COMMIT.mkdirs()) {
+            if (!COMMITLOG_FOLDER.mkdirs()) {
                 log.error("Failed to mkdir commitlog");
                 return false;
             }
@@ -127,12 +127,35 @@ public enum Commitlog {
         }
     }
 
+    /**
+     * 在Commitlog文件夹下创建一个新文件
+     *
+     * @throws IOException
+     */
     public void createNewMappedFile() throws IOException {
         MappedFile mappedFile = new MappedFile(String.valueOf(this.fileFormOffset.incrementAndGet()), DEFAULT_MAPPED_FILE_SIZE, this);
         this.mappedFileStack.push(mappedFile);
     }
 
+    /**
+     * 创建第一个新文件
+     *
+     * @param fileSize
+     * @throws IOException
+     */
     public void createFirstMappedFile(int fileSize) throws IOException {
+        if (COMMITLOG_FOLDER == null) {
+            log.error("commitlog folder is null");
+            return;
+        }
+        File[] files = COMMITLOG_FOLDER.listFiles();
+        if (files != null) {
+            if (Arrays.stream(files).anyMatch(f -> !f.getName().contains("."))) {
+                log.error("There are already files in commitlog");
+                return;
+            }
+        }
+
         this.mappedFileStack.push(new MappedFile("0", fileSize, this));
     }
 
