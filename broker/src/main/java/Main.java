@@ -29,7 +29,7 @@ public class Main {
         }
 
         // 初始化 ConsumerQueue
-        if (!ConsumeQueue.INSTANCE.init()) {
+        if (!ConsumeQueue.getInstance().init()) {
             log.error("Failed to init commitlog");
             return false;
         }

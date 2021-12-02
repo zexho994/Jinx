@@ -15,7 +15,7 @@ public enum DefaultMessageStore implements MessageStore {
      */
     INSTANCE;
     private final Commitlog commitlog = Commitlog.getInstance();
-    private final ConsumeQueue consumeQueue = ConsumeQueue.INSTANCE;
+    private final ConsumeQueue consumeQueue = ConsumeQueue.getInstance();
 
     /**
      * 默认采用同步的方式

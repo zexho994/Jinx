@@ -10,12 +10,18 @@ import java.io.File;
  * @date 2021/12/2 10:30 上午
  */
 @Log4j2
-public enum ConsumeQueue {
+public class ConsumeQueue {
 
-    /**
-     * 实例
-     */
-    INSTANCE;
+    private ConsumeQueue() {
+    }
+
+    private static class Inner {
+        private static final ConsumeQueue INSTANCE = new ConsumeQueue();
+    }
+
+    public static ConsumeQueue getInstance() {
+        return Inner.INSTANCE;
+    }
 
     public static final String CONSUMER_FOLDER_DIR_PATH = System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator;
     public static File CONSUMER_QUEUE_FOLDER;
