@@ -39,7 +39,7 @@ public enum Commitlog {
     /**
      * 所有文件总字节偏移量
      */
-    private AtomicInteger fileFormOffset = new AtomicInteger(0);
+    private final AtomicInteger fileFormOffset = new AtomicInteger(0);
     private final Lock lock = new ReentrantLock();
     private final int DEFAULT_MAPPED_FILE_SIZE = MemoryCapacity.KB;
 
@@ -62,16 +62,15 @@ public enum Commitlog {
                 }).forEach(file -> {
                     try {
                         int fileOffset = Integer.parseInt(file.getName());
-                        int size = fileOffset - this.fileFormOffset.get();
-                        this.mappedFileStack.push(new MappedFile(file, DEFAULT_MAPPED_FILE_SIZE, this));
                         this.fileFormOffset.set(fileOffset);
+                        this.mappedFileStack.push(new MappedFile(file, DEFAULT_MAPPED_FILE_SIZE));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 });
                 if (!this.mappedFileStack.isEmpty()) {
                     String lastFileName = this.mappedFileStack.peek().getFileName();
-                    this.fileFormOffset = new AtomicInteger(Integer.parseInt(lastFileName));
+                    this.fileFormOffset.set(Integer.parseInt(lastFileName));
                 }
             }
         } else {
@@ -99,16 +98,21 @@ public enum Commitlog {
 
         lock.lock();
         try {
+            MessageAppendResult appendResult = this.getLastMappedFile().append(data);
             if (flushModel == FlushModel.SYNC) {
-                if (this.getLastMappedFile().checkFileRemainSize(data.length)) {
-                    // 如果剩余空间足够
-                    this.getLastMappedFile().appendThenFlush(data);
-                } else {
-                    // 旧数据存储到旧文件
-                    this.getLastMappedFile().flush();
-                    // 新数据存储到新文件
-                    this.createNewMappedFile();
-                    this.getLastMappedFile().appendThenFlush(data);
+                // 同步刷盘,在追加后立即执行flush
+                switch (appendResult) {
+                    case OK:
+                        this.getLastMappedFile().flush();
+                        break;
+                    case INSUFFICIENT_SPACE:
+                        this.createNewMappedFile();
+                        this.getLastMappedFile().append(data);
+                        this.getLastMappedFile().flush();
+                        break;
+                    default:
+                        log.error("AppendResult type error");
+                        break;
                 }
             } else {
                 // 异步刷盘
@@ -127,7 +131,11 @@ public enum Commitlog {
      * @throws IOException 创建新文件时发送异常
      */
     public void createNewMappedFile() throws IOException {
-        MappedFile mappedFile = new MappedFile(String.valueOf(this.fileFormOffset.incrementAndGet()), DEFAULT_MAPPED_FILE_SIZE, this);
+        MappedFile lastMappedFile = this.getLastMappedFile();
+        int fileFormOffset = lastMappedFile.getFileFormOffset();
+        int wrotePos = lastMappedFile.getWrotePos();
+        String fileName = String.valueOf(fileFormOffset + wrotePos + 1);
+        MappedFile mappedFile = new MappedFile(fileName, DEFAULT_MAPPED_FILE_SIZE);
         this.mappedFileStack.push(mappedFile);
     }
 
@@ -150,7 +158,7 @@ public enum Commitlog {
             }
         }
 
-        this.mappedFileStack.push(new MappedFile("0", fileSize, this));
+        this.mappedFileStack.push(new MappedFile("0", fileSize));
     }
 
     /**
@@ -162,7 +170,4 @@ public enum Commitlog {
         return this.mappedFileStack.peek();
     }
 
-    public AtomicInteger getFileFormOffset() {
-        return fileFormOffset;
-    }
 }

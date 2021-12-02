@@ -36,13 +36,13 @@ public enum DefaultMessageStore implements MessageStore {
     @Override
     public void putMessage(final Message message, final FlushModel flushModel) {
         // 检查存储状态
-        if (this.checkStoreStatus()) {
+        if (!this.checkStoreStatus()) {
             log.error("Store status is abnormality");
             return;
         }
 
         // 检查消息格式
-        if (this.checkMessage()) {
+        if (!this.checkMessage()) {
             log.error("The Message format is invalid");
             return;
         }
