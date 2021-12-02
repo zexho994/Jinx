@@ -46,7 +46,6 @@ public enum MessageManager {
      */
     public void putMessage(Message message, FlushModel model) {
         messageStore.putMessage(message);
-
         // 获取主题的所有消费组，所有消费组队列添加此消息
         String topic = message.getTopic();
         List<MessageQueue> messageQueues = TopicManager.getTopicSubscriber(topic);

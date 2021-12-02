@@ -80,7 +80,9 @@ public class MappedFile {
      * {@link MessageAppendResult#INSUFFICIENT_SPACE} 空间不够用
      * {@link MessageAppendResult#OK} 追加成功
      */
-    public MessageAppendResult append(final byte[] data) throws IOException {
+    public MessageAppendResult append(final InnerMessage innerMessage) throws IOException {
+        byte[] data = innerMessage.toString().getBytes();
+
         if (!this.checkRemainSize(data)) {
             return MessageAppendResult.INSUFFICIENT_SPACE;
         }

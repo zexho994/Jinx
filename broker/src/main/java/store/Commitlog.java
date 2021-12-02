@@ -1,6 +1,5 @@
 package store;
 
-import Message.Message;
 import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
 
@@ -96,19 +95,17 @@ public enum Commitlog {
     /**
      * 保存消息到 Commitlog 目录下中
      *
-     * @param message    要保存的消息
-     * @param flushModel 消息的刷盘类型
+     * @param innerMessage 要保存的对象
+     * @param flushModel   消息的刷盘类型
      * @return 执行结果, 有以下几种：
      * {@link PutMessageResult#OK} 成功
      * {@link PutMessageResult#FAILURE} 某种原因导致失败
      */
-    public CommitPutMessageResult putMessage(final Message message, final FlushModel flushModel) {
-        byte[] data = message.toString().getBytes();
-
+    public CommitPutMessageResult putMessage(final InnerMessage innerMessage, final FlushModel flushModel) {
         lock.lock();
         try {
             int fileWriteOffset = this.getLastMappedFile().getWrotePos();
-            MessageAppendResult appendResult = this.getLastMappedFile().append(data);
+            MessageAppendResult appendResult = this.getLastMappedFile().append(innerMessage);
             if (flushModel == FlushModel.SYNC) {
                 // 同步刷盘,在追加后立即执行flush
                 switch (appendResult) {
@@ -118,7 +115,7 @@ public enum Commitlog {
                     case INSUFFICIENT_SPACE:
                         this.createNewMappedFile();
                         fileWriteOffset = 0;
-                        this.getLastMappedFile().append(data);
+                        this.getLastMappedFile().append(innerMessage);
                         this.getLastMappedFile().flush();
                         break;
                     default:
@@ -129,9 +126,9 @@ public enum Commitlog {
                 // 异步刷盘
             }
 
-            return CommitPutMessageResult.ok(fileWriteOffset, data.length);
+            return CommitPutMessageResult.ok(fileWriteOffset, innerMessage.toString().getBytes().length);
         } catch (IOException e) {
-            log.error("Failed to store message " + message, e);
+            log.error("Failed to store message " + innerMessage, e);
             return CommitPutMessageResult.error();
         } finally {
             lock.unlock();
