@@ -95,39 +95,6 @@ public enum Commitlog {
     }
 
     /**
-     * 存储消息
-     *
-     * @param message 要存储的消息对象
-     */
-    public void storeMessage(Message message, FlushModel model) throws IOException {
-        lock.lock();
-        try {
-            MappedFile mappedFile = this.getLastMappedFile();
-            byte[] data = message.toString().getBytes();
-            // 同步刷盘消息
-            if (model == FlushModel.SYNC) {
-                if (mappedFile.checkFileRemainSize(data.length)) {
-                    // 如果剩余空间足够
-                    mappedFile.appendThenFlush(data);
-                } else {
-                    // 旧数据存储到旧文件
-                    mappedFile.flush();
-                    // 新数据存储到新文件
-                    this.createNewMappedFile();
-                    this.getLastMappedFile().appendThenFlush(data);
-                }
-            } else {
-                // 异步刷盘
-            }
-        } catch (IOException e) {
-            log.error("Failed to store message " + message, e);
-            throw e;
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
      * 在Commitlog文件夹下创建一个新文件
      *
      * @throws IOException

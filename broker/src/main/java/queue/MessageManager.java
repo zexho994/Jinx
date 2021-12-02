@@ -3,10 +3,11 @@ package queue;
 import Message.Message;
 import lombok.extern.log4j.Log4j2;
 import store.Commitlog;
+import store.DefaultMessageStore;
 import store.FlushModel;
+import store.MessageStore;
 import topic.TopicManager;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +24,7 @@ public enum MessageManager {
     Instance;
 
     private final Commitlog commitlog = Commitlog.Instance;
+    private final MessageStore messageStore = DefaultMessageStore.INSTANCE;
 
     /**
      * Key : topic
@@ -43,11 +45,7 @@ public enum MessageManager {
      * 投递消息
      */
     public void putMessage(Message message, FlushModel model) {
-        try {
-            commitlog.storeMessage(message, model);
-        } catch (IOException e) {
-            log.error(e);
-        }
+        messageStore.putMessage(message);
 
         // 获取主题的所有消费组，所有消费组队列添加此消息
         String topic = message.getTopic();
