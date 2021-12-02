@@ -18,7 +18,7 @@ import topic.TopicManager;
 @Log4j2
 public class BrokerRemotingHandler extends NettyServerHandler {
 
-    private MessageManager messageManager = MessageManager.Instance;
+    private final MessageManager messageManager = MessageManager.getInstance();
 
     /**
      * 有新的producer或者consumer接入

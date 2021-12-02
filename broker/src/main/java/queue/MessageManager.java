@@ -2,7 +2,6 @@ package queue;
 
 import Message.Message;
 import lombok.extern.log4j.Log4j2;
-import store.Commitlog;
 import store.DefaultMessageStore;
 import store.FlushModel;
 import store.MessageStore;
@@ -16,15 +15,20 @@ import java.util.Optional;
  * @date 2021/11/19 8:59 上午
  */
 @Log4j2
-public enum MessageManager {
+public class MessageManager {
 
-    /**
-     * 实例对象
-     */
-    Instance;
+    private MessageManager() {
+    }
 
-    private final Commitlog commitlog = Commitlog.getInstance();
-    private final MessageStore messageStore = DefaultMessageStore.INSTANCE;
+    private static class Inner {
+        private static final MessageManager INSTANCE = new MessageManager();
+    }
+
+    public static MessageManager getInstance() {
+        return Inner.INSTANCE;
+    }
+
+    private final MessageStore messageStore = DefaultMessageStore.getInstance();
 
     /**
      * Key : topic

@@ -8,12 +8,19 @@ import lombok.extern.log4j.Log4j2;
  * @date 2021/12/2 9:26 上午
  */
 @Log4j2
-public enum DefaultMessageStore implements MessageStore {
+public class DefaultMessageStore implements MessageStore {
 
-    /**
-     * 对象实例
-     */
-    INSTANCE;
+    private DefaultMessageStore() {
+    }
+
+    private static class Inner {
+        private static final DefaultMessageStore INSTANCE = new DefaultMessageStore();
+    }
+
+    public static DefaultMessageStore getInstance() {
+        return Inner.INSTANCE;
+    }
+
     private final Commitlog commitlog = Commitlog.getInstance();
     private final ConsumeQueue consumeQueue = ConsumeQueue.getInstance();
 
