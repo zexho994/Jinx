@@ -93,11 +93,21 @@ public enum Commitlog {
         return true;
     }
 
-    public void putMessage(final Message message, final FlushModel flushModel) {
+    /**
+     * 保存消息到 Commitlog 目录下中
+     *
+     * @param message    要保存的消息
+     * @param flushModel 消息的刷盘类型
+     * @return 执行结果, 有以下几种：
+     * {@link PutMessageResult#OK} 成功
+     * {@link PutMessageResult#FAILURE} 某种原因导致失败
+     */
+    public CommitPutMessageResult putMessage(final Message message, final FlushModel flushModel) {
         byte[] data = message.toString().getBytes();
 
         lock.lock();
         try {
+            int fileWriteOffset = this.getLastMappedFile().getWrotePos();
             MessageAppendResult appendResult = this.getLastMappedFile().append(data);
             if (flushModel == FlushModel.SYNC) {
                 // 同步刷盘,在追加后立即执行flush
@@ -107,6 +117,7 @@ public enum Commitlog {
                         break;
                     case INSUFFICIENT_SPACE:
                         this.createNewMappedFile();
+                        fileWriteOffset = 0;
                         this.getLastMappedFile().append(data);
                         this.getLastMappedFile().flush();
                         break;
@@ -116,10 +127,12 @@ public enum Commitlog {
                 }
             } else {
                 // 异步刷盘
-
             }
+
+            return CommitPutMessageResult.ok(fileWriteOffset, data.length);
         } catch (IOException e) {
             log.error("Failed to store message " + message, e);
+            return CommitPutMessageResult.error();
         } finally {
             lock.unlock();
         }

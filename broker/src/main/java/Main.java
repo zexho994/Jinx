@@ -1,6 +1,7 @@
 import lombok.extern.log4j.Log4j2;
 import remoting.BrokerRemotingService;
 import store.Commitlog;
+import store.ConsumeQueue;
 
 /**
  * @author Zexho
@@ -10,17 +11,29 @@ import store.Commitlog;
 public class Main {
     public static void main(String[] args) {
         // 初始化任务
-        systemInit();
+        if (!systemInit()) {
+            log.error("Failed to SystemInit");
+            System.exit(-1);
+        }
 
         // 启动broker
         BrokerRemotingService brokerRemotingService = new BrokerRemotingService();
         brokerRemotingService.start();
     }
 
-    public static void systemInit() {
+    public static boolean systemInit() {
+        // 初始化 Commitlog
         if (!Commitlog.Instance.init()) {
             log.error("Failed to init commitlog");
-            System.exit(0);
+            return false;
         }
+
+        // 初始化 ConsumerQueue
+        if (!ConsumeQueue.INSTANCE.init()) {
+            log.error("Failed to init commitlog");
+            return false;
+        }
+
+        return true;
     }
 }

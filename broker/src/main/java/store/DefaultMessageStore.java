@@ -15,6 +15,7 @@ public enum DefaultMessageStore implements MessageStore {
      */
     INSTANCE;
     private final Commitlog commitlog = Commitlog.Instance;
+    private final ConsumeQueue consumeQueue = ConsumeQueue.INSTANCE;
 
     /**
      * 默认采用同步的方式
@@ -48,7 +49,15 @@ public enum DefaultMessageStore implements MessageStore {
         }
 
         // 交给commitlog进行存储
-        this.commitlog.putMessage(message, flushModel);
+        CommitPutMessageResult commitlogPutResult = this.commitlog.putMessage(message, flushModel);
+
+        // 交给 consumeQueue 进行存储
+        if (commitlogPutResult.getResult() == PutMessageResult.OK) {
+            this.consumeQueue.putMessage(message, commitlogPutResult.getOffset(), commitlogPutResult.getMsgSize());
+        } else if (commitlogPutResult.getResult() == PutMessageResult.FAILURE) {
+            log.error("");
+        }
+
     }
 
     public boolean checkStoreStatus() {
