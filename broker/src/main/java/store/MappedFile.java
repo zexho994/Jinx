@@ -49,7 +49,7 @@ public class MappedFile {
     }
 
     private void init() throws IOException {
-        ensureDirOk(this.file.getParent());
+        ensureDirExist(this.file.getParent());
 
         boolean initSuccess = false;
         try {
@@ -82,7 +82,7 @@ public class MappedFile {
         this.remainFileSize.getAndUpdate(n -> n - data.length);
     }
 
-    private void ensureDirOk(final String dirName) {
+    private void ensureDirExist(final String dirName) {
         if (dirName != null) {
             File f = new File(dirName);
             if (!f.exists()) {
