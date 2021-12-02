@@ -23,7 +23,7 @@ public enum MessageManager {
      */
     Instance;
 
-    private final Commitlog commitlog = Commitlog.Instance;
+    private final Commitlog commitlog = Commitlog.getInstance();
     private final MessageStore messageStore = DefaultMessageStore.INSTANCE;
 
     /**

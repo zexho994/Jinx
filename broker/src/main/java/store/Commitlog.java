@@ -18,11 +18,19 @@ import java.util.stream.Collectors;
  * @date 2021/11/22 10:34 上午
  */
 @Log4j2
-public enum Commitlog {
-    /**
-     * CommitLog对象
-     */
-    Instance;
+public class Commitlog {
+
+    private Commitlog() {
+    }
+
+    private static class Inner {
+        private static final Commitlog INSTANCE = new Commitlog();
+    }
+
+    public static Commitlog getInstance() {
+        return Inner.INSTANCE;
+    }
+
     /**
      * commit文件夹路径 $HOME/jinx/commit
      */

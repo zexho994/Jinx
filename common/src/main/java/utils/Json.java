@@ -8,10 +8,10 @@ import com.google.gson.Gson;
  */
 public class Json {
 
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
 
     public static String toJson(Object object) {
-        return gson.toJson(object);
+        return GSON.toJson(object);
     }
 
     public static String toJsonLine(Object object) {
@@ -19,7 +19,7 @@ public class Json {
     }
 
     public static <T> T fromJson(String json, Class<T> type) {
-        return gson.fromJson(json, type);
+        return GSON.fromJson(json, type);
     }
 
 }

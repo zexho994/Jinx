@@ -14,7 +14,7 @@ public enum DefaultMessageStore implements MessageStore {
      * 对象实例
      */
     INSTANCE;
-    private final Commitlog commitlog = Commitlog.Instance;
+    private final Commitlog commitlog = Commitlog.getInstance();
     private final ConsumeQueue consumeQueue = ConsumeQueue.INSTANCE;
 
     /**

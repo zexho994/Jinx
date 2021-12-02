@@ -23,7 +23,7 @@ public class Main {
 
     public static boolean systemInit() {
         // 初始化 Commitlog
-        if (!Commitlog.Instance.init()) {
+        if (!Commitlog.getInstance().init()) {
             log.error("Failed to init commitlog");
             return false;
         }
