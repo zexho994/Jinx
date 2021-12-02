@@ -48,7 +48,6 @@ public class MappedFile {
         init();
     }
 
-
     private void init() throws IOException {
         ensureDirOk(this.file.getParent());
 

@@ -94,10 +94,37 @@ public enum Commitlog {
         return true;
     }
 
+    public void putMessage(final Message message, final FlushModel flushModel) {
+        byte[] data = message.toString().getBytes();
+
+        lock.lock();
+        try {
+            if (flushModel == FlushModel.SYNC) {
+                if (this.getLastMappedFile().checkFileRemainSize(data.length)) {
+                    // 如果剩余空间足够
+                    this.getLastMappedFile().appendThenFlush(data);
+                } else {
+                    // 旧数据存储到旧文件
+                    this.getLastMappedFile().flush();
+                    // 新数据存储到新文件
+                    this.createNewMappedFile();
+                    this.getLastMappedFile().appendThenFlush(data);
+                }
+            } else {
+                // 异步刷盘
+
+            }
+        } catch (IOException e) {
+            log.error("Failed to store message " + message, e);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /**
      * 在Commitlog文件夹下创建一个新文件
      *
-     * @throws IOException
+     * @throws IOException 创建新文件时发送异常
      */
     public void createNewMappedFile() throws IOException {
         MappedFile mappedFile = new MappedFile(String.valueOf(this.fileFormOffset.incrementAndGet()), DEFAULT_MAPPED_FILE_SIZE, this);
