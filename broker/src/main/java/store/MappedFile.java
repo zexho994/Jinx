@@ -2,13 +2,13 @@ package store;
 
 import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
+import utils.Json;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -23,7 +23,6 @@ public class MappedFile {
     private final File file;
     private FileChannel fileChannel;
     private ByteBuffer byteBuffer;
-
     /**
      * 文件名
      */
@@ -75,13 +74,13 @@ public class MappedFile {
     /**
      * 追加消息到文件末尾
      *
-     * @param data 要追加的数据
+     * @param innerMessage 要追加的数据
      * @return 返回结果有几种：
      * {@link MessageAppendResult#INSUFFICIENT_SPACE} 空间不够用
      * {@link MessageAppendResult#OK} 追加成功
      */
     public MessageAppendResult append(final InnerMessage innerMessage) throws IOException {
-        byte[] data = innerMessage.toString().getBytes();
+        byte[] data = Json.toJsonLine(innerMessage).getBytes();
 
         if (!this.checkRemainSize(data)) {
             return MessageAppendResult.INSUFFICIENT_SPACE;
@@ -114,6 +113,20 @@ public class MappedFile {
      */
     public void flush() throws IOException {
         this.fileChannel.force(false);
+    }
+
+    public List<InnerMessage> load() throws IOException {
+        InputStream inputStream = new FileInputStream(this.file);
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+        List<InnerMessage> innerMessageList = new LinkedList<>();
+        for (String data = ""; data != null; ) {
+            data = bufferedReader.readLine();
+            InnerMessage innerMessage = Json.fromJson(data, InnerMessage.class);
+            innerMessageList.add(innerMessage);
+        }
+        return innerMessageList;
     }
 
     public String getFileName() {

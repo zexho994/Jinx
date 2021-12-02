@@ -18,11 +18,4 @@ public class InnerMessage implements Serializable {
         this.totalSize = message.toString().length();
     }
 
-    @Override
-    public String toString() {
-        return "InnerMessage{" +
-                "totalSize=" + totalSize +
-                ", message=" + message.toString() +
-                '}';
-    }
 }

@@ -40,7 +40,7 @@ public enum Commitlog {
      */
     private final AtomicInteger fileFormOffset = new AtomicInteger(0);
     private final Lock lock = new ReentrantLock();
-    private final int DEFAULT_MAPPED_FILE_SIZE = MemoryCapacity.KB;
+    public static final int DEFAULT_MAPPED_FILE_SIZE = MemoryCapacity.KB;
 
     /**
      * 初始化时候创建文件夹
