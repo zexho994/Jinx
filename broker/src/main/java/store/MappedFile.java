@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MappedFile {
 
     private final File file;
-    private FileChannel fileChannel;
+    private FileChannel randomAccessChannel;
     private ByteBuffer byteBuffer;
     /**
      * 文件名
@@ -57,15 +57,15 @@ public class MappedFile {
 
         boolean initSuccess = false;
         try {
-            this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
+            this.randomAccessChannel = new RandomAccessFile(file, "rw").getChannel();
             this.byteBuffer = ByteBuffer.allocate(MemoryCapacity.MB);
             initSuccess = true;
         } catch (FileNotFoundException e) {
             log.error("Failed to create file " + file.getName(), e);
             throw e;
         } finally {
-            if (!initSuccess && this.fileChannel != null) {
-                this.fileChannel.close();
+            if (!initSuccess && this.randomAccessChannel != null) {
+                this.randomAccessChannel.close();
             }
         }
     }
@@ -85,7 +85,7 @@ public class MappedFile {
 
         this.byteBuffer.put(data);
         this.byteBuffer.flip();
-        this.fileChannel.write(this.byteBuffer);
+        this.randomAccessChannel.write(this.byteBuffer);
         this.byteBuffer.clear();
 
         this.wrotePos.getAndAdd(data.length);
@@ -109,7 +109,7 @@ public class MappedFile {
      * @throws IOException
      */
     public void flush() throws IOException {
-        this.fileChannel.force(false);
+        this.randomAccessChannel.force(false);
     }
 
     public Queue<String> load() throws IOException {

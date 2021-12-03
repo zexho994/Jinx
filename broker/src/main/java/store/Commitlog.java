@@ -113,6 +113,8 @@ public class Commitlog {
         try {
             int fileWriteOffset = this.getLastMappedFile().getWrotePos();
             byte[] data = Json.toJsonLine(innerMessage).getBytes();
+
+
             MessageAppendResult appendResult = this.getLastMappedFile().append(data);
             if (flushModel == FlushModel.SYNC) {
                 // 同步刷盘,在追加后立即执行flush

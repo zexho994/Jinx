@@ -1,6 +1,5 @@
 package store;
 
-import Message.Message;
 import lombok.extern.log4j.Log4j2;
 import utils.Json;
 
@@ -85,19 +84,17 @@ public class ConsumeQueue {
     /**
      * 存储消息到 ConsumeQueue 文件中
      *
-     * @param message
-     * @param offset
-     * @param msgSize
+     * @param topic  消息主题
+     * @param offset 消息在commit中的偏移量,总偏移量
      */
-    public PutMessageResult putMessage(Message message, int offset, int msgSize) {
-        String topic = message.getTopic();
+    public PutMessageResult putMessage(String topic, long offset) {
         lock.lock();
         try {
             ensureFileExist(topic);
             ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
             MappedFile mappedFile = consumeQueueFiles.getLastFile();
 
-            ConsumeQueueData consumeQueueData = new ConsumeQueueData(offset, msgSize);
+            ConsumeQueueData consumeQueueData = new ConsumeQueueData(offset);
             byte[] data = Json.toJsonLine(consumeQueueData).getBytes();
 
             MessageAppendResult appendResult = mappedFile.append(data);
@@ -120,12 +117,10 @@ public class ConsumeQueue {
     }
 
     static class ConsumeQueueData {
-        public final int offset;
-        public final int size;
+        public final long offset;
 
-        public ConsumeQueueData(int offset, int size) {
+        public ConsumeQueueData(long offset) {
             this.offset = offset;
-            this.size = size;
         }
     }
 
