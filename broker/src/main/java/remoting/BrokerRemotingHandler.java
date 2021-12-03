@@ -74,7 +74,6 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      */
     public void doConsumerMessage(Message message, ChannelHandlerContext ctx) {
         String topic = message.getTopic();
-        String consumerGroup = message.getConsumerGroup();
         Message pullMessage = messageManager.pullMessage(topic);
         if (pullMessage != null) {
             ctx.writeAndFlush(pullMessage);

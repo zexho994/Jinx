@@ -2,6 +2,7 @@ package store;
 
 import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
+import utils.Json;
 
 import java.io.File;
 import java.io.IOException;
@@ -70,7 +71,7 @@ public class Commitlog {
                     try {
                         int fileOffset = Integer.parseInt(file.getName());
                         this.fileFormOffset.set(fileOffset);
-                        this.mappedFileStack.push(new MappedFile(file, DEFAULT_MAPPED_FILE_SIZE));
+                        this.mappedFileStack.push(new MappedFile(FileType.COMMITLOG, file, DEFAULT_MAPPED_FILE_SIZE));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -113,7 +114,8 @@ public class Commitlog {
         lock.lock();
         try {
             int fileWriteOffset = this.getLastMappedFile().getWrotePos();
-            MessageAppendResult appendResult = this.getLastMappedFile().append(innerMessage);
+            byte[] data = Json.toJsonLine(innerMessage).getBytes();
+            MessageAppendResult appendResult = this.getLastMappedFile().append(data);
             if (flushModel == FlushModel.SYNC) {
                 // 同步刷盘,在追加后立即执行flush
                 switch (appendResult) {
@@ -123,7 +125,7 @@ public class Commitlog {
                     case INSUFFICIENT_SPACE:
                         this.createNewMappedFile();
                         fileWriteOffset = 0;
-                        this.getLastMappedFile().append(innerMessage);
+                        this.getLastMappedFile().append(data);
                         this.getLastMappedFile().flush();
                         break;
                     default:
@@ -150,10 +152,10 @@ public class Commitlog {
      */
     public void createNewMappedFile() throws IOException {
         MappedFile lastMappedFile = this.getLastMappedFile();
-        int fileFormOffset = lastMappedFile.getFileFormOffset();
+        int fileFormOffset = Integer.parseInt(lastMappedFile.getFileName());
         int wrotePos = lastMappedFile.getWrotePos();
         String fileName = String.valueOf(fileFormOffset + wrotePos + 1);
-        MappedFile mappedFile = new MappedFile(fileName, DEFAULT_MAPPED_FILE_SIZE);
+        MappedFile mappedFile = new MappedFile(FileType.COMMITLOG, fileName, DEFAULT_MAPPED_FILE_SIZE);
         this.mappedFileStack.push(mappedFile);
     }
 
@@ -176,7 +178,7 @@ public class Commitlog {
             }
         }
 
-        this.mappedFileStack.push(new MappedFile("0", fileSize));
+        this.mappedFileStack.push(new MappedFile(FileType.COMMITLOG, "0", fileSize));
     }
 
     /**
