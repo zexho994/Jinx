@@ -1,0 +1,37 @@
+@startuml
+autonumber
+
+participant producer
+
+box broker
+participant BrokerRemoting
+participant MessageManager
+participant DefaultMessageStore
+participant Commitlog
+participant ConsumeQueue
+participant commitlog
+end box
+
+participant consumer
+
+producer -> BrokerRemoting ++: send message
+BrokerRemoting -> MessageManager ++: doProduc()
+MessageManager -> DefaultMessageStore ++: putMessage()
+
+group commitlog持久化
+DefaultMessageStore -> Commitlog ++: putMessage()
+return PutMessageResult
+end group
+
+group consumeQueue持久化
+DefaultMessageStore -> ConsumeQueue ++: putMessage()
+return PutMessageResult
+end group
+
+return PutMessageResult
+MessageManager -> MessageManager : 存储消息到消息队列
+
+return ok
+return success
+
+@enduml

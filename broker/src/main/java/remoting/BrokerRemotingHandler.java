@@ -64,8 +64,6 @@ public class BrokerRemotingHandler extends NettyServerHandler {
         MessageType messageType = MessageType.get(message.getProperty(PropertiesKeys.MESSAGE_TYPE));
         if (messageType == MessageType.Message) {
             messageManager.putMessage(message, FlushModel.SYNC);
-        } else if (messageType == MessageType.Registered_Topic) {
-            TopicManager.addNewTopic(message.getTopic());
         }
     }
 

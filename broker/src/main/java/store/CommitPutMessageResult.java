@@ -13,7 +13,6 @@ public class CommitPutMessageResult {
      * 执行结果
      */
     private PutMessageResult result;
-
     /**
      * 消息所在文件中的偏移量
      */
