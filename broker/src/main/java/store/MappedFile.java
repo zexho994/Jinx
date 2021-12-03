@@ -39,16 +39,16 @@ public class MappedFile {
      */
     private final FileType fileType;
 
-    public MappedFile(final FileType fileType, final String fileName, final int fileSize) throws IOException {
-        this(fileType, new File(fileType.basePath + fileName), fileSize);
+    public MappedFile(final FileType fileType, final String fileName) throws IOException {
+        this(fileType, new File(fileType.basePath + fileName));
     }
 
-    public MappedFile(final FileType fileType, final File file, final int fileSize) throws IOException {
+    public MappedFile(final FileType fileType, final File file) throws IOException {
         this.fileType = fileType;
         this.file = file;
         this.fileName = file.getName();
         this.wrotePos = new AtomicInteger(0);
-        this.fileSize = fileSize;
+        this.fileSize = fileType.fileSize;
         init();
     }
 

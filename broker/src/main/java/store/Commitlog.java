@@ -1,6 +1,5 @@
 package store;
 
-import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
 import utils.Json;
 
@@ -49,7 +48,6 @@ public class Commitlog {
      */
     private final AtomicInteger fileFormOffset = new AtomicInteger(0);
     private final Lock lock = new ReentrantLock();
-    public static final int DEFAULT_MAPPED_FILE_SIZE = MemoryCapacity.KB;
 
     /**
      * 初始化时候创建文件夹
@@ -71,7 +69,7 @@ public class Commitlog {
                     try {
                         int fileOffset = Integer.parseInt(file.getName());
                         this.fileFormOffset.set(fileOffset);
-                        this.mappedFileStack.push(new MappedFile(FileType.COMMITLOG, file, DEFAULT_MAPPED_FILE_SIZE));
+                        this.mappedFileStack.push(new MappedFile(FileType.COMMITLOG, file));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -91,7 +89,7 @@ public class Commitlog {
 
         if (count == 0) {
             try {
-                this.createFirstMappedFile(DEFAULT_MAPPED_FILE_SIZE);
+                this.createFirstMappedFile();
             } catch (IOException e) {
                 log.error("Failed create new MappedFile", e);
                 return false;
@@ -155,17 +153,16 @@ public class Commitlog {
         int fileFormOffset = Integer.parseInt(lastMappedFile.getFileName());
         int wrotePos = lastMappedFile.getWrotePos();
         String fileName = String.valueOf(fileFormOffset + wrotePos + 1);
-        MappedFile mappedFile = new MappedFile(FileType.COMMITLOG, fileName, DEFAULT_MAPPED_FILE_SIZE);
+        MappedFile mappedFile = new MappedFile(FileType.COMMITLOG, fileName);
         this.mappedFileStack.push(mappedFile);
     }
 
     /**
      * 创建第一个新文件
      *
-     * @param fileSize 文件大小
      * @throws IOException
      */
-    public void createFirstMappedFile(int fileSize) throws IOException {
+    public void createFirstMappedFile() throws IOException {
         if (COMMITLOG_FOLDER == null) {
             log.error("commitlog folder is null");
             return;
@@ -178,7 +175,7 @@ public class Commitlog {
             }
         }
 
-        this.mappedFileStack.push(new MappedFile(FileType.COMMITLOG, "0", fileSize));
+        this.mappedFileStack.push(new MappedFile(FileType.COMMITLOG, "0"));
     }
 
     /**

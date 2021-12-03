@@ -11,7 +11,7 @@ class MappedFileTest {
     @Test
     void load() {
         try {
-            MappedFile mappedFile = new MappedFile(FileType.COMMITLOG, "0", Commitlog.DEFAULT_MAPPED_FILE_SIZE);
+            MappedFile mappedFile = new MappedFile(FileType.COMMITLOG, "0");
             Queue<String> load = mappedFile.load();
             Assertions.assertTrue(load.size() > 0);
         } catch (IOException e) {

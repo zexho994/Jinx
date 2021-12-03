@@ -1,5 +1,7 @@
 package store;
 
+import common.MemoryCapacity;
+
 import java.io.File;
 
 /**
@@ -11,17 +13,19 @@ public enum FileType {
     /**
      * {@link Commitlog}
      */
-    COMMITLOG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator),
+    COMMITLOG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator, MemoryCapacity.KB),
 
     /**
      * {@link ConsumeQueue}
      */
-    CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator),
+    CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator, MemoryCapacity.KB / 5),
     ;
 
     final String basePath;
+    final int fileSize;
 
-    FileType(final String basePath) {
+    FileType(final String basePath, final int fileSize) {
         this.basePath = basePath;
+        this.fileSize = fileSize;
     }
 }

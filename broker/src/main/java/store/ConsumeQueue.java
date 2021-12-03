@@ -1,13 +1,13 @@
 package store;
 
 import Message.Message;
-import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
 import utils.Json;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -33,11 +33,31 @@ public class ConsumeQueue {
     }
 
     public static File CONSUMER_QUEUE_FOLDER;
-    private final Map<String, MappedFile> mappedFileMap = new ConcurrentHashMap<>();
-    private final int DEFAULT_CONSUME_QUEUE_FILE_SIZE = MemoryCapacity.GB;
+    private final Map<String, ConsumeQueueFiles> mappedFileMap = new ConcurrentHashMap<>();
+
+    private static class ConsumeQueueFiles {
+        private final Stack<MappedFile> fileQueue;
+
+        public ConsumeQueueFiles(MappedFile mappedFile) {
+            this.fileQueue = new Stack<>();
+            fileQueue.add(mappedFile);
+        }
+
+        public MappedFile getLastFile() {
+            return fileQueue.peek();
+        }
+
+        /**
+         * 添加一个新文件
+         */
+        public void createNewFile() {
+            MappedFile lastFile = this.getLastFile();
+            String fileName = lastFile.getFileName();
+        }
+
+    }
 
     public boolean init() {
-        CONSUMER_QUEUE_FOLDER = new File(FileType.CONSUME_QUEUE.basePath);
         try {
             this.ensureDirExist();
         } catch (Exception e) {
@@ -47,12 +67,9 @@ public class ConsumeQueue {
         return true;
     }
 
-    private void ensureDirExist() throws Exception {
+    private void ensureDirExist() {
         if (CONSUMER_QUEUE_FOLDER == null) {
-            throw new Exception("CONSUMER_QUEUE_FOLDER is null");
-        }
-
-        if (!CONSUMER_QUEUE_FOLDER.exists()) {
+            CONSUMER_QUEUE_FOLDER = new File(FileType.CONSUME_QUEUE.basePath);
             CONSUMER_QUEUE_FOLDER.mkdirs();
         }
     }
@@ -67,13 +84,25 @@ public class ConsumeQueue {
     public PutMessageResult putMessage(Message message, int offset, int msgSize) {
         String topic = message.getTopic();
         lock.lock();
-
         try {
-            MappedFile mappedFile = ensureFileExist(topic);
+            ensureFileExist(topic);
+            ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
+            MappedFile mappedFile = consumeQueueFiles.getLastFile();
+
             ConsumeQueueData consumeQueueData = new ConsumeQueueData(offset, msgSize);
             byte[] data = Json.toJsonLine(consumeQueueData).getBytes();
-            mappedFile.append(data);
-            mappedFile.flush();
+
+            MessageAppendResult appendResult = mappedFile.append(data);
+            if (MessageAppendResult.OK == appendResult) {
+                mappedFile.flush();
+            } else if (MessageAppendResult.INSUFFICIENT_SPACE == appendResult) {
+                log.info("ConsumeQueue INSUFFICIENT_SPACE");
+                consumeQueueFiles.createNewFile();
+                mappedFile = consumeQueueFiles.getLastFile();
+                mappedFile.append(data);
+                mappedFile.flush();
+            }
+
             return PutMessageResult.OK;
         } catch (IOException e) {
             return PutMessageResult.FAILURE;
@@ -92,14 +121,27 @@ public class ConsumeQueue {
         }
     }
 
-    private MappedFile ensureFileExist(String topic) throws IOException {
-        MappedFile mappedFile = mappedFileMap.get(topic);
-        if (mappedFile == null) {
-            mappedFile = new MappedFile(FileType.CONSUME_QUEUE, topic, DEFAULT_CONSUME_QUEUE_FILE_SIZE);
-            mappedFileMap.put(topic, mappedFile);
+    /**
+     * 确保 ConsumeQueue 文件存在
+     *
+     * @param topic 主题名称
+     * @throws IOException
+     */
+    private void ensureFileExist(String topic) throws IOException {
+        if (mappedFileMap.containsKey(topic)) {
+            return;
         }
-        return mappedFile;
+        // 创建文件
+        File topicFolder = new File(FileType.CONSUME_QUEUE.basePath + topic);
+        topicFolder.mkdirs();
+        File file = new File(topicFolder.getAbsolutePath() + File.separator + "0");
+        file.createNewFile();
 
+        // 记录保存到 map 中
+        MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
+        ConsumeQueueFiles consumeQueueFiles = new ConsumeQueueFiles(mappedFile);
+
+        this.mappedFileMap.put(topic, consumeQueueFiles);
     }
 
 }
