@@ -36,9 +36,12 @@ public class ConsumeQueue {
     private final Map<String, ConsumeQueueFiles> mappedFileMap = new ConcurrentHashMap<>();
 
     private static class ConsumeQueueFiles {
+
+        private final String topic;
         private final Stack<MappedFile> fileQueue;
 
-        public ConsumeQueueFiles(MappedFile mappedFile) {
+        public ConsumeQueueFiles(String topic, MappedFile mappedFile) {
+            this.topic = topic;
             this.fileQueue = new Stack<>();
             fileQueue.add(mappedFile);
         }
@@ -50,9 +53,14 @@ public class ConsumeQueue {
         /**
          * 添加一个新文件
          */
-        public void createNewFile() {
+        public void createNewFile() throws IOException {
             MappedFile lastFile = this.getLastFile();
             String fileName = lastFile.getFileName();
+            int wrotePos = lastFile.getWrotePos();
+            String nextFileOffset = String.valueOf(Integer.parseInt(fileName) + wrotePos + 1);
+            File file = new File(CONSUMER_QUEUE_FOLDER.getAbsolutePath() + File.separator + topic + File.separator + nextFileOffset);
+            MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
+            this.fileQueue.push(mappedFile);
         }
 
     }
@@ -139,7 +147,7 @@ public class ConsumeQueue {
 
         // 记录保存到 map 中
         MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
-        ConsumeQueueFiles consumeQueueFiles = new ConsumeQueueFiles(mappedFile);
+        ConsumeQueueFiles consumeQueueFiles = new ConsumeQueueFiles(topic, mappedFile);
 
         this.mappedFileMap.put(topic, consumeQueueFiles);
     }
