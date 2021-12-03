@@ -40,9 +40,9 @@ public class TopicManager {
         if (consumeQueue == null) {
             consumeQueue = new ConsumeQueue();
             TOPIC_CONSUME_QUEUE_MAP.put(topic, consumeQueue);
-            log.info("topic {} add subscriber {} success", topic, consumeGroup);
+            log.info("Topic <{}> add ConsumeQueue <{}> success", topic, consumeGroup);
         } else {
-            log.warn("consumeGroup {} is already exists on topic {}", consumeGroup, topic);
+            log.warn("ConsumeQueue <{}> is already exists on Topic <{}>", consumeGroup, topic);
         }
     }
 
@@ -53,10 +53,10 @@ public class TopicManager {
      * @param topic 主题名称
      * @return 订阅了 {@param topic} 的所有消费组的队列
      */
-    public static ConsumeQueue getConsumeQueue(String topic, String consumeGroup) {
-        // 如果不存在改topic，则保存
+    public static ConsumeQueue getConsumeQueue(String topic) {
+        // 如果不存在该topic，则新增一个
         if (!TOPIC_CONSUME_QUEUE_MAP.containsKey(topic)) {
-            addSubscriber(topic, consumeGroup);
+            addNewTopic(topic);
         }
         return TOPIC_CONSUME_QUEUE_MAP.get(topic);
     }

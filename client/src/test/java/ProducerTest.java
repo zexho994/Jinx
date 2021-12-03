@@ -14,9 +14,8 @@ public class ProducerTest {
     }
 
     public static void startProducer1(int sleep) {
-        Producer producer = new Producer("127.0.0.1");
+        Producer producer = new Producer("group_1", "127.0.0.1");
         producer.start();
-        producer.registeredTopic("topic_1");
 
         Message message1 = new Message();
         message1.setTopic("topic_1");
@@ -33,9 +32,8 @@ public class ProducerTest {
     }
 
     public static void startProducer2(int sleep) {
-        Producer producer = new Producer("127.0.0.1");
+        Producer producer = new Producer("group_2", "127.0.0.1");
         producer.start();
-        producer.registeredTopic("topic_2");
 
         Message message2 = new Message();
         message2.setTopic("topic_2");

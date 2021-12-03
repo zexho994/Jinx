@@ -17,9 +17,7 @@ public enum MessageType {
     Pull_Message("pullMessage"),
 
     /////////// Producer ///////////////
-    Message("message"),
-    Registered_Topic("registeredTopic"),
-
+    Put_Message("message"),
     ;
 
     public final String type;

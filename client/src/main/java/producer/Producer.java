@@ -18,8 +18,10 @@ import remoting.RemotingService;
 public class Producer implements RemotingService {
 
     private final NettyRemotingClientImpl nettyRemotingClient;
+    private final String group;
 
-    public Producer(String host) {
+    public Producer(String group, String host) {
+        this.group = group;
         NettyClientConfig config = new NettyClientConfig(host);
         this.nettyRemotingClient = new NettyRemotingClientImpl(config);
     }
@@ -34,16 +36,9 @@ public class Producer implements RemotingService {
         this.nettyRemotingClient.shutdown();
     }
 
-    public void registeredTopic(String topic) {
-        Message message = new Message();
-        message.setTopic(topic);
-        message.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Producer.type);
-        message.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Registered_Topic.type);
-        this.sendMessage(message);
-    }
-
     @Override
     public void sendMessage(Message message) {
+        message.setConsumerGroup(this.group);
         try {
             this.sendMessageSync(message);
         } catch (InterruptedException e) {
@@ -54,7 +49,7 @@ public class Producer implements RemotingService {
     private void sendMessageSync(Message message) throws InterruptedException {
         log.info("SEND MESSAGE => {}", message);
         message.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Producer.type);
-        message.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Message.type);
+        message.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Put_Message.type);
 
         Channel channel = this.nettyRemotingClient.getChannel();
         if (!channel.isActive()) {

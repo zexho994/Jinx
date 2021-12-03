@@ -9,7 +9,6 @@ import lombok.extern.log4j.Log4j2;
 import netty.server.NettyServerHandler;
 import queue.MessageManager;
 import store.FlushModel;
-import topic.TopicManager;
 
 /**
  * @author Zexho
@@ -62,7 +61,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      */
     public void doProducerMessage(Message message) {
         MessageType messageType = MessageType.get(message.getProperty(PropertiesKeys.MESSAGE_TYPE));
-        if (messageType == MessageType.Message) {
+        if (messageType == MessageType.Put_Message) {
             messageManager.putMessage(message, FlushModel.SYNC);
         }
     }
@@ -76,7 +75,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     public void doConsumerMessage(Message message, ChannelHandlerContext ctx) {
         String topic = message.getTopic();
         String consumerGroup = message.getConsumerGroup();
-        Message pullMessage = messageManager.pullMessage(topic, consumerGroup);
+        Message pullMessage = messageManager.pullMessage(topic);
         if (pullMessage != null) {
             ctx.writeAndFlush(pullMessage);
         }

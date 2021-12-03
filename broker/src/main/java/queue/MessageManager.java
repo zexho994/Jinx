@@ -31,8 +31,8 @@ public class MessageManager {
      * Key : topic
      * Val : List<{@link ConsumeQueue}>
      */
-    public Message pullMessage(String topic, String consumerGroup) {
-        ConsumeQueue consumeQueues = TopicManager.getConsumeQueue(topic, consumerGroup);
+    public Message pullMessage(String topic) {
+        ConsumeQueue consumeQueues = TopicManager.getConsumeQueue(topic);
         return consumeQueues.pollMessage();
     }
 
@@ -46,7 +46,7 @@ public class MessageManager {
         // 获取主题的所有消费组，所有消费组队列添加此消息
         String topic = message.getTopic();
         // 获取主题的消费队列
-        ConsumeQueue consumeQueue = TopicManager.getConsumeQueue(topic, message.getConsumerGroup());
+        ConsumeQueue consumeQueue = TopicManager.getConsumeQueue(topic);
         // 保存消息到消费队列
         consumeQueue.putMessage(message);
     }
