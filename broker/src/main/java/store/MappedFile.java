@@ -20,7 +20,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MappedFile {
 
     private final File file;
-    private FileChannel randomAccessChannel;
+    private RandomAccessFile randomAccessFile;
+    private FileChannel accessChannel;
     private ByteBuffer byteBuffer;
     /**
      * 文件名
@@ -57,15 +58,16 @@ public class MappedFile {
 
         boolean initSuccess = false;
         try {
-            this.randomAccessChannel = new RandomAccessFile(file, "rw").getChannel();
+            this.randomAccessFile = new RandomAccessFile(file, "rw");
+            this.accessChannel = randomAccessFile.getChannel();
             this.byteBuffer = ByteBuffer.allocate(MemoryCapacity.MB);
             initSuccess = true;
         } catch (FileNotFoundException e) {
             log.error("Failed to create file " + file.getName(), e);
             throw e;
         } finally {
-            if (!initSuccess && this.randomAccessChannel != null) {
-                this.randomAccessChannel.close();
+            if (!initSuccess && this.accessChannel != null) {
+                this.accessChannel.close();
             }
         }
     }
@@ -79,17 +81,25 @@ public class MappedFile {
      * {@link MessageAppendResult#OK} 追加成功
      */
     public MessageAppendResult append(final byte[] data) throws IOException {
-        if (!this.checkRemainSize(data)) {
+        if (!this.checkRemainSize(data.length)) {
             return MessageAppendResult.INSUFFICIENT_SPACE;
         }
 
         this.byteBuffer.put(data);
         this.byteBuffer.flip();
-        this.randomAccessChannel.write(this.byteBuffer);
+        this.accessChannel.write(this.byteBuffer);
         this.byteBuffer.clear();
 
         this.wrotePos.getAndAdd(data.length);
 
+        return MessageAppendResult.OK;
+    }
+
+    public MessageAppendResult appendLong(final long n) throws IOException {
+        if (!checkRemainSize(Long.SIZE)) {
+            return MessageAppendResult.INSUFFICIENT_SPACE;
+        }
+        this.randomAccessFile.writeLong(n);
         return MessageAppendResult.OK;
     }
 
@@ -109,7 +119,7 @@ public class MappedFile {
      * @throws IOException
      */
     public void flush() throws IOException {
-        this.randomAccessChannel.force(false);
+        this.accessChannel.force(false);
     }
 
     public Queue<String> load() throws IOException {
@@ -125,12 +135,18 @@ public class MappedFile {
         return fileData;
     }
 
+    public long getLong(int offset) throws IOException {
+        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+        randomAccessFile.seek(offset * 8L);
+        return randomAccessFile.readLong();
+    }
+
     public String getFileName() {
         return this.fileName;
     }
 
-    public boolean checkRemainSize(byte[] data) {
-        int curSize = this.wrotePos.get() + data.length;
+    public boolean checkRemainSize(long size) {
+        long curSize = this.wrotePos.get() + size;
         return curSize <= this.fileSize;
     }
 

@@ -1,7 +1,6 @@
 package store;
 
 import lombok.extern.log4j.Log4j2;
-import utils.Json;
 
 import java.io.File;
 import java.io.IOException;
@@ -94,17 +93,14 @@ public class ConsumeQueue {
             ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
             MappedFile mappedFile = consumeQueueFiles.getLastFile();
 
-            ConsumeQueueData consumeQueueData = new ConsumeQueueData(offset);
-            byte[] data = Json.toJsonLine(consumeQueueData).getBytes();
-
-            MessageAppendResult appendResult = mappedFile.append(data);
+            MessageAppendResult appendResult = mappedFile.appendLong(offset);
             if (MessageAppendResult.OK == appendResult) {
                 mappedFile.flush();
             } else if (MessageAppendResult.INSUFFICIENT_SPACE == appendResult) {
                 log.info("ConsumeQueue INSUFFICIENT_SPACE");
                 consumeQueueFiles.createNewFile();
                 mappedFile = consumeQueueFiles.getLastFile();
-                mappedFile.append(data);
+                mappedFile.appendLong(offset);
                 mappedFile.flush();
             }
 
@@ -114,6 +110,11 @@ public class ConsumeQueue {
         } finally {
             lock.unlock();
         }
+    }
+
+    public long getCommitlogOffset(String topic, int seq) throws IOException {
+        ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
+        return consumeQueueFiles.getLastFile().getLong(seq);
     }
 
     static class ConsumeQueueData {

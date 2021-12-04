@@ -42,8 +42,17 @@ class ByteUtilTest {
     }
 
     @Test
+    public void test2() {
+
+    }
+
+    @Test
     void writeLong(long n, RandomAccessFile randomAccessFile) throws IOException {
         randomAccessFile.writeLong(n);
+    }
+
+    @Test
+    void writeLong() {
     }
 
     @Test
