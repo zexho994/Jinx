@@ -2,6 +2,7 @@ package store;
 
 import Message.Message;
 import lombok.extern.log4j.Log4j2;
+import utils.ArrayUtils;
 import utils.ByteUtil;
 
 import java.io.File;
@@ -113,23 +114,21 @@ public class Commitlog {
         lock.lock();
         try {
             int fileWriteOffset = this.getLastMappedFile().getWrotePos();
-
             byte[] data = ByteUtil.to(message);
             byte[] size = ByteUtil.to(data.length);
+            byte[] arr = ArrayUtils.merge(size, data);
 
-            MessageAppendResult appendResult1 = this.getLastMappedFile().append(size);
-            MessageAppendResult appendResult2 = this.getLastMappedFile().append(data);
+            MessageAppendResult appendResult = this.getLastMappedFile().append(arr);
             if (flushModel == FlushModel.SYNC) {
                 // 同步刷盘,在追加后立即执行flush
-                switch (appendResult2) {
+                switch (appendResult) {
                     case OK:
                         this.getLastMappedFile().flush();
                         break;
                     case INSUFFICIENT_SPACE:
                         this.createNewMappedFile();
                         fileWriteOffset = this.getLastMappedFile().getFromOffset();
-                        this.getLastMappedFile().append(size);
-                        this.getLastMappedFile().append(data);
+                        this.getLastMappedFile().append(arr);
                         this.getLastMappedFile().flush();
                         break;
                     default:
