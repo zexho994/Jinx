@@ -14,7 +14,4 @@ class CommitlogTest {
         commitlog.putMessage(message, FlushModel.SYNC);
     }
 
-    @Test
-    void getMessage() {
-    }
 }

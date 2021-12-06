@@ -78,9 +78,10 @@ public class BrokerRemotingHandler extends NettyServerHandler {
         String topic = message.getTopic();
 
         try {
-            Message pullMessage = consumerManager.pullMessage(topic, message.getConsumerGroup());
-            if (pullMessage != null) {
+            try {
+                Message pullMessage = consumerManager.pullMessage(topic, message.getConsumerGroup());
                 ctx.writeAndFlush(pullMessage);
+            } catch (Exception ignored) {
             }
         } catch (Exception e) {
             e.printStackTrace();

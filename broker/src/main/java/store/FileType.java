@@ -2,7 +2,6 @@ package store;
 
 import common.MemoryCapacity;
 
-import javax.swing.text.JTextComponent;
 import java.io.File;
 
 /**
@@ -14,12 +13,12 @@ public enum FileType {
     /**
      * {@link Commitlog}
      */
-    COMMITLOG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator, MemoryCapacity.KB),
+    COMMITLOG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator, MemoryCapacity.GB),
 
     /**
      * {@link ConsumeQueue}
      */
-    CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator, MemoryCapacity.KB / 5),
+    CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator, MemoryCapacity.KB),
 
     /**
      * {@link ConsumeOffset}
