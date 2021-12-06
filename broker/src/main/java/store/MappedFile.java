@@ -1,7 +1,9 @@
 package store;
 
+import Message.Message;
 import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
+import utils.ByteUtil;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -27,6 +29,7 @@ public class MappedFile {
      * 文件名
      */
     private final String fileName;
+    private final int fromOffset;
     /**
      * 文件大小
      */
@@ -48,6 +51,7 @@ public class MappedFile {
         this.fileType = fileType;
         this.file = file;
         this.fileName = file.getName();
+        this.fromOffset = Integer.parseInt(fileName);
         this.wrotePos = new AtomicInteger(0);
         this.fileSize = fileType.fileSize;
         init();
@@ -95,11 +99,21 @@ public class MappedFile {
         return MessageAppendResult.OK;
     }
 
+    public MessageAppendResult appendInt(final int n) throws IOException {
+        if (!checkRemainSize(Integer.SIZE)) {
+            return MessageAppendResult.INSUFFICIENT_SPACE;
+        }
+        this.randomAccessFile.writeInt(n);
+        this.wrotePos.getAndAdd(Integer.SIZE);
+        return MessageAppendResult.OK;
+    }
+
     public MessageAppendResult appendLong(final long n) throws IOException {
         if (!checkRemainSize(Long.SIZE)) {
             return MessageAppendResult.INSUFFICIENT_SPACE;
         }
         this.randomAccessFile.writeLong(n);
+        this.wrotePos.getAndAdd(Long.SIZE);
         return MessageAppendResult.OK;
     }
 
@@ -141,13 +155,30 @@ public class MappedFile {
         return randomAccessFile.readLong();
     }
 
+    public int getInt(int offset) throws IOException {
+        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+        randomAccessFile.seek(offset);
+        return randomAccessFile.readInt();
+    }
+
+    public Message loadMessage(int offset, int size) throws IOException {
+        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+        randomAccessFile.seek(offset);
+        byte[] b = new byte[size];
+        randomAccessFile.read(b);
+        return ByteUtil.to(b, Message.class);
+    }
+
     public String getFileName() {
         return this.fileName;
     }
 
+    public int getFromOffset() {
+        return this.fromOffset;
+    }
+
     public boolean checkRemainSize(long size) {
-        long curSize = this.wrotePos.get() + size;
-        return curSize <= this.fileSize;
+        return this.wrotePos.get() + size <= this.fileSize;
     }
 
     public int getWrotePos() {

@@ -3,6 +3,7 @@ package Message;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -94,5 +95,21 @@ public class Message implements Serializable {
                 ", properties=" + properties +
                 ", body=" + body +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Message)) return false;
+        Message message = (Message) o;
+        return Objects.equals(getTransactionId(), message.getTransactionId()) && Objects.equals(getTopic(),
+                message.getTopic()) && Objects.equals(getConsumerGroup(),
+                message.getConsumerGroup()) && Objects.equals(properties, message.properties)
+                && Objects.equals(getBody(), message.getBody());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getTransactionId(), getTopic(), getConsumerGroup(), properties, getBody());
     }
 }

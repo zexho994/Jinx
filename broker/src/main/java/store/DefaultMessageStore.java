@@ -55,11 +55,8 @@ public class DefaultMessageStore implements MessageStore {
             return;
         }
 
-        // message -> inner message
-        InnerMessage innerMessage = new InnerMessage(message);
-
         // 交给commitlog进行存储
-        CommitPutMessageResult commitlogPutResult = this.commitlog.putMessage(innerMessage, flushModel);
+        CommitPutMessageResult commitlogPutResult = this.commitlog.putMessage(message, flushModel);
 
         // 交给 consumeQueue 进行存储
         if (commitlogPutResult.getResult() == PutMessageResult.OK) {

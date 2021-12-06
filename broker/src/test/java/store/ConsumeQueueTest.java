@@ -32,4 +32,9 @@ class ConsumeQueueTest {
         long l4 = consumeQueue.getCommitlogOffset("test_a", 3);
         assert l4 == 300;
     }
+
+    @Test
+    void testGetMessage() throws IOException {
+        consumeQueue.getMessage("test_a", 0);
+    }
 }

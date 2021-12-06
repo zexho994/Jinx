@@ -1,7 +1,8 @@
 package store;
 
+import Message.Message;
 import lombok.extern.log4j.Log4j2;
-import utils.Json;
+import utils.ByteUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -102,29 +103,32 @@ public class Commitlog {
     /**
      * 保存消息到 Commitlog 目录下中
      *
-     * @param innerMessage 要保存的对象
-     * @param flushModel   消息的刷盘类型
+     * @param message    要保存的对象
+     * @param flushModel 消息的刷盘类型
      * @return 执行结果, 有以下几种：
      * {@link PutMessageResult#OK} 成功
      * {@link PutMessageResult#FAILURE} 某种原因导致失败
      */
-    public CommitPutMessageResult putMessage(final InnerMessage innerMessage, final FlushModel flushModel) {
+    public CommitPutMessageResult putMessage(final Message message, final FlushModel flushModel) {
         lock.lock();
         try {
             int fileWriteOffset = this.getLastMappedFile().getWrotePos();
-            byte[] data = Json.toJsonLine(innerMessage).getBytes();
 
+            byte[] data = ByteUtil.to(message);
+            byte[] size = ByteUtil.to(data.length);
 
-            MessageAppendResult appendResult = this.getLastMappedFile().append(data);
+            MessageAppendResult appendResult1 = this.getLastMappedFile().append(size);
+            MessageAppendResult appendResult2 = this.getLastMappedFile().append(data);
             if (flushModel == FlushModel.SYNC) {
                 // 同步刷盘,在追加后立即执行flush
-                switch (appendResult) {
+                switch (appendResult2) {
                     case OK:
                         this.getLastMappedFile().flush();
                         break;
                     case INSUFFICIENT_SPACE:
                         this.createNewMappedFile();
-                        fileWriteOffset = 0;
+                        fileWriteOffset = this.getLastMappedFile().getFromOffset();
+                        this.getLastMappedFile().append(size);
                         this.getLastMappedFile().append(data);
                         this.getLastMappedFile().flush();
                         break;
@@ -136,13 +140,27 @@ public class Commitlog {
                 // 异步刷盘
             }
 
-            return CommitPutMessageResult.ok(fileWriteOffset, innerMessage.toString().getBytes().length);
+            return CommitPutMessageResult.ok(fileWriteOffset, data.length);
         } catch (IOException e) {
-            log.error("Failed to store message " + innerMessage, e);
+            log.error("Failed to store message " + message, e);
             return CommitPutMessageResult.error();
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * 获取消息
+     *
+     * @param offset 在文件中的偏移量
+     * @return
+     */
+    public Message getMessage(long offset) throws IOException {
+        long fileSeq = offset / FileType.COMMITLOG.fileSize;
+        MappedFile mappedFile = this.mappedFileStack.get((int) fileSeq);
+        long pos = offset - mappedFile.getFromOffset();
+        int anInt = mappedFile.getInt((int) pos);
+        return mappedFile.loadMessage((int) (offset + 4), anInt);
     }
 
     /**

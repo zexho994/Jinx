@@ -1,5 +1,6 @@
 package store;
 
+import Message.Message;
 import lombok.extern.log4j.Log4j2;
 
 import java.io.File;
@@ -32,6 +33,7 @@ public class ConsumeQueue {
 
     public static File CONSUMER_QUEUE_FOLDER;
     private final Map<String, ConsumeQueueFiles> mappedFileMap = new ConcurrentHashMap<>();
+    private final Commitlog commitlog = Commitlog.getInstance();
 
     private static class ConsumeQueueFiles {
 
@@ -83,24 +85,24 @@ public class ConsumeQueue {
     /**
      * 存储消息到 ConsumeQueue 文件中
      *
-     * @param topic  消息主题
-     * @param offset 消息在commit中的偏移量,总偏移量
+     * @param topic           消息主题
+     * @param commitlogOffset 消息在commit中的偏移量,总偏移量
      */
-    public PutMessageResult putMessage(String topic, long offset) {
+    public PutMessageResult putMessage(String topic, long commitlogOffset) {
         lock.lock();
         try {
             ensureFileExist(topic);
             ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
             MappedFile mappedFile = consumeQueueFiles.getLastFile();
 
-            MessageAppendResult appendResult = mappedFile.appendLong(offset);
+            MessageAppendResult appendResult = mappedFile.appendLong(commitlogOffset);
             if (MessageAppendResult.OK == appendResult) {
                 mappedFile.flush();
             } else if (MessageAppendResult.INSUFFICIENT_SPACE == appendResult) {
                 log.info("ConsumeQueue INSUFFICIENT_SPACE");
                 consumeQueueFiles.createNewFile();
                 mappedFile = consumeQueueFiles.getLastFile();
-                mappedFile.appendLong(offset);
+                mappedFile.appendLong(commitlogOffset);
                 mappedFile.flush();
             }
 
@@ -112,17 +114,22 @@ public class ConsumeQueue {
         }
     }
 
+    /**
+     * 获取消息
+     *
+     * @param topic
+     * @param n
+     */
+    public void getMessage(String topic, int n) throws IOException {
+        ConsumeQueueFiles consumeQueueFiles = this.mappedFileMap.get(topic);
+        MappedFile lastFile = consumeQueueFiles.getLastFile();
+        long commitlogOffset = lastFile.getLong(n);
+        Message message = commitlog.getMessage(commitlogOffset);
+    }
+
     public long getCommitlogOffset(String topic, int seq) throws IOException {
         ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
         return consumeQueueFiles.getLastFile().getLong(seq);
-    }
-
-    static class ConsumeQueueData {
-        public final long offset;
-
-        public ConsumeQueueData(long offset) {
-            this.offset = offset;
-        }
     }
 
     /**
