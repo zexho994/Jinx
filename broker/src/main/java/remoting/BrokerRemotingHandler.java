@@ -2,6 +2,7 @@ package remoting;
 
 import Message.Message;
 import Message.PropertiesKeys;
+import consumer.ConsumerManager;
 import enums.ClientType;
 import enums.MessageType;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,6 +19,7 @@ import store.FlushModel;
 public class BrokerRemotingHandler extends NettyServerHandler {
 
     private final MessageManager messageManager = MessageManager.getInstance();
+    private final ConsumerManager consumerManager = ConsumerManager.getInstance();
 
     /**
      * 有新的producer或者consumer接入
@@ -74,10 +76,16 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      */
     public void doConsumerMessage(Message message, ChannelHandlerContext ctx) {
         String topic = message.getTopic();
-        Message pullMessage = messageManager.pullMessage(topic);
-        if (pullMessage != null) {
-            ctx.writeAndFlush(pullMessage);
+
+        try {
+            Message pullMessage = consumerManager.pullMessage(topic, message.getConsumerGroup());
+            if (pullMessage != null) {
+                ctx.writeAndFlush(pullMessage);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
     }
 
 }

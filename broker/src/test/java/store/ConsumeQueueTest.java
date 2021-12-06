@@ -1,5 +1,6 @@
 package store;
 
+import Message.Message;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -35,6 +36,6 @@ class ConsumeQueueTest {
 
     @Test
     void testGetMessage() throws IOException {
-        consumeQueue.getMessage("test_a", 0);
+        Message test_a = consumeQueue.getMessage("test_a", 0);
     }
 }

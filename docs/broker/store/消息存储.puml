@@ -9,13 +9,13 @@ participant MessageManager
 participant DefaultMessageStore
 participant Commitlog
 participant ConsumeQueue
-participant commitlog
+participant ConsumeOffset
 end box
 
 participant consumer
 
 producer -> BrokerRemoting ++: send message
-BrokerRemoting -> MessageManager ++: doProduc()
+BrokerRemoting -> MessageManager ++: doProduce()
 MessageManager -> DefaultMessageStore ++: putMessage()
 
 group commitlog持久化
@@ -34,4 +34,21 @@ MessageManager -> MessageManager : 存储消息到消息队列
 return ok
 return success
 
+newpage
+consumer ->  BrokerRemoting ++: pull message
+BrokerRemoting -> MessageManager ++: : pullMessage
+MessageManager -> ConsumeOffset ++: get consumeOffset
+ConsumeOffset -> ConsumeOffset : 获取对应 consumeOffset 文件
+ConsumeOffset -> ConsumeOffset : 获取消费offset
+return 消费组的消费offset
+MessageManager -> ConsumeQueue ++: 获取 commitlog offset
+ConsumeQueue -> ConsumeQueue : 根据topic找到消费队列
+ConsumeQueue -> ConsumeQueue : 根据 consumeOffset 找到 commitlog offset
+return commitlog offset
+MessageManager -> Commitlog ++: 获取消息
+return message
+MessageManager -> ConsumeOffset ++: 更新消费组的消费位置
+return success
+return message
+return message
 @enduml

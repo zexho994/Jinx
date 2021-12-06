@@ -16,4 +16,9 @@ public enum MessageAppendResult {
      */
     INSUFFICIENT_SPACE,
 
+    /**
+     * io操作错误
+     */
+    IO_EXCEPTION,
+
 }

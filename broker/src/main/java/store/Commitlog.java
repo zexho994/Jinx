@@ -160,7 +160,12 @@ public class Commitlog {
         MappedFile mappedFile = this.mappedFileStack.get((int) fileSeq);
         long pos = offset - mappedFile.getFromOffset();
         int anInt = mappedFile.getInt((int) pos);
-        return mappedFile.loadMessage((int) (offset + 4), anInt);
+
+        try {
+            return mappedFile.loadMessage((int) (offset + 4), anInt);
+        } catch (IOException e) {
+            throw new IOException("load message error, offset = " + offset, e);
+        }
     }
 
     /**

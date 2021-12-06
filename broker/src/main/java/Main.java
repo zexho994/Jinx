@@ -1,6 +1,7 @@
 import lombok.extern.log4j.Log4j2;
 import remoting.BrokerRemotingService;
 import store.Commitlog;
+import store.ConsumeOffset;
 import store.ConsumeQueue;
 
 /**
@@ -30,7 +31,12 @@ public class Main {
 
         // 初始化 ConsumerQueue
         if (!ConsumeQueue.getInstance().init()) {
-            log.error("Failed to init commitlog");
+            log.error("Failed to init consumeQueue");
+            return false;
+        }
+
+        if (!ConsumeOffset.getInstance().init()) {
+            log.error("Failed to init consumeOffset");
             return false;
         }
 

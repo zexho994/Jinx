@@ -51,7 +51,11 @@ public class MappedFile {
         this.fileType = fileType;
         this.file = file;
         this.fileName = file.getName();
-        this.fromOffset = Integer.parseInt(fileName);
+        if (fileType == FileType.COMMITLOG || fileType == FileType.CONSUME_QUEUE) {
+            this.fromOffset = Integer.parseInt(fileName);
+        } else {
+            this.fromOffset = 0;
+        }
         this.wrotePos = new AtomicInteger(0);
         this.fileSize = fileType.fileSize;
         init();
@@ -108,11 +112,18 @@ public class MappedFile {
         return MessageAppendResult.OK;
     }
 
-    public MessageAppendResult appendLong(final long n) throws IOException {
+    public MessageAppendResult appendLong(final long n) {
         if (!checkRemainSize(Long.SIZE)) {
             return MessageAppendResult.INSUFFICIENT_SPACE;
         }
-        this.randomAccessFile.writeLong(n);
+
+        try {
+            this.randomAccessFile.writeLong(n);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return MessageAppendResult.IO_EXCEPTION;
+        }
+
         this.wrotePos.getAndAdd(Long.SIZE);
         return MessageAppendResult.OK;
     }
@@ -149,9 +160,9 @@ public class MappedFile {
         return fileData;
     }
 
-    public long getLong(int offset) throws IOException {
+    public long getLong(long offset) throws IOException {
         RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-        randomAccessFile.seek(offset * 8L);
+        randomAccessFile.seek(offset);
         return randomAccessFile.readLong();
     }
 
@@ -159,6 +170,12 @@ public class MappedFile {
         RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
         randomAccessFile.seek(offset);
         return randomAccessFile.readInt();
+    }
+
+    public void updateInt(int offset, int n) throws IOException {
+        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+        randomAccessFile.seek(offset);
+        randomAccessFile.writeInt(n);
     }
 
     public Message loadMessage(int offset, int size) throws IOException {

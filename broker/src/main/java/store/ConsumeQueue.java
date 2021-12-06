@@ -62,7 +62,6 @@ public class ConsumeQueue {
             MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
             this.fileQueue.push(mappedFile);
         }
-
     }
 
     public boolean init() {
@@ -118,18 +117,18 @@ public class ConsumeQueue {
      * 获取消息
      *
      * @param topic
-     * @param n
+     * @param seq
      */
-    public void getMessage(String topic, int n) throws IOException {
+    public Message getMessage(String topic, int seq) throws IOException {
         ConsumeQueueFiles consumeQueueFiles = this.mappedFileMap.get(topic);
         MappedFile lastFile = consumeQueueFiles.getLastFile();
-        long commitlogOffset = lastFile.getLong(n);
-        Message message = commitlog.getMessage(commitlogOffset);
+        long commitlogOffset = lastFile.getLong(seq * 8L);
+        return commitlog.getMessage(commitlogOffset);
     }
 
     public long getCommitlogOffset(String topic, int seq) throws IOException {
         ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
-        return consumeQueueFiles.getLastFile().getLong(seq);
+        return consumeQueueFiles.getLastFile().getLong(seq * 8L);
     }
 
     /**

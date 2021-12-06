@@ -2,6 +2,7 @@ package store;
 
 import common.MemoryCapacity;
 
+import javax.swing.text.JTextComponent;
 import java.io.File;
 
 /**
@@ -19,6 +20,11 @@ public enum FileType {
      * {@link ConsumeQueue}
      */
     CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator, MemoryCapacity.KB / 5),
+
+    /**
+     * {@link ConsumeOffset}
+     */
+    CONSUME_OFFSET(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeOffset" + File.separator, MemoryCapacity.KB),
     ;
 
     final String basePath;
