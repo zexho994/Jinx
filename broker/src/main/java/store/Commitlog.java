@@ -113,7 +113,7 @@ public class Commitlog {
     public CommitPutMessageResult putMessage(final Message message, final FlushModel flushModel) {
         lock.lock();
         try {
-            int fileWriteOffset = this.getLastMappedFile().getWrotePos();
+            int fileWriteOffset = this.getLastMappedFile().getFromOffset() + this.getLastMappedFile().getWrotePos();
             byte[] data = ByteUtil.to(message);
             byte[] size = ByteUtil.to(data.length);
             byte[] arr = ArrayUtils.merge(size, data);
@@ -155,16 +155,27 @@ public class Commitlog {
      * @return
      */
     public Message getMessage(long offset) throws IOException {
-        long fileSeq = offset / FileType.COMMITLOG.fileSize;
-        MappedFile mappedFile = this.mappedFileStack.get((int) fileSeq);
+        MappedFile mappedFile = this.getFileByOffset(offset);
         long pos = offset - mappedFile.getFromOffset();
-        int anInt = mappedFile.getInt((int) pos);
+        int messageSize = mappedFile.getInt((int) pos);
 
         try {
-            return mappedFile.loadMessage((int) (offset + 4), anInt);
+            return mappedFile.loadMessage((int) (pos + 4), messageSize);
         } catch (IOException e) {
             throw new IOException("load message error, offset = " + offset, e);
         }
+    }
+
+    private MappedFile getFileByOffset(long offset) {
+        for (int i = this.mappedFileStack.size() - 1; i >= 0; i--) {
+            MappedFile mappedFile = this.mappedFileStack.get(i);
+            if (mappedFile.getFromOffset() <= offset) {
+                return mappedFile;
+            }
+        }
+
+        log.error("get file by offset fail, offset = " + offset);
+        return null;
     }
 
     /**

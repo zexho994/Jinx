@@ -13,7 +13,7 @@ public enum FileType {
     /**
      * {@link Commitlog}
      */
-    COMMITLOG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator, MemoryCapacity.GB),
+    COMMITLOG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator, MemoryCapacity.KB/2),
 
     /**
      * {@link ConsumeQueue}

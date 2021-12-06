@@ -92,6 +92,7 @@ public class MappedFile {
         if (!this.checkRemainSize(data.length)) {
             return MessageAppendResult.INSUFFICIENT_SPACE;
         }
+        log.info("append data to mappedFile,fileName = {},wrotePos = {},size = {}", this.fileName, this.wrotePos, data.length);
 
         this.byteBuffer.put(data);
         this.byteBuffer.flip();
