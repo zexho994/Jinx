@@ -13,17 +13,17 @@ public enum FileType {
     /**
      * {@link Commitlog}
      */
-    COMMITLOG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator, MemoryCapacity.KB/2),
+    COMMITLOG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator, 64 * MemoryCapacity.KB),
 
     /**
      * {@link ConsumeQueue}
      */
-    CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator, MemoryCapacity.KB),
+    CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator,MemoryCapacity.KB / 10),
 
     /**
      * {@link ConsumeOffset}
      */
-    CONSUME_OFFSET(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeOffset" + File.separator, MemoryCapacity.KB),
+    CONSUME_OFFSET(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeOffset" + File.separator, MemoryCapacity.B * 8),
     ;
 
     final String basePath;

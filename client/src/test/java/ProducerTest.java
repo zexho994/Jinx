@@ -2,6 +2,8 @@
 import Message.Message;
 import producer.Producer;
 
+import java.util.UUID;
+
 /**
  * @author Zexho
  * @date 2021/11/16 8:59 上午
@@ -21,6 +23,7 @@ public class ProducerTest {
         message1.setTopic("topic_1");
         int n = 0;
         while (true) {
+            message1.setTransactionId(UUID.randomUUID().toString());
             message1.setBody(++n);
             producer.sendMessage(message1);
             try {
@@ -39,6 +42,7 @@ public class ProducerTest {
         message2.setTopic("topic_2");
         int n = 0;
         while (true) {
+            message2.setTransactionId(UUID.randomUUID().toString());
             message2.setBody(++n);
             producer.sendMessage(message2);
             try {

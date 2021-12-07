@@ -10,7 +10,7 @@ class ConsumeQueueTest {
     ConsumeQueue consumeQueue = ConsumeQueue.getInstance();
 
     @Test
-    void test() throws IOException {
+    void test() throws Exception {
         ConsumeQueueTest consumeQueueTest = new ConsumeQueueTest();
         consumeQueueTest.putMessage();
         consumeQueueTest.getMessage();
@@ -23,7 +23,7 @@ class ConsumeQueueTest {
         consumeQueue.putMessage("test_a", 300);
     }
 
-    void getMessage() throws IOException {
+    void getMessage() throws Exception {
         long l1 = consumeQueue.getCommitlogOffset("test_a", 0);
         assert l1 == 0;
         long l2 = consumeQueue.getCommitlogOffset("test_a", 1);

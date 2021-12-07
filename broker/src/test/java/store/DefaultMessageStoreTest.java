@@ -3,7 +3,6 @@ package store;
 import Message.Message;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.UUID;
 
 class DefaultMessageStoreTest {
@@ -18,7 +17,7 @@ class DefaultMessageStoreTest {
     }
 
     @Test
-    public void test() throws IOException {
+    public void test() throws Exception {
         DefaultMessageStoreTest defaultMessageStoreTest = new DefaultMessageStoreTest();
 
         Message message1 = new Message();
@@ -58,7 +57,7 @@ class DefaultMessageStoreTest {
         defaultMessageStore.putMessage(message);
     }
 
-    Message getMessage(int seq) throws IOException {
+    Message getMessage(int seq) throws Exception {
         long commitlogOffset = consumeQueue.getCommitlogOffset("topic 1", seq);
         return commitlog.getMessage(commitlogOffset);
     }

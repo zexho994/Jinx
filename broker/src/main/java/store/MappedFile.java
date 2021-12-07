@@ -21,6 +21,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Log4j2
 public class MappedFile {
 
+    public static final int INT_LENGTH = 4;
+    public static final int LONG_LENGTH = 8;
+
     private final File file;
     private RandomAccessFile randomAccessFile;
     private FileChannel accessChannel;
@@ -105,27 +108,27 @@ public class MappedFile {
     }
 
     public MessageAppendResult appendInt(final int n) throws IOException {
-        if (!checkRemainSize(Integer.SIZE)) {
+        if (!checkRemainSize(INT_LENGTH)) {
             return MessageAppendResult.INSUFFICIENT_SPACE;
         }
         this.randomAccessFile.writeInt(n);
-        this.wrotePos.getAndAdd(Integer.SIZE);
+        this.wrotePos.getAndAdd(INT_LENGTH);
         return MessageAppendResult.OK;
     }
 
     public MessageAppendResult appendLong(final long n) {
-        if (!checkRemainSize(Long.SIZE)) {
+        if (!checkRemainSize(LONG_LENGTH)) {
             return MessageAppendResult.INSUFFICIENT_SPACE;
         }
 
         try {
             this.randomAccessFile.writeLong(n);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("write long error. ", e);
             return MessageAppendResult.IO_EXCEPTION;
         }
 
-        this.wrotePos.getAndAdd(Long.SIZE);
+        this.wrotePos.getAndAdd(LONG_LENGTH);
         return MessageAppendResult.OK;
     }
 

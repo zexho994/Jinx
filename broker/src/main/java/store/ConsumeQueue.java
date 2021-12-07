@@ -55,12 +55,31 @@ public class ConsumeQueue {
          */
         public void createNewFile() throws IOException {
             MappedFile lastFile = this.getLastFile();
-            String fileName = lastFile.getFileName();
+            int fromOffset = lastFile.getFromOffset();
             int wrotePos = lastFile.getWrotePos();
-            String nextFileOffset = String.valueOf(Integer.parseInt(fileName) + wrotePos + 1);
+            String nextFileOffset = String.valueOf(fromOffset + wrotePos);
             File file = new File(CONSUMER_QUEUE_FOLDER.getAbsolutePath() + File.separator + topic + File.separator + nextFileOffset);
             MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
             this.fileQueue.push(mappedFile);
+        }
+
+        /**
+         * 根据偏移量找到对应存储文件
+         *
+         * @param offset 要查找消息的总偏移量
+         * @return
+         */
+        public MappedFile getFileByOffset(long offset) throws Exception {
+            if (offset < 0) {
+                throw new Exception("offset must be positive");
+            }
+            for (int i = fileQueue.size() - 1; i >= 0; i--) {
+                MappedFile mappedFile = fileQueue.get(i);
+                if (mappedFile.getFromOffset() <= offset) {
+                    return mappedFile;
+                }
+            }
+            throw new Exception("Get file by offset fail, offset = " + offset);
         }
     }
 
@@ -91,6 +110,7 @@ public class ConsumeQueue {
         lock.lock();
         try {
             ensureFileExist(topic);
+
             ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
             MappedFile mappedFile = consumeQueueFiles.getLastFile();
 
@@ -98,7 +118,7 @@ public class ConsumeQueue {
             if (MessageAppendResult.OK == appendResult) {
                 mappedFile.flush();
             } else if (MessageAppendResult.INSUFFICIENT_SPACE == appendResult) {
-                log.info("ConsumeQueue INSUFFICIENT_SPACE");
+                log.warn("ConsumeQueue INSUFFICIENT_SPACE");
                 consumeQueueFiles.createNewFile();
                 mappedFile = consumeQueueFiles.getLastFile();
                 mappedFile.appendLong(commitlogOffset);
@@ -120,15 +140,29 @@ public class ConsumeQueue {
      * @param seq
      */
     public Message getMessage(String topic, int seq) throws IOException {
+        ensureFileExist(topic);
+
         ConsumeQueueFiles consumeQueueFiles = this.mappedFileMap.get(topic);
         MappedFile lastFile = consumeQueueFiles.getLastFile();
         long commitlogOffset = lastFile.getLong(seq * 8L);
         return commitlog.getMessage(commitlogOffset);
     }
 
-    public long getCommitlogOffset(String topic, int seq) throws IOException {
+    /**
+     * 获取消息在 commitlog 文件中总偏移值 offset
+     *
+     * @param topic 消息主题
+     * @param seq   消费序号
+     * @return
+     * @throws Exception
+     */
+    public long getCommitlogOffset(String topic, int seq) throws Exception {
+        ensureFileExist(topic);
+
         ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
-        return consumeQueueFiles.getLastFile().getLong(seq * 8L);
+        MappedFile mappedFile = consumeQueueFiles.getFileByOffset(seq * 8L);
+
+        return mappedFile.getLong((seq * 8L) - mappedFile.getFromOffset());
     }
 
     /**
@@ -141,17 +175,25 @@ public class ConsumeQueue {
         if (mappedFileMap.containsKey(topic)) {
             return;
         }
-        // 创建文件
-        File topicFolder = new File(FileType.CONSUME_QUEUE.basePath + topic);
-        topicFolder.mkdirs();
-        File file = new File(topicFolder.getAbsolutePath() + File.separator + "0");
-        file.createNewFile();
 
-        // 记录保存到 map 中
-        MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
-        ConsumeQueueFiles consumeQueueFiles = new ConsumeQueueFiles(topic, mappedFile);
+        this.lock.lock();
+        try {
+            if (mappedFileMap.containsKey(topic)) {
+                return;
+            }
+            // 创建文件
+            File topicFolder = new File(FileType.CONSUME_QUEUE.basePath + topic);
+            topicFolder.mkdirs();
+            File file = new File(topicFolder.getAbsolutePath() + File.separator + "0");
+            file.createNewFile();
 
-        this.mappedFileMap.put(topic, consumeQueueFiles);
+            // 记录保存到 map 中
+            MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
+            ConsumeQueueFiles consumeQueueFiles = new ConsumeQueueFiles(topic, mappedFile);
+            this.mappedFileMap.put(topic, consumeQueueFiles);
+        } finally {
+            this.lock.unlock();
+        }
     }
 
 }

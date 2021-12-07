@@ -62,7 +62,7 @@ public class DefaultMessageStore implements MessageStore {
         if (commitlogPutResult.getResult() == PutMessageResult.OK) {
             PutMessageResult putMessageResult = this.consumeQueue.putMessage(message.getTopic(), commitlogPutResult.getOffset());
         } else if (commitlogPutResult.getResult() == PutMessageResult.FAILURE) {
-            log.error("");
+            log.error("Failed to put message to consumeQueue, topic = {}, commit offset = {}", message.getTopic(), commitlogPutResult.getOffset());
         }
 
     }

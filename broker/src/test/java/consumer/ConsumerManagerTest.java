@@ -52,4 +52,12 @@ class ConsumerManagerTest {
         Assertions.assertEquals(msgId4, message4.getTransactionId());
     }
 
+    @Test
+    void testPullMessage() throws Exception {
+        String topic = "Topic_MessageOrderingTest";
+        String group = "Group_MessageOrderingTest";
+        while (true) {
+            this.consumerManager.pullMessage(topic, group);
+        }
+    }
 }

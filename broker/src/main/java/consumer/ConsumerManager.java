@@ -39,6 +39,7 @@ public class ConsumerManager {
      * @return 未消费的消息
      */
     public Message pullMessage(String topic, String consumeGroup) throws Exception {
+        // 获取group的消费序号
         int consumeQueueSeq;
         try {
             consumeQueueSeq = consumeOffset.getOffset(topic, consumeGroup);
@@ -46,6 +47,7 @@ public class ConsumerManager {
             throw new Exception("get consume offset error. topic = " + topic + ", consumeGroup = " + consumeGroup, e);
         }
 
+        // 获取commitlog文件偏移量
         long commitlogOffset;
         try {
             commitlogOffset = consumeQueue.getCommitlogOffset(topic, consumeQueueSeq);
@@ -53,6 +55,7 @@ public class ConsumerManager {
             throw new Exception("get commitlog offset error,topic = " + topic + ", consumeQueueSeq = " + consumeQueueSeq, e);
         }
 
+        // 获取消息数据
         Message message;
         try {
             message = commitlog.getMessage(commitlogOffset);
@@ -60,6 +63,7 @@ public class ConsumerManager {
             throw new Exception("get message error,commitlogOffset = " + commitlogOffset, e);
         }
 
+        // 如果获取消息成功，消费序号++
         if (message != null) {
             consumeOffset.incOffset(topic, consumeGroup);
         }
