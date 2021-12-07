@@ -8,8 +8,8 @@ import enums.MessageType;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 import netty.server.NettyServerHandler;
-import queue.MessageManager;
-import store.FlushModel;
+import producer.ProducerManager;
+import store.constant.FlushModel;
 
 /**
  * @author Zexho
@@ -18,8 +18,8 @@ import store.FlushModel;
 @Log4j2
 public class BrokerRemotingHandler extends NettyServerHandler {
 
-    private final MessageManager messageManager = MessageManager.getInstance();
     private final ConsumerManager consumerManager = ConsumerManager.getInstance();
+    private final ProducerManager producerManager = ProducerManager.getInstance();
 
     /**
      * 有新的producer或者consumer接入
@@ -64,7 +64,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     public void doProducerMessage(Message message) {
         MessageType messageType = MessageType.get(message.getProperty(PropertiesKeys.MESSAGE_TYPE));
         if (messageType == MessageType.Put_Message) {
-            messageManager.putMessage(message, FlushModel.SYNC);
+            producerManager.putMessage(message, FlushModel.SYNC);
         }
     }
 

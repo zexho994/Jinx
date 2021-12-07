@@ -1,6 +1,8 @@
-package store;
+package store.consumequeue;
 
 import lombok.extern.log4j.Log4j2;
+import store.mappedfile.MappedFile;
+import store.constant.FileType;
 
 import java.io.File;
 import java.io.IOException;

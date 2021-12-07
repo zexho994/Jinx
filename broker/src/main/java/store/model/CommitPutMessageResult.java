@@ -1,6 +1,7 @@
-package store;
+package store.model;
 
 import lombok.Data;
+import store.constant.PutMessageResult;
 
 /**
  * @author Zexho

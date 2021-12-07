@@ -1,8 +1,8 @@
 import lombok.extern.log4j.Log4j2;
 import remoting.BrokerRemotingService;
-import store.Commitlog;
-import store.ConsumeOffset;
-import store.ConsumeQueue;
+import store.commitlog.Commitlog;
+import store.consumequeue.ConsumeOffset;
+import store.consumequeue.ConsumeQueue;
 
 /**
  * @author Zexho

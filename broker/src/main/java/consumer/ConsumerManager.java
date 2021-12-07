@@ -1,9 +1,9 @@
 package consumer;
 
 import Message.Message;
-import store.Commitlog;
-import store.ConsumeOffset;
-import store.ConsumeQueue;
+import store.commitlog.Commitlog;
+import store.consumequeue.ConsumeOffset;
+import store.consumequeue.ConsumeQueue;
 
 import java.io.IOException;
 

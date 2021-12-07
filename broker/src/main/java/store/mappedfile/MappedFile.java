@@ -1,8 +1,10 @@
-package store;
+package store.mappedfile;
 
 import Message.Message;
 import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
+import store.constant.FileType;
+import store.constant.MessageAppendResult;
 import utils.ByteUtil;
 
 import java.io.*;

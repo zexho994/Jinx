@@ -2,6 +2,8 @@ package store;
 
 import Message.Message;
 import org.junit.jupiter.api.Test;
+import store.commitlog.Commitlog;
+import store.constant.FlushModel;
 
 class CommitlogTest {
 

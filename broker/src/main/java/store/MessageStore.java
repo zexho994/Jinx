@@ -1,6 +1,7 @@
 package store;
 
 import Message.Message;
+import store.constant.FlushModel;
 
 /**
  * @author Zexho

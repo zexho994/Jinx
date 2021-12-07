@@ -1,27 +1,24 @@
-package queue;
+package producer;
 
 import Message.Message;
-import lombok.extern.log4j.Log4j2;
 import store.DefaultMessageStore;
-import store.FlushModel;
+import store.constant.FlushModel;
 import store.MessageStore;
 
 /**
  * @author Zexho
- * @date 2021/11/19 8:59 上午
+ * @date 2021/12/7 5:39 下午
  */
-@Log4j2
-public class MessageManager {
-
-    private MessageManager() {
+public class ProducerManager {
+    private ProducerManager() {
     }
 
     private static class Inner {
-        private static final MessageManager INSTANCE = new MessageManager();
+        private static final ProducerManager INSTANCE = new ProducerManager();
     }
 
-    public static MessageManager getInstance() {
-        return Inner.INSTANCE;
+    public static ProducerManager getInstance() {
+        return ProducerManager.Inner.INSTANCE;
     }
 
     private final MessageStore messageStore = DefaultMessageStore.getInstance();
@@ -33,5 +30,4 @@ public class MessageManager {
         // 消息交给存储模块进行存储
         messageStore.putMessage(message, model);
     }
-
 }

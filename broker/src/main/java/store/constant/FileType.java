@@ -1,6 +1,9 @@
-package store;
+package store.constant;
 
 import common.MemoryCapacity;
+import store.consumequeue.ConsumeOffset;
+import store.commitlog.Commitlog;
+import store.consumequeue.ConsumeQueue;
 
 import java.io.File;
 
@@ -26,8 +29,8 @@ public enum FileType {
     CONSUME_OFFSET(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeOffset" + File.separator, MemoryCapacity.B * 8),
     ;
 
-    final String basePath;
-    final int fileSize;
+    public final String basePath;
+    public final int fileSize;
 
     FileType(final String basePath, final int fileSize) {
         this.basePath = basePath;
