@@ -97,7 +97,7 @@ public class MappedFile {
         if (!this.checkRemainSize(data.length)) {
             return MessageAppendResult.INSUFFICIENT_SPACE;
         }
-        log.info("append data to mappedFile,fileName = {},wrotePos = {},size = {}", this.fileName, this.wrotePos, data.length);
+        log.info("append data to mappedFile,file = {},wrotePos = {},size = {}", this.file.getAbsolutePath(), this.wrotePos, data.length);
 
         this.byteBuffer.put(data);
         this.byteBuffer.flip();
@@ -178,6 +178,13 @@ public class MappedFile {
         return randomAccessFile.readInt();
     }
 
+    /**
+     * 更新int值
+     *
+     * @param offset 偏移量
+     * @param n      新值
+     * @throws IOException
+     */
     public void updateInt(int offset, int n) throws IOException {
         RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
         randomAccessFile.seek(offset);

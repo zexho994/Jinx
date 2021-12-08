@@ -2,6 +2,7 @@ package store.commitlog;
 
 import Message.Message;
 import lombok.extern.log4j.Log4j2;
+import store.MappedFileQueue;
 import store.constant.FileType;
 import store.constant.FlushModel;
 import store.constant.MessageAppendResult;
@@ -14,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -49,7 +49,7 @@ public class Commitlog {
     /**
      * 存储 mappedFile 队列
      */
-    private final Stack<MappedFile> mappedFileStack = new Stack<>();
+    private final MappedFileQueue mappedFileQueue = new MappedFileQueue();
     /**
      * 所有文件总字节偏移量
      */
@@ -76,13 +76,13 @@ public class Commitlog {
                     try {
                         int fileOffset = Integer.parseInt(file.getName());
                         this.fileFormOffset.set(fileOffset);
-                        this.mappedFileStack.push(new MappedFile(FileType.COMMITLOG, file));
+                        this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, file));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 });
-                if (!this.mappedFileStack.isEmpty()) {
-                    String lastFileName = this.mappedFileStack.peek().getFileName();
+                if (!this.mappedFileQueue.isEmpty()) {
+                    String lastFileName = this.mappedFileQueue.getLastMappedFile().getFileName();
                     this.fileFormOffset.set(Integer.parseInt(lastFileName));
                 }
             }
@@ -118,21 +118,21 @@ public class Commitlog {
     public CommitPutMessageResult putMessage(final Message message, final FlushModel flushModel) {
         lock.lock();
         try {
-            int fileWriteOffset = this.getLastMappedFile().getFromOffset() + this.getLastMappedFile().getWrotePos();
+            int fileWriteOffset = this.mappedFileQueue.getLastMappedFile().getFromOffset() + this.mappedFileQueue.getLastMappedFile().getWrotePos();
             byte[] data = ByteUtil.to(message);
 
-            MessageAppendResult appendResult = this.getLastMappedFile().append(data);
+            MessageAppendResult appendResult = this.mappedFileQueue.getLastMappedFile().append(data);
             if (flushModel == FlushModel.SYNC) {
                 // 同步刷盘,在追加后立即执行flush
                 switch (appendResult) {
                     case OK:
-                        this.getLastMappedFile().flush();
+                        this.mappedFileQueue.getLastMappedFile().flush();
                         break;
                     case INSUFFICIENT_SPACE:
                         this.createNewMappedFile();
-                        fileWriteOffset = this.getLastMappedFile().getFromOffset();
-                        this.getLastMappedFile().append(data);
-                        this.getLastMappedFile().flush();
+                        fileWriteOffset = this.mappedFileQueue.getLastMappedFile().getFromOffset();
+                        this.mappedFileQueue.getLastMappedFile().append(data);
+                        this.mappedFileQueue.getLastMappedFile().flush();
                         break;
                     default:
                         log.error("AppendResult type error");
@@ -169,8 +169,8 @@ public class Commitlog {
     }
 
     private MappedFile getFileByOffset(long offset) {
-        for (int i = this.mappedFileStack.size() - 1; i >= 0; i--) {
-            MappedFile mappedFile = this.mappedFileStack.get(i);
+        for (int i = this.mappedFileQueue.size() - 1; i >= 0; i--) {
+            MappedFile mappedFile = this.mappedFileQueue.getByIndex(i);
             if (mappedFile.getFromOffset() <= offset) {
                 return mappedFile;
             }
@@ -186,12 +186,12 @@ public class Commitlog {
      * @throws IOException 创建新文件时发送异常
      */
     public void createNewMappedFile() throws IOException {
-        MappedFile lastMappedFile = this.getLastMappedFile();
+        MappedFile lastMappedFile = this.mappedFileQueue.getLastMappedFile();
         int fileFormOffset = Integer.parseInt(lastMappedFile.getFileName());
         int wrotePos = lastMappedFile.getWrotePos();
         String fileName = String.valueOf(fileFormOffset + wrotePos + 1);
         MappedFile mappedFile = new MappedFile(FileType.COMMITLOG, fileName);
-        this.mappedFileStack.push(mappedFile);
+        this.mappedFileQueue.addMappedFile(mappedFile);
     }
 
     /**
@@ -212,16 +212,7 @@ public class Commitlog {
             }
         }
 
-        this.mappedFileStack.push(new MappedFile(FileType.COMMITLOG, "0"));
-    }
-
-    /**
-     * 获取当前可用的文件
-     *
-     * @return 当前最新可用的文件
-     */
-    public MappedFile getLastMappedFile() {
-        return this.mappedFileStack.peek();
+        this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, "0"));
     }
 
 }
