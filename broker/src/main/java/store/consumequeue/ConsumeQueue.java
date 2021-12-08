@@ -5,6 +5,8 @@ import store.constant.FileType;
 import store.constant.MessageAppendResult;
 import store.constant.PutMessageResult;
 import store.mappedfile.MappedFile;
+import utils.ArrayUtils;
+import utils.ByteUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -110,7 +112,7 @@ public class ConsumeQueue {
      * @param topic           消息主题
      * @param commitlogOffset 消息在commit中的偏移量,总偏移量
      */
-    public PutMessageResult putMessage(String topic, long commitlogOffset) {
+    public PutMessageResult putMessage(String topic, long commitlogOffset, int size) {
         lock.lock();
         try {
             ensureFileExist(topic);
@@ -118,14 +120,18 @@ public class ConsumeQueue {
             ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
             MappedFile mappedFile = consumeQueueFiles.getLastFile();
 
-            MessageAppendResult appendResult = mappedFile.appendLong(commitlogOffset);
+            byte[] a1 = ByteUtil.to(commitlogOffset);
+            byte[] a2 = ByteUtil.to(size);
+            byte[] merge = ArrayUtils.merge(a1, a2);
+
+            MessageAppendResult appendResult = mappedFile.append(merge);
             if (MessageAppendResult.OK == appendResult) {
                 mappedFile.flush();
             } else if (MessageAppendResult.INSUFFICIENT_SPACE == appendResult) {
                 log.warn("ConsumeQueue INSUFFICIENT_SPACE");
                 consumeQueueFiles.createNewFile();
                 mappedFile = consumeQueueFiles.getLastFile();
-                mappedFile.appendLong(commitlogOffset);
+                mappedFile.append(merge);
                 mappedFile.flush();
             }
 
@@ -145,15 +151,17 @@ public class ConsumeQueue {
      * @return
      * @throws Exception
      */
-    public long getMessageOffset(String topic, String gruop) throws Exception {
+    public GetCommitlogOffset getCommitlogOffset(String topic, String gruop) throws Exception {
         ensureFileExist(topic);
 
         int offset = consumeOffset.getOffset(topic, gruop);
 
         ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
-        MappedFile mappedFile = consumeQueueFiles.getFileByOffset(offset * 8L);
+        MappedFile mappedFile = consumeQueueFiles.getFileByOffset(offset * 12L);
 
-        return mappedFile.getLong((offset * 8L) - mappedFile.getFromOffset());
+        long commitOffset = mappedFile.getLong((offset * 12L) - mappedFile.getFromOffset());
+        int msgSize = mappedFile.getInt((int) ((offset * 12L) - mappedFile.getFromOffset() + 8));
+        return new GetCommitlogOffset(commitOffset, msgSize);
     }
 
     public void incOffset(String topic, String group) throws IOException {

@@ -19,6 +19,18 @@ public class ByteUtil {
                 (byte) num};
     }
 
+    public static byte[] to(long num) {
+        return new byte[]{
+                (byte) (num >> 56),
+                (byte) (num >> 48),
+                (byte) (num >> 40),
+                (byte) (num >> 32),
+                (byte) (num >> 24),
+                (byte) (num >> 16),
+                (byte) (num >> 8),
+                (byte) num};
+    }
+
     public static byte[] to(Object obj) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream out = new ObjectOutputStream(bos)) {
             out.writeObject(obj);

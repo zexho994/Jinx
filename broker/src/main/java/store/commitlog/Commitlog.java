@@ -2,13 +2,12 @@ package store.commitlog;
 
 import Message.Message;
 import lombok.extern.log4j.Log4j2;
-import store.model.CommitPutMessageResult;
 import store.constant.FileType;
 import store.constant.FlushModel;
 import store.constant.MessageAppendResult;
 import store.constant.PutMessageResult;
 import store.mappedfile.MappedFile;
-import utils.ArrayUtils;
+import store.model.CommitPutMessageResult;
 import utils.ByteUtil;
 
 import java.io.File;
@@ -121,10 +120,8 @@ public class Commitlog {
         try {
             int fileWriteOffset = this.getLastMappedFile().getFromOffset() + this.getLastMappedFile().getWrotePos();
             byte[] data = ByteUtil.to(message);
-            byte[] size = ByteUtil.to(data.length);
-            byte[] arr = ArrayUtils.merge(size, data);
 
-            MessageAppendResult appendResult = this.getLastMappedFile().append(arr);
+            MessageAppendResult appendResult = this.getLastMappedFile().append(data);
             if (flushModel == FlushModel.SYNC) {
                 // 同步刷盘,在追加后立即执行flush
                 switch (appendResult) {
@@ -134,7 +131,7 @@ public class Commitlog {
                     case INSUFFICIENT_SPACE:
                         this.createNewMappedFile();
                         fileWriteOffset = this.getLastMappedFile().getFromOffset();
-                        this.getLastMappedFile().append(arr);
+                        this.getLastMappedFile().append(data);
                         this.getLastMappedFile().flush();
                         break;
                     default:
@@ -160,13 +157,12 @@ public class Commitlog {
      * @param offset 在文件中的偏移量
      * @return
      */
-    public Message getMessage(long offset) throws IOException {
+    public Message getMessage(long offset, int size) throws IOException {
         MappedFile mappedFile = this.getFileByOffset(offset);
-        long pos = offset - mappedFile.getFromOffset();
-        int messageSize = mappedFile.getInt((int) pos);
+        int pos = (int) (offset - mappedFile.getFromOffset());
 
         try {
-            return mappedFile.loadMessage((int) (pos + 4), messageSize);
+            return mappedFile.loadMessage(pos, size);
         } catch (IOException e) {
             throw new IOException("load message error, offset = " + offset, e);
         }
