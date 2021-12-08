@@ -1,6 +1,7 @@
 package store.consumequeue;
 
 import lombok.extern.log4j.Log4j2;
+import store.MappedFileQueue;
 import store.constant.FileType;
 import store.constant.MessageAppendResult;
 import store.constant.PutMessageResult;
@@ -11,7 +12,6 @@ import utils.ByteUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -37,55 +37,26 @@ public class ConsumeQueue {
     }
 
     public static File CONSUMER_QUEUE_FOLDER;
-    private final Map<String, ConsumeQueueFiles> mappedFileMap = new ConcurrentHashMap<>();
+
+    /**
+     * Key: topic
+     * Val: fileQueue
+     */
+    private final Map<String, MappedFileQueue> mappedFileMap = new ConcurrentHashMap<>();
     private final ConsumeOffset consumeOffset = ConsumeOffset.getInstance();
 
-    private static class ConsumeQueueFiles {
-
-        private final String topic;
-        private final Stack<MappedFile> fileQueue;
-
-        public ConsumeQueueFiles(String topic, MappedFile mappedFile) {
-            this.topic = topic;
-            this.fileQueue = new Stack<>();
-            fileQueue.add(mappedFile);
-        }
-
-        public MappedFile getLastFile() {
-            return fileQueue.peek();
-        }
-
-        /**
-         * 添加一个新文件
-         */
-        public void createNewFile() throws IOException {
-            MappedFile lastFile = this.getLastFile();
-            int fromOffset = lastFile.getFromOffset();
-            int wrotePos = lastFile.getWrotePos();
-            String nextFileOffset = String.valueOf(fromOffset + wrotePos);
-            File file = new File(CONSUMER_QUEUE_FOLDER.getAbsolutePath() + File.separator + topic + File.separator + nextFileOffset);
-            MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
-            this.fileQueue.push(mappedFile);
-        }
-
-        /**
-         * 根据偏移量找到对应存储文件
-         *
-         * @param offset 要查找消息的总偏移量
-         * @return
-         */
-        public MappedFile getFileByOffset(long offset) throws Exception {
-            if (offset < 0) {
-                throw new Exception("offset must be positive");
-            }
-            for (int i = fileQueue.size() - 1; i >= 0; i--) {
-                MappedFile mappedFile = fileQueue.get(i);
-                if (mappedFile.getFromOffset() <= offset) {
-                    return mappedFile;
-                }
-            }
-            throw new Exception("Get file by offset fail, offset = " + offset);
-        }
+    /**
+     * 添加一个新文件
+     */
+    public void createNewFile(String topic) throws IOException {
+        MappedFileQueue mappedFileQueue = this.mappedFileMap.get(topic);
+        MappedFile lastFile = mappedFileQueue.getLastMappedFile();
+        int fromOffset = lastFile.getFromOffset();
+        int wrotePos = lastFile.getWrotePos();
+        String nextFileOffset = String.valueOf(fromOffset + wrotePos);
+        File file = new File(CONSUMER_QUEUE_FOLDER.getAbsolutePath() + File.separator + topic + File.separator + nextFileOffset);
+        MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
+        mappedFileQueue.addMappedFile(mappedFile);
     }
 
     public boolean init() {
@@ -117,8 +88,8 @@ public class ConsumeQueue {
         try {
             ensureFileExist(topic);
 
-            ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
-            MappedFile mappedFile = consumeQueueFiles.getLastFile();
+            MappedFileQueue mappedFileQueue = mappedFileMap.get(topic);
+            MappedFile mappedFile = mappedFileQueue.getLastMappedFile();
 
             byte[] a1 = ByteUtil.to(commitlogOffset);
             byte[] a2 = ByteUtil.to(size);
@@ -129,8 +100,8 @@ public class ConsumeQueue {
                 mappedFile.flush();
             } else if (MessageAppendResult.INSUFFICIENT_SPACE == appendResult) {
                 log.warn("ConsumeQueue INSUFFICIENT_SPACE");
-                consumeQueueFiles.createNewFile();
-                mappedFile = consumeQueueFiles.getLastFile();
+                this.createNewFile(topic);
+                mappedFile = mappedFileQueue.getLastMappedFile();
                 mappedFile.append(merge);
                 mappedFile.flush();
             }
@@ -147,8 +118,8 @@ public class ConsumeQueue {
      * 获取消息在 commitlog 文件中总偏移值 offset
      *
      * @param topic 消息主题
-     * @param seq   消费序号
-     * @return
+     * @param gruop 消费组
+     * @return 获取结果对象
      * @throws Exception
      */
     public GetCommitlogOffset getCommitlogOffset(String topic, String gruop) throws Exception {
@@ -156,7 +127,7 @@ public class ConsumeQueue {
 
         int offset = consumeOffset.getOffset(topic, gruop);
 
-        ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
+        MappedFileQueue consumeQueueFiles = mappedFileMap.get(topic);
         MappedFile mappedFile = consumeQueueFiles.getFileByOffset(offset * 12L);
 
         long commitOffset = mappedFile.getLong((offset * 12L) - mappedFile.getFromOffset());
@@ -192,8 +163,9 @@ public class ConsumeQueue {
 
             // 记录保存到 map 中
             MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
-            ConsumeQueueFiles consumeQueueFiles = new ConsumeQueueFiles(topic, mappedFile);
-            this.mappedFileMap.put(topic, consumeQueueFiles);
+            MappedFileQueue mappedFileQueue = new MappedFileQueue();
+            mappedFileQueue.addMappedFile(mappedFile);
+            this.mappedFileMap.put(topic, mappedFileQueue);
         } finally {
             this.lock.unlock();
         }
