@@ -1,7 +1,6 @@
 package store.constant;
 
 import common.MemoryCapacity;
-import store.consumequeue.ConsumeOffset;
 import store.commitlog.Commitlog;
 import store.consumequeue.ConsumeQueue;
 
@@ -23,9 +22,6 @@ public enum FileType {
      */
     CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator,MemoryCapacity.KB / 10),
 
-    /**
-     * {@link ConsumeOffset}
-     */
     CONSUME_OFFSET(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeOffset" + File.separator, MemoryCapacity.B * 8),
     ;
 

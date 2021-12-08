@@ -1,8 +1,8 @@
 package store.consumequeue;
 
 import lombok.extern.log4j.Log4j2;
-import store.mappedfile.MappedFile;
 import store.constant.FileType;
+import store.mappedfile.MappedFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/12/6 9:47 上午
  */
 @Log4j2
-public class ConsumeOffset {
+class ConsumeOffset {
 
     public static File CONSUME_OFFSET_FOLDER;
 
@@ -31,14 +31,12 @@ public class ConsumeOffset {
 
     private final Map<String, Map<String, MappedFile>> consumeOffsetMap = new ConcurrentHashMap<>();
 
-    public boolean init() {
+    void init() {
         try {
             this.ensureDirExist();
         } catch (Exception e) {
             log.error("ConsumeOffset init error", e);
-            return false;
         }
-        return true;
     }
 
     private void ensureDirExist() {
@@ -91,6 +89,8 @@ public class ConsumeOffset {
     }
 
     /**
+     * 获取group的消费进度
+     *
      * @param topic
      * @param consumeGroup
      * @return

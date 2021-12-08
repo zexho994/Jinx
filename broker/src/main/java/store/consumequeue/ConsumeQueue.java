@@ -1,12 +1,10 @@
 package store.consumequeue;
 
-import Message.Message;
 import lombok.extern.log4j.Log4j2;
-import store.mappedfile.MappedFile;
-import store.commitlog.Commitlog;
 import store.constant.FileType;
 import store.constant.MessageAppendResult;
 import store.constant.PutMessageResult;
+import store.mappedfile.MappedFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +36,7 @@ public class ConsumeQueue {
 
     public static File CONSUMER_QUEUE_FOLDER;
     private final Map<String, ConsumeQueueFiles> mappedFileMap = new ConcurrentHashMap<>();
-    private final Commitlog commitlog = Commitlog.getInstance();
+    private final ConsumeOffset consumeOffset = ConsumeOffset.getInstance();
 
     private static class ConsumeQueueFiles {
 
@@ -91,6 +89,7 @@ public class ConsumeQueue {
     public boolean init() {
         try {
             this.ensureDirExist();
+            this.consumeOffset.init();
         } catch (Exception e) {
             log.error("ConsumeQueue init error", e);
             return false;
@@ -139,21 +138,6 @@ public class ConsumeQueue {
     }
 
     /**
-     * 获取消息
-     *
-     * @param topic
-     * @param seq
-     */
-    public Message getMessage(String topic, int seq) throws IOException {
-        ensureFileExist(topic);
-
-        ConsumeQueueFiles consumeQueueFiles = this.mappedFileMap.get(topic);
-        MappedFile lastFile = consumeQueueFiles.getLastFile();
-        long commitlogOffset = lastFile.getLong(seq * 8L);
-        return commitlog.getMessage(commitlogOffset);
-    }
-
-    /**
      * 获取消息在 commitlog 文件中总偏移值 offset
      *
      * @param topic 消息主题
@@ -161,13 +145,19 @@ public class ConsumeQueue {
      * @return
      * @throws Exception
      */
-    public long getCommitlogOffset(String topic, int seq) throws Exception {
+    public long getMessageOffset(String topic, String gruop) throws Exception {
         ensureFileExist(topic);
 
-        ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
-        MappedFile mappedFile = consumeQueueFiles.getFileByOffset(seq * 8L);
+        int offset = consumeOffset.getOffset(topic, gruop);
 
-        return mappedFile.getLong((seq * 8L) - mappedFile.getFromOffset());
+        ConsumeQueueFiles consumeQueueFiles = mappedFileMap.get(topic);
+        MappedFile mappedFile = consumeQueueFiles.getFileByOffset(offset * 8L);
+
+        return mappedFile.getLong((offset * 8L) - mappedFile.getFromOffset());
+    }
+
+    public void incOffset(String topic, String group) throws IOException {
+        this.consumeOffset.incOffset(topic, group);
     }
 
     /**

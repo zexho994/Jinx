@@ -41,9 +41,9 @@ class DefaultMessageStoreTest {
         message3.setConsumerGroup("message 3");
         defaultMessageStoreTest.putMessage(message3); // offset = 640,size = 316,commitlogoffset = 640
 
-        Message message_1 = defaultMessageStoreTest.getMessage(0);// commitlogoffset = 0
-        Message message_2 = defaultMessageStoreTest.getMessage(1); // commitlogoffset = 1
-        Message message_3 = defaultMessageStoreTest.getMessage(2); // commitlogoffset = 2
+        Message message_1 = defaultMessageStoreTest.getMessage("message 1", "message 1");// commitlogoffset = 0
+        Message message_2 = defaultMessageStoreTest.getMessage("message 2", "message 1"); // commitlogoffset = 1
+        Message message_3 = defaultMessageStoreTest.getMessage("message 3", "message 1"); // commitlogoffset = 2
 
         assert message1.equals(message_1);
         assert message2.equals(message_2);
@@ -59,8 +59,8 @@ class DefaultMessageStoreTest {
         defaultMessageStore.putMessage(message);
     }
 
-    Message getMessage(int seq) throws Exception {
-        long commitlogOffset = consumeQueue.getCommitlogOffset("topic 1", seq);
+    Message getMessage(String topic, String group) throws Exception {
+        long commitlogOffset = consumeQueue.getMessageOffset(topic, group);
         return commitlog.getMessage(commitlogOffset);
     }
 

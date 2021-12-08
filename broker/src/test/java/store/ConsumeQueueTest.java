@@ -25,18 +25,14 @@ class ConsumeQueueTest {
     }
 
     void getMessage() throws Exception {
-        long l1 = consumeQueue.getCommitlogOffset("test_a", 0);
+        long l1 = consumeQueue.getMessageOffset("test_a", "");
         assert l1 == 0;
-        long l2 = consumeQueue.getCommitlogOffset("test_a", 1);
+        long l2 = consumeQueue.getMessageOffset("test_a", "");
         assert l2 == 100;
-        long l3 = consumeQueue.getCommitlogOffset("test_a", 2);
+        long l3 = consumeQueue.getMessageOffset("test_a", "");
         assert l3 == 200;
-        long l4 = consumeQueue.getCommitlogOffset("test_a", 3);
+        long l4 = consumeQueue.getMessageOffset("test_a", "");
         assert l4 == 300;
     }
 
-    @Test
-    void testGetMessage() throws IOException {
-        Message test_a = consumeQueue.getMessage("test_a", 0);
-    }
 }

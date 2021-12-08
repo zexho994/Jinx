@@ -2,7 +2,6 @@ package consumer;
 
 import Message.Message;
 import store.commitlog.Commitlog;
-import store.consumequeue.ConsumeOffset;
 import store.consumequeue.ConsumeQueue;
 
 import java.io.IOException;
@@ -24,7 +23,6 @@ public class ConsumerManager {
         return ConsumerManager.Inner.INSTANCE;
     }
 
-    private final ConsumeOffset consumeOffset = ConsumeOffset.getInstance();
     private final ConsumeQueue consumeQueue = ConsumeQueue.getInstance();
     private final Commitlog commitlog = Commitlog.getInstance();
 
@@ -39,20 +37,12 @@ public class ConsumerManager {
      * @return 未消费的消息
      */
     public Message pullMessage(String topic, String consumeGroup) throws Exception {
-        // 获取group的消费序号
-        int consumeQueueSeq;
-        try {
-            consumeQueueSeq = consumeOffset.getOffset(topic, consumeGroup);
-        } catch (IOException e) {
-            throw new Exception("get consume offset error. topic = " + topic + ", consumeGroup = " + consumeGroup, e);
-        }
-
         // 获取commitlog文件偏移量
         long commitlogOffset;
         try {
-            commitlogOffset = consumeQueue.getCommitlogOffset(topic, consumeQueueSeq);
+            commitlogOffset = consumeQueue.getMessageOffset(topic, consumeGroup);
         } catch (IOException e) {
-            throw new Exception("get commitlog offset error,topic = " + topic + ", consumeQueueSeq = " + consumeQueueSeq, e);
+            throw new Exception("get commitlog offset error,topic = " + topic + ", consumeGroup = " + consumeGroup, e);
         }
 
         // 获取消息数据
@@ -65,7 +55,7 @@ public class ConsumerManager {
 
         // 如果获取消息成功，消费序号++
         if (message != null) {
-            consumeOffset.incOffset(topic, consumeGroup);
+            consumeQueue.incOffset(topic, consumeGroup);
         }
         return message;
     }
