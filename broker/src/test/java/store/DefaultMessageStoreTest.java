@@ -4,7 +4,6 @@ import Message.Message;
 import org.junit.jupiter.api.Test;
 import store.commitlog.Commitlog;
 import store.consumequeue.ConsumeQueue;
-import store.consumequeue.GetCommitlogOffset;
 
 import java.util.UUID;
 
@@ -61,8 +60,8 @@ class DefaultMessageStoreTest {
     }
 
     Message getMessage(String topic, String group) throws Exception {
-        GetCommitlogOffset commitlogOffset = consumeQueue.getCommitlogOffset(topic, group);
-        return commitlog.getMessage(commitlogOffset.offset);
+        long commitlogOffset = consumeQueue.getCommitlogOffset(topic, group);
+        return commitlog.getMessage(commitlogOffset);
     }
 
 }

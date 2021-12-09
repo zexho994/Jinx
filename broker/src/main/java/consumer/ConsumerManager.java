@@ -3,7 +3,6 @@ package consumer;
 import Message.Message;
 import store.commitlog.Commitlog;
 import store.consumequeue.ConsumeQueue;
-import store.consumequeue.GetCommitlogOffset;
 
 import java.io.IOException;
 
@@ -39,7 +38,7 @@ public class ConsumerManager {
      */
     public Message pullMessage(String topic, String consumeGroup) throws Exception {
         // 获取commitlog文件偏移量
-        GetCommitlogOffset commitlogOffset;
+        long commitlogOffset;
         try {
             commitlogOffset = consumeQueue.getCommitlogOffset(topic, consumeGroup);
         } catch (IOException e) {
@@ -49,7 +48,7 @@ public class ConsumerManager {
         // 获取消息数据
         Message message;
         try {
-            message = commitlog.getMessage(commitlogOffset.offset);
+            message = commitlog.getMessage(commitlogOffset);
         } catch (IOException e) {
             throw new Exception("get message error,commitlogOffset = " + commitlogOffset, e);
         }

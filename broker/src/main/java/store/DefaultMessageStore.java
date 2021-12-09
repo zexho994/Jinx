@@ -65,7 +65,7 @@ public class DefaultMessageStore implements MessageStore {
 
         // 交给 consumeQueue 进行存储
         if (commitlogPutResult.getResult() == PutMessageResult.OK) {
-            PutMessageResult putMessageResult = this.consumeQueue.putMessage(message.getTopic(), commitlogPutResult.getOffset(), commitlogPutResult.getMsgSize());
+            PutMessageResult putMessageResult = this.consumeQueue.putMessage(message.getTopic(), commitlogPutResult.getOffset());
         } else if (commitlogPutResult.getResult() == PutMessageResult.FAILURE) {
             log.error("Failed to put message to consumeQueue, topic = {}, commit offset = {}", message.getTopic(), commitlogPutResult.getOffset());
         }

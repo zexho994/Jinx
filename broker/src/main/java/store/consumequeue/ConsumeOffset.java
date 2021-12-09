@@ -55,7 +55,7 @@ class ConsumeOffset {
         Arrays.stream(CONSUME_OFFSET_FOLDER.listFiles())
                 .filter(file -> !file.getName().contains("."))
                 .forEach(topicDir -> {
-                    Map<String, MappedFile> mappedFileMap = new ConcurrentHashMap<>();
+                    Map<String, MappedFile> mappedFileMap = new ConcurrentHashMap<>(16);
                     this.consumeOffsetMap.put(topicDir.getName(), mappedFileMap);
                     Arrays.stream(topicDir.listFiles())
                             .filter(file -> !file.getName().contains("."))
@@ -120,7 +120,7 @@ class ConsumeOffset {
      * @param consumeGroup
      * @return
      */
-    public int getOffset(String topic, String consumeGroup) throws Exception {
+    public long getOffset(String topic, String consumeGroup) throws Exception {
         Map<String, MappedFile> topicMap = consumeOffsetMap.get(topic);
         if (topicMap == null) {
             this.addTopic(topic);
