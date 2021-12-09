@@ -42,7 +42,7 @@ public class MappedFile {
     /**
      * 文件写入偏移量
      */
-    private final AtomicInteger wrotePos;
+    private final AtomicInteger wrotePos = new AtomicInteger(0);
     /**
      * 文件类型
      */
@@ -61,7 +61,6 @@ public class MappedFile {
         } else {
             this.fromOffset = 0;
         }
-        this.wrotePos = new AtomicInteger(0);
         this.fileSize = fileType.fileSize;
         init();
     }

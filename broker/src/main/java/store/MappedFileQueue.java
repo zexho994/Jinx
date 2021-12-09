@@ -10,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class MappedFileQueue {
 
-    public final CopyOnWriteArrayList<MappedFile> queue = new CopyOnWriteArrayList();
+    private final CopyOnWriteArrayList<MappedFile> queue = new CopyOnWriteArrayList<>();
 
     public void addMappedFile(MappedFile mappedFile) {
         this.queue.add(mappedFile);
@@ -37,7 +37,6 @@ public class MappedFileQueue {
     public int size() {
         return this.queue.size();
     }
-
 
     /**
      * 根据偏移量找到对应存储文件
