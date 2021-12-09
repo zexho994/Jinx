@@ -62,7 +62,6 @@ public class ConsumeQueue {
     public boolean init() {
         try {
             this.ensureDirExist();
-            this.recover();
             this.consumeOffset.init();
         } catch (Exception e) {
             log.error("ConsumeQueue init error", e);

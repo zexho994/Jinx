@@ -100,11 +100,10 @@ public class Commitlog {
             }
         }
 
-        this.recoverLastFile();
         return true;
     }
 
-    public void recoverLastFile() {
+    public void recover() throws IOException {
         if (this.mappedFileQueue.isEmpty()) {
             return;
         }
@@ -119,7 +118,7 @@ public class Commitlog {
                 }
                 offset += MappedFile.INT_LENGTH + size;
             }
-        } catch (IOException ignored) {
+        } catch (Exception ignore) {
 
         }
         try {
