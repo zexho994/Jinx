@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 磁盘文件的映射
@@ -42,7 +42,7 @@ public class MappedFile {
     /**
      * 文件写入偏移量
      */
-    private final AtomicInteger wrotePos = new AtomicInteger(0);
+    private final AtomicLong wrotePos = new AtomicLong(0);
     /**
      * 文件类型
      */
@@ -190,7 +190,7 @@ public class MappedFile {
         randomAccessFile.writeInt(n);
     }
 
-    public Message loadMessage(int offset, int size) throws IOException {
+    public Message loadMessage(long offset, int size) throws IOException {
         RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
         randomAccessFile.seek(offset);
         byte[] b = new byte[size];
@@ -210,7 +210,13 @@ public class MappedFile {
         return this.wrotePos.get() + size <= this.fileSize;
     }
 
-    public int getWrotePos() {
+    public long getWrotePos() {
         return wrotePos.get();
     }
+
+    public void setWrotePos(long pos) throws IOException {
+        this.wrotePos.set(pos);
+        this.accessChannel.position(pos);
+    }
+
 }

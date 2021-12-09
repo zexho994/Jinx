@@ -104,7 +104,30 @@ public class Commitlog {
             }
         }
 
+        this.recoverLastFile();
         return true;
+    }
+
+    public void recoverLastFile() {
+        MappedFile lastMappedFile = this.mappedFileQueue.getLastMappedFile();
+        long offset = 0;
+        try {
+            while (true) {
+                int size = lastMappedFile.getInt(offset);
+                Message message = lastMappedFile.loadMessage(offset + MappedFile.INT_LENGTH, size);
+                if (message == null) {
+                    break;
+                }
+                offset += MappedFile.INT_LENGTH + size;
+            }
+        } catch (IOException ignored) {
+
+        }
+        try {
+            lastMappedFile.setWrotePos(offset);
+        } catch (IOException e) {
+            log.error("set wrote position error. ", e);
+        }
     }
 
     /**
@@ -119,7 +142,7 @@ public class Commitlog {
     public CommitPutMessageResult putMessage(final Message message, final FlushModel flushModel) {
         lock.lock();
         try {
-            int fileWriteOffset = this.mappedFileQueue.getLastMappedFile().getFromOffset() + this.mappedFileQueue.getLastMappedFile().getWrotePos();
+            long fileWriteOffset = this.mappedFileQueue.getLastMappedFile().getFromOffset() + this.mappedFileQueue.getLastMappedFile().getWrotePos();
             byte[] messagebyte = ByteUtil.to(message);
             byte[] size = ByteUtil.to(messagebyte.length);
             byte[] data = ArrayUtils.merge(size, messagebyte);
@@ -191,7 +214,7 @@ public class Commitlog {
     public void createNewMappedFile() throws IOException {
         MappedFile lastMappedFile = this.mappedFileQueue.getLastMappedFile();
         int fileFormOffset = Integer.parseInt(lastMappedFile.getFileName());
-        int wrotePos = lastMappedFile.getWrotePos();
+        long wrotePos = lastMappedFile.getWrotePos();
         String fileName = String.valueOf(fileFormOffset + wrotePos + 1);
         MappedFile mappedFile = new MappedFile(FileType.COMMITLOG, fileName);
         this.mappedFileQueue.addMappedFile(mappedFile);

@@ -52,7 +52,7 @@ public class ConsumeQueue {
         MappedFileQueue mappedFileQueue = this.mappedFileMap.get(topic);
         MappedFile lastFile = mappedFileQueue.getLastMappedFile();
         int fromOffset = lastFile.getFromOffset();
-        int wrotePos = lastFile.getWrotePos();
+        long wrotePos = lastFile.getWrotePos();
         String nextFileOffset = String.valueOf(fromOffset + wrotePos);
         File file = new File(CONSUMER_QUEUE_FOLDER.getAbsolutePath() + File.separator + topic + File.separator + nextFileOffset);
         MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);

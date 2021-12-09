@@ -17,19 +17,19 @@ public class CommitPutMessageResult {
     /**
      * 消息所在文件中的偏移量
      */
-    private int offset;
+    private long offset;
     /**
      * 消息的大小
      */
     private int msgSize;
 
-    public CommitPutMessageResult(PutMessageResult result, int offset, int msgSize) {
+    public CommitPutMessageResult(PutMessageResult result, long offset, int msgSize) {
         this.result = result;
         this.offset = offset;
         this.msgSize = msgSize;
     }
 
-    public static CommitPutMessageResult ok(final int offset, final int msgSize) {
+    public static CommitPutMessageResult ok(final long offset, final int msgSize) {
         return new CommitPutMessageResult(PutMessageResult.OK, offset, msgSize);
     }
 

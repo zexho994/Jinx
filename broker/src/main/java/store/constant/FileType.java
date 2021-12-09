@@ -20,7 +20,7 @@ public enum FileType {
     /**
      * {@link ConsumeQueue}
      */
-    CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator,MemoryCapacity.KB / 10),
+    CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator, 32 * MemoryCapacity.KB),
 
     CONSUME_OFFSET(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeOffset" + File.separator, MemoryCapacity.B * 8),
     ;
