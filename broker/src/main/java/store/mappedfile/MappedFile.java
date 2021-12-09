@@ -96,7 +96,7 @@ public class MappedFile {
         if (!this.checkRemainSize(data.length)) {
             return MessageAppendResult.INSUFFICIENT_SPACE;
         }
-        log.info("append data to mappedFile,file = {},wrotePos = {},size = {}", this.file.getAbsolutePath(), this.wrotePos, data.length);
+        log.info("append data to mappedFile,\n====> file = {},\n====> wrotePos = {}, size = {}\n", this.file.getAbsolutePath(), this.wrotePos, data.length);
 
         this.byteBuffer.put(data);
         this.byteBuffer.flip();
@@ -114,22 +114,6 @@ public class MappedFile {
         }
         this.randomAccessFile.writeInt(n);
         this.wrotePos.getAndAdd(INT_LENGTH);
-        return MessageAppendResult.OK;
-    }
-
-    public MessageAppendResult appendLong(final long n) {
-        if (!checkRemainSize(LONG_LENGTH)) {
-            return MessageAppendResult.INSUFFICIENT_SPACE;
-        }
-
-        try {
-            this.randomAccessFile.writeLong(n);
-        } catch (IOException e) {
-            log.error("write long error. ", e);
-            return MessageAppendResult.IO_EXCEPTION;
-        }
-
-        this.wrotePos.getAndAdd(LONG_LENGTH);
         return MessageAppendResult.OK;
     }
 
@@ -217,6 +201,10 @@ public class MappedFile {
     public void setWrotePos(long pos) throws IOException {
         this.wrotePos.set(pos);
         this.accessChannel.position(pos);
+    }
+
+    public String getAbsolutePath(){
+        return this.file.getAbsolutePath();
     }
 
 }

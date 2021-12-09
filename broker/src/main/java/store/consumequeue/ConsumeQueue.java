@@ -11,6 +11,7 @@ import utils.ByteUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -62,12 +63,73 @@ public class ConsumeQueue {
     public boolean init() {
         try {
             this.ensureDirExist();
+            this.recover();
             this.consumeOffset.init();
         } catch (Exception e) {
             log.error("ConsumeQueue init error", e);
             return false;
         }
         return true;
+    }
+
+    /**
+     * consumeQueue 文件恢复
+     */
+    public void recover() throws Exception {
+        if (CONSUMER_QUEUE_FOLDER == null) {
+            throw new Exception("CONSUMER_QUEUE_FOLDER is null");
+        }
+
+        Arrays.stream(CONSUMER_QUEUE_FOLDER.listFiles())
+                .filter(file -> !file.getName().contains("."))
+                .forEach(topicDir -> {
+                    MappedFileQueue mappedFileQueue = new MappedFileQueue();
+                    this.mappedFileMap.put(topicDir.getName(), mappedFileQueue);
+                    Arrays.stream(topicDir.listFiles())
+                            .filter(file -> !file.getName().contains("."))
+                            .sorted((o1, o2) -> {
+                                int offset1 = Integer.parseInt(o1.getName());
+                                int offset2 = Integer.parseInt(o2.getName());
+                                return offset1 - offset2;
+                            }).forEach(file -> {
+                                try {
+                                    MappedFile mf = new MappedFile(FileType.CONSUME_QUEUE, file);
+                                    mappedFileQueue.addMappedFile(mf);
+                                } catch (IOException e) {
+                                    log.error("Create mapped file error. ", e);
+                                }
+                            });
+                    this.checkConsumeQueueFile(mappedFileQueue.getLastMappedFile());
+                });
+    }
+
+    public void checkConsumeQueueFile(MappedFile mappedFile) {
+        if (mappedFile == null) {
+            return;
+        }
+
+        long offset = 0;
+        while (true) {
+            try {
+                mappedFile.getLong(offset);
+            } catch (IOException e) {
+                break;
+            }
+            try {
+                mappedFile.getInt(offset + MappedFile.LONG_LENGTH);
+            } catch (IOException e) {
+                break;
+            }
+            offset += MappedFile.LONG_LENGTH + MappedFile.INT_LENGTH;
+        }
+
+        log.info("Recover ConsumeQueue success. file = {}, wrote position = {} ", mappedFile.getAbsolutePath(), offset);
+        try {
+            mappedFile.setWrotePos(offset);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void ensureDirExist() {

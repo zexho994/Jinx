@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -54,7 +54,7 @@ public class Commitlog {
     /**
      * 所有文件总字节偏移量
      */
-    private final AtomicInteger fileFormOffset = new AtomicInteger(0);
+    private final AtomicLong fileFormOffset = new AtomicLong(0);
     private final Lock lock = new ReentrantLock();
 
     /**
@@ -82,10 +82,6 @@ public class Commitlog {
                         e.printStackTrace();
                     }
                 });
-                if (!this.mappedFileQueue.isEmpty()) {
-                    String lastFileName = this.mappedFileQueue.getLastMappedFile().getFileName();
-                    this.fileFormOffset.set(Integer.parseInt(lastFileName));
-                }
             }
         } else {
             // 文件夹不存在
@@ -109,6 +105,9 @@ public class Commitlog {
     }
 
     public void recoverLastFile() {
+        if (this.mappedFileQueue.isEmpty()) {
+            return;
+        }
         MappedFile lastMappedFile = this.mappedFileQueue.getLastMappedFile();
         long offset = 0;
         try {
@@ -125,6 +124,8 @@ public class Commitlog {
         }
         try {
             lastMappedFile.setWrotePos(offset);
+            this.fileFormOffset.set(offset);
+            log.info("Recover Commitlog success. file = {}, wrote position = {}", lastMappedFile.getAbsolutePath(), offset);
         } catch (IOException e) {
             log.error("set wrote position error. ", e);
         }

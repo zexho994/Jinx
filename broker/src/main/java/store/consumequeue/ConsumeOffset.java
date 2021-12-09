@@ -6,6 +6,7 @@ import store.mappedfile.MappedFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,6 +35,7 @@ class ConsumeOffset {
     void init() {
         try {
             this.ensureDirExist();
+            this.recover();
         } catch (Exception e) {
             log.error("ConsumeOffset init error", e);
         }
@@ -44,6 +46,29 @@ class ConsumeOffset {
             CONSUME_OFFSET_FOLDER = new File(FileType.CONSUME_OFFSET.basePath);
             CONSUME_OFFSET_FOLDER.mkdirs();
         }
+    }
+
+    public void recover() throws Exception {
+        if (CONSUME_OFFSET_FOLDER == null) {
+            throw new Exception("CONSUME_OFFSET_FOLDER is null");
+        }
+        Arrays.stream(CONSUME_OFFSET_FOLDER.listFiles())
+                .filter(file -> !file.getName().contains("."))
+                .forEach(topicDir -> {
+                    Map<String, MappedFile> mappedFileMap = new ConcurrentHashMap<>();
+                    this.consumeOffsetMap.put(topicDir.getName(), mappedFileMap);
+                    Arrays.stream(topicDir.listFiles())
+                            .filter(file -> !file.getName().contains("."))
+                            .forEach(file -> {
+                                try {
+                                    MappedFile mf = new MappedFile(FileType.CONSUME_OFFSET, file);
+                                    mappedFileMap.put(file.getName(), mf);
+                                    log.info("Recover ConsumeOffset success. file = {} , consume offset = {}", mf.getAbsolutePath(), mf.getInt(0));
+                                } catch (IOException e) {
+                                    log.error("Create mapped file error. ", e);
+                                }
+                            });
+                });
     }
 
     /**
