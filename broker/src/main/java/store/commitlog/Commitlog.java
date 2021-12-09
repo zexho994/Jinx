@@ -9,6 +9,7 @@ import store.constant.MessageAppendResult;
 import store.constant.PutMessageResult;
 import store.mappedfile.MappedFile;
 import store.model.CommitPutMessageResult;
+import utils.ArrayUtils;
 import utils.ByteUtil;
 
 import java.io.File;
@@ -119,7 +120,9 @@ public class Commitlog {
         lock.lock();
         try {
             int fileWriteOffset = this.mappedFileQueue.getLastMappedFile().getFromOffset() + this.mappedFileQueue.getLastMappedFile().getWrotePos();
-            byte[] data = ByteUtil.to(message);
+            byte[] messagebyte = ByteUtil.to(message);
+            byte[] size = ByteUtil.to(messagebyte.length);
+            byte[] data = ArrayUtils.merge(size, messagebyte);
 
             MessageAppendResult appendResult = this.mappedFileQueue.getLastMappedFile().append(data);
             if (flushModel == FlushModel.SYNC) {
@@ -142,7 +145,7 @@ public class Commitlog {
                 // 异步刷盘
             }
 
-            return CommitPutMessageResult.ok(fileWriteOffset, data.length);
+            return CommitPutMessageResult.ok(fileWriteOffset, messagebyte.length);
         } catch (IOException e) {
             log.error("Failed to store message " + message, e);
             return CommitPutMessageResult.error();
@@ -157,10 +160,10 @@ public class Commitlog {
      * @param offset 在文件中的偏移量
      * @return
      */
-    public Message getMessage(long offset, int size) throws IOException {
+    public Message getMessage(long offset) throws IOException {
         MappedFile mappedFile = this.getFileByOffset(offset);
-        int pos = (int) (offset - mappedFile.getFromOffset());
-
+        int size = mappedFile.getInt(offset);
+        int pos = (int) (offset - mappedFile.getFromOffset() + MappedFile.INT_LENGTH);
         try {
             return mappedFile.loadMessage(pos, size);
         } catch (IOException e) {

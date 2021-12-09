@@ -171,7 +171,7 @@ public class MappedFile {
         return randomAccessFile.readLong();
     }
 
-    public int getInt(int offset) throws IOException {
+    public int getInt(long offset) throws IOException {
         RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
         randomAccessFile.seek(offset);
         return randomAccessFile.readInt();

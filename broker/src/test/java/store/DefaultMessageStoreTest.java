@@ -62,7 +62,7 @@ class DefaultMessageStoreTest {
 
     Message getMessage(String topic, String group) throws Exception {
         GetCommitlogOffset commitlogOffset = consumeQueue.getCommitlogOffset(topic, group);
-        return commitlog.getMessage(commitlogOffset.offset, commitlogOffset.size);
+        return commitlog.getMessage(commitlogOffset.offset);
     }
 
 }

@@ -49,7 +49,7 @@ public class ConsumerManager {
         // 获取消息数据
         Message message;
         try {
-            message = commitlog.getMessage(commitlogOffset.offset, commitlogOffset.size);
+            message = commitlog.getMessage(commitlogOffset.offset);
         } catch (IOException e) {
             throw new Exception("get message error,commitlogOffset = " + commitlogOffset, e);
         }
