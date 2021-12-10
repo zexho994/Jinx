@@ -2,6 +2,66 @@
 
 package Broker模块 <<Frame>> {
 
+    package consume{
+        class ConsumeManager{
+            + void pullMessage()
+        }
+    }
+    note top of consume : 与消息消费相关的功能
+
+    package producer{
+        class ProducerManager {
+            + void putMessage()
+        }
+    }
+    note top of producer : 与消息生产相关的功能
+
+    package remoting{
+        class BrokerRemotingHandler{
+            + void channelRead()
+        }
+        class BrokerRemotingService{
+            + void start()
+        }
+    }
+    note top of remoting : 与网络相关的功能
+
+    BrokerRemotingHandler --> ProducerManager : 处理生产者请求
+    BrokerRemotingHandler --> ConsumeManager : 处理消费者请求
+
+    package store{
+        interface MessageStore{
+            + void putMessage(Message)
+        }
+        class DefaultMessageStore{}
+        class MappedFileQueue{}
+        package commitLog{
+            class CommitLog {
+                + void putMessage(Message)
+            }
+        }
+        package consumeQueue{
+            class ConsumeOffset{
+                + void putMessage(Message)
+            }
+            class ConsumeQueue{
+                + void putMessage(Message)
+            }
+        }
+        class MappedFile{
+            + void append(byte[])
+            + void flush(byte[])
+        }
+
+       MessageStore <|-- DefaultMessageStore
+       MappedFileQueue --> MappedFile : use
+       ConsumeQueue --> MappedFileQueue : use
+       ConsumeQueue -> ConsumeOffset : use
+       CommitLog --> MappedFileQueue : use
+       DefaultMessageStore --> ConsumeQueue
+       DefaultMessageStore --> CommitLog
+    }
+    note top of store : 与消息持久化相关的功能
 
 }
 

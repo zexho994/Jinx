@@ -61,7 +61,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      *
      * @param message 生产者发送的消息
      */
-    public void doProducerMessage(Message message) {
+    private void doProducerMessage(Message message) {
         MessageType messageType = MessageType.get(message.getProperty(PropertiesKeys.MESSAGE_TYPE));
         if (messageType == MessageType.Put_Message) {
             producerManager.putMessage(message, FlushModel.SYNC);
@@ -74,13 +74,15 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      *
      * @param message 消费者发送的消息
      */
-    public void doConsumerMessage(Message message, ChannelHandlerContext ctx) {
+    private void doConsumerMessage(Message message, ChannelHandlerContext ctx) {
         String topic = message.getTopic();
 
         try {
             try {
                 Message pullMessage = consumerManager.pullMessage(topic, message.getConsumerGroup());
-                ctx.writeAndFlush(pullMessage);
+                if (pullMessage != null) {
+                    ctx.writeAndFlush(pullMessage);
+                }
             } catch (Exception ignored) {
             }
         } catch (Exception e) {

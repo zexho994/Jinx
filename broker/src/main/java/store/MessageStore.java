@@ -24,4 +24,13 @@ public interface MessageStore {
      * @param flushModel 刷盘模式
      */
     void putMessage(Message message, FlushModel flushModel);
+
+    /**
+     * 获取消息
+     *
+     * @param topic
+     * @param group
+     */
+    Message findMessage(String topic, String group);
+
 }

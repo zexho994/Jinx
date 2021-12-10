@@ -69,8 +69,20 @@ public class DefaultMessageStore implements MessageStore {
         } else if (commitlogPutResult.getResult() == PutMessageResult.FAILURE) {
             log.error("Failed to put message to consumeQueue, topic = {}, commit offset = {}", message.getTopic(), commitlogPutResult.getOffset());
         }
-
     }
+
+    @Override
+    public Message findMessage(String topic, String group) {
+        // 获取commitlog文件偏移量
+        try {
+            long commitlogOffset = consumeQueue.getCommitlogOffset(topic, group);
+            return commitlog.getMessage(commitlogOffset);
+        } catch (Exception e) {
+            log.error("Failed to find message, topic = {}, group = {} ", topic, group);
+            return null;
+        }
+    }
+
 
     public boolean checkStoreStatus() {
         return true;
