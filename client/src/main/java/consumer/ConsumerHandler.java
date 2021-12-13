@@ -1,6 +1,6 @@
 package consumer;
 
-import Message.Message;
+import message.Message;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 import netty.client.NettyClientHandler;

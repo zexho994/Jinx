@@ -1,5 +1,5 @@
 
-import Message.Message;
+import message.Message;
 import producer.Producer;
 
 import java.util.UUID;
@@ -11,21 +11,23 @@ import java.util.UUID;
 public class ProducerTest {
 
     public static void main(String[] args) {
-        new Thread(() -> ProducerTest.startProducer1(1000)).start();
-        new Thread(() -> ProducerTest.startProducer2(1000)).start();
+        new Thread(() -> ProducerTest.startProducer1(30000)).start();
+//        new Thread(() -> ProducerTest.startProducer2(1000)).start();
     }
 
     public static void startProducer1(int sleep) {
         Producer producer = new Producer("group_1", "127.0.0.1");
         producer.start();
 
-        Message message1 = new Message();
-        message1.setTopic("topic_1");
         int n = 0;
         while (true) {
-            message1.setTransactionId(UUID.randomUUID().toString());
-            message1.setBody(++n);
-            producer.sendMessage(message1);
+            Message message = new Message();
+            // 自定义失败处理方法
+            producer.setAfterRetryProcess(msg -> System.out.println("my after retry process method"));
+            message.setTopic("topic_1");
+            message.setTransactionId(UUID.randomUUID().toString());
+            message.setBody(++n);
+            producer.sendMessage(message);
             try {
                 Thread.sleep(sleep);
             } catch (InterruptedException e) {

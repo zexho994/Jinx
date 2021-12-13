@@ -187,8 +187,12 @@ public class ConsumeQueue {
         return mappedFile.getLong((off) - mappedFile.getFromOffset());
     }
 
-    public void incOffset(String topic, String group) throws IOException {
-        this.consumeOffset.incOffset(topic, group);
+    public void incOffset(String topic, String group) {
+        try {
+            this.consumeOffset.incOffset(topic, group);
+        } catch (IOException e) {
+            log.error("consumeOffset +1 error.", e);
+        }
     }
 
     /**

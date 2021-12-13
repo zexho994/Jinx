@@ -1,6 +1,6 @@
 package consumer;
 
-import Message.Message;
+import message.Message;
 import io.netty.channel.Channel;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;

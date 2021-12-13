@@ -1,12 +1,14 @@
 package remoting;
 
-import Message.Message;
-import Message.PropertiesKeys;
 import consumer.ConsumerManager;
 import enums.ClientType;
+import enums.MessageResponseCode;
 import enums.MessageType;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
+import message.ProducerMessageResponse;
+import message.PropertiesKeys;
 import netty.server.NettyServerHandler;
 import producer.ProducerManager;
 import store.constant.FlushModel;
@@ -50,7 +52,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
         }
         ClientType clientTypeObj = ClientType.get(clientType);
         if (ClientType.Producer == clientTypeObj) {
-            doProducerMessage(message);
+            doProducerMessage(message, ctx);
         } else if (ClientType.Consumer == clientTypeObj) {
             doConsumerMessage(message, ctx);
         }
@@ -60,12 +62,18 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      * 处理生产者的消息
      *
      * @param message 生产者发送的消息
+     * @param ctx
      */
-    private void doProducerMessage(Message message) {
+    private void doProducerMessage(Message message, ChannelHandlerContext ctx) {
         MessageType messageType = MessageType.get(message.getProperty(PropertiesKeys.MESSAGE_TYPE));
         if (messageType == MessageType.Put_Message) {
             producerManager.putMessage(message, FlushModel.SYNC);
         }
+
+        ProducerMessageResponse resp = new ProducerMessageResponse();
+        resp.setTransactionId(message.getTransactionId());
+        resp.setCode(MessageResponseCode.FAILURE.code);
+        ctx.writeAndFlush(resp);
     }
 
     /**
@@ -76,14 +84,10 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      */
     private void doConsumerMessage(Message message, ChannelHandlerContext ctx) {
         String topic = message.getTopic();
-
         try {
-            try {
-                Message pullMessage = consumerManager.pullMessage(topic, message.getConsumerGroup());
-                if (pullMessage != null) {
-                    ctx.writeAndFlush(pullMessage);
-                }
-            } catch (Exception ignored) {
+            Message pullMessage = consumerManager.pullMessage(topic, message.getConsumerGroup());
+            if (pullMessage != null) {
+                ctx.writeAndFlush(pullMessage);
             }
         } catch (Exception e) {
             e.printStackTrace();

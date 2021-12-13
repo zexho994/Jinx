@@ -1,6 +1,6 @@
 package store.mappedfile;
 
-import Message.Message;
+import message.Message;
 import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
 import store.constant.FileType;

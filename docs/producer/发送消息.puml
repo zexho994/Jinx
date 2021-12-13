@@ -1,8 +1,13 @@
 @startuml
 autonumber
 
-producer -> producer : 获取 broker 网络地址
-producer -> broker ++: 发送消息
+participant  producer
+participant messageSentQueue
+participant broker
+
+producer -> broker : 发送消息
+producer -> messageSentQueue : 消息保存到发送队列中
+
 return ok
 
 @enduml

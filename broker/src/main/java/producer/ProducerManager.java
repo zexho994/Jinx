@@ -1,6 +1,6 @@
 package producer;
 
-import Message.Message;
+import message.Message;
 import store.DefaultMessageStore;
 import store.constant.FlushModel;
 import store.MessageStore;

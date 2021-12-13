@@ -1,0 +1,26 @@
+@startuml
+autonumber
+
+box Producer
+participant clientNet
+participant requestTable
+participant clientHandler
+end box
+participant broker
+
+clientNet -> requestTable ++: 记录发送记录
+return ok
+clientNet -> broker : 发送消息
+opt 成功
+    broker --> clientNet : ack,type = success
+else ack type为失败
+    broker --> clientNet ++: ack,type = error
+    clientNet -> clientHandler --: 交给用户处理
+else 超时未收到ack
+    ... 最大等待时间 ...
+    requestTable -> requestTable ++: 扫描超时请求
+    requestTable -> clientNet --: 要求重发
+    clientNet -> broker : 重复步骤3
+end
+
+@enduml

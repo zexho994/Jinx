@@ -9,12 +9,12 @@ package Broker模块 <<Frame>> {
     }
     note top of consume : 与消息消费相关的功能
 
-    package producer{
+    package produce{
         class ProducerManager {
             + void putMessage()
         }
     }
-    note top of producer : 与消息生产相关的功能
+    note top of produce : 与消息生产相关的功能
 
     package remoting{
         class BrokerRemotingHandler{
@@ -32,6 +32,7 @@ package Broker模块 <<Frame>> {
     package store{
         interface MessageStore{
             + void putMessage(Message)
+            + Message findMessage(topic,group)
         }
         class DefaultMessageStore{}
         class MappedFileQueue{}
@@ -62,9 +63,32 @@ package Broker模块 <<Frame>> {
        DefaultMessageStore --> CommitLog
     }
     note top of store : 与消息持久化相关的功能
-
+    ProducerManager --> MessageStore : putMessage
+    ConsumeManager --> MessageStore : findMessage
 }
+note top of Broker模块 : 为生产者/消费者提供服务
 
+package Remote模块 <<Frame>> {
+    package client{}
+    note left of client : 客户端相关
+    package server{}
+    note left of server : 服务端相关
+}
+note top of Remote模块 : 网络相关
 
+package Client模块 <<Frame>> {
+    package producer{
+        class Producer{}
+        class ProducerHandler{
+        }
+        class MessageRequestTable{
+        }
+        note top of MessageRequestTable : 请求记录表
+    }
+    note left of producer : 生产者相关
+    package consumer{}
+    note left of consumer : 消费者相关
+}
+note top of Client模块 : 客户端SDK相关
 
 @enduml

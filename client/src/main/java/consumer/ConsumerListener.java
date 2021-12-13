@@ -1,6 +1,6 @@
 package consumer;
 
-import Message.Message;
+import message.Message;
 
 /**
  * @author Zexho

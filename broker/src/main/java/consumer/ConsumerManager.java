@@ -1,6 +1,6 @@
 package consumer;
 
-import Message.Message;
+import message.Message;
 import store.DefaultMessageStore;
 import store.MessageStore;
 import store.consumequeue.ConsumeQueue;
@@ -36,7 +36,7 @@ public class ConsumerManager {
      * @param consumeGroup 消费组
      * @return 未消费的消息
      */
-    public Message pullMessage(String topic, String consumeGroup) throws Exception {
+    public Message pullMessage(String topic, String consumeGroup) {
         Message message = messageStore.findMessage(topic, consumeGroup);
         if (message != null) {
             consumeQueue.incOffset(topic, consumeGroup);

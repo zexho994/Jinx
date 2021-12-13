@@ -1,6 +1,6 @@
 package store;
 
-import Message.Message;
+import message.Message;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import store.constant.FileType;

@@ -1,6 +1,6 @@
 package store;
 
-import Message.Message;
+import message.Message;
 import lombok.extern.log4j.Log4j2;
 import store.commitlog.Commitlog;
 import store.constant.FlushModel;
@@ -83,7 +83,6 @@ public class DefaultMessageStore implements MessageStore {
         }
     }
 
-
     public boolean checkStoreStatus() {
         return true;
     }
@@ -91,4 +90,5 @@ public class DefaultMessageStore implements MessageStore {
     public boolean checkMessage() {
         return true;
     }
+
 }

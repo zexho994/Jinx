@@ -12,8 +12,8 @@ import java.io.IOException;
 @Log4j2
 public class Main {
 
-    private static final Commitlog commitlog = Commitlog.getInstance();
-    private static final ConsumeQueue consumeQueue = ConsumeQueue.getInstance();
+    private static final Commitlog COMMITLOG = Commitlog.getInstance();
+    private static final ConsumeQueue CONSUME_QUEUE = ConsumeQueue.getInstance();
 
     public static void main(String[] args) {
         // 初始化任务
@@ -35,13 +35,13 @@ public class Main {
 
     public static boolean systemInit() {
         // 初始化 Commitlog
-        if (!commitlog.init()) {
+        if (!COMMITLOG.init()) {
             log.error("Failed to init commitlog");
             return false;
         }
 
         // 初始化 ConsumerQueue
-        if (!consumeQueue.init()) {
+        if (!CONSUME_QUEUE.init()) {
             log.error("Failed to init consumeQueue");
             return false;
         }
@@ -51,14 +51,14 @@ public class Main {
 
     public static boolean mappedFileRecover() {
         try {
-            commitlog.recover();
+            COMMITLOG.recover();
         } catch (IOException e) {
             log.error("Commitlog recover fail. ", e);
             return false;
         }
 
         try {
-            consumeQueue.recover();
+            CONSUME_QUEUE.recover();
         } catch (Exception e) {
             log.error("ConsumeQueue recover fail. ", e);
             return false;

@@ -1,6 +1,6 @@
 package store;
 
-import Message.Message;
+import message.Message;
 import store.constant.FlushModel;
 
 /**

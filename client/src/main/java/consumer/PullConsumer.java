@@ -1,7 +1,7 @@
 package consumer;
 
-import Message.Message;
-import Message.PropertiesKeys;
+import message.Message;
+import message.PropertiesKeys;
 import enums.ClientType;
 import enums.MessageType;
 import lombok.extern.log4j.Log4j2;

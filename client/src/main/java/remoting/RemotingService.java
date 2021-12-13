@@ -1,6 +1,6 @@
 package remoting;
 
-import Message.Message;
+import message.Message;
 
 /**
  * @author Zexho

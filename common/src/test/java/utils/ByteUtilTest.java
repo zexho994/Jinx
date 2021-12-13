@@ -1,6 +1,6 @@
 package utils;
 
-import Message.Message;
+import message.Message;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

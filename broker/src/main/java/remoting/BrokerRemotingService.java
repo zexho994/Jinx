@@ -11,16 +11,16 @@ import netty.server.NettyServerConfig;
 @Log4j2
 public class BrokerRemotingService {
 
-    private final NettyRemotingServerImpl nettyRemotingClient;
+    private final NettyRemotingServerImpl remotingServer;
 
     public BrokerRemotingService() {
         NettyServerConfig config = new NettyServerConfig();
-        this.nettyRemotingClient = new NettyRemotingServerImpl(config);
-        this.nettyRemotingClient.setServerHandler(new BrokerRemotingHandler());
+        this.remotingServer = new NettyRemotingServerImpl(config);
+        this.remotingServer.setServerHandler(new BrokerRemotingHandler());
     }
 
     public void start() {
-        this.nettyRemotingClient.start();
+        this.remotingServer.start();
     }
 
 }

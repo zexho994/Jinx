@@ -1,4 +1,4 @@
-import Message.Message;
+import message.Message;
 import consumer.Consumer;
 import org.junit.jupiter.api.Assertions;
 import producer.Producer;

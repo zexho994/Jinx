@@ -1,7 +1,5 @@
 package enums;
 
-import Message.Message;
-
 import java.util.Objects;
 
 /**
