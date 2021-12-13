@@ -34,6 +34,7 @@ public class Producer implements RemotingService {
     @Override
     public void start() {
         this.nettyRemotingClient.start();
+        this.messageRequestTable.start();
     }
 
     @Override
