@@ -2,6 +2,7 @@ package store;
 
 import message.Message;
 import store.constant.FlushModel;
+import store.constant.PutMessageResult;
 
 /**
  * @author Zexho
@@ -13,8 +14,9 @@ public interface MessageStore {
      * 存储消息
      *
      * @param message 消息对象
+     * @return
      */
-    void putMessage(Message message);
+    PutMessageResult putMessage(Message message);
 
 
     /**
@@ -22,8 +24,9 @@ public interface MessageStore {
      *
      * @param message    消息对象
      * @param flushModel 刷盘模式
+     * @return
      */
-    void putMessage(Message message, FlushModel flushModel);
+    PutMessageResult putMessage(Message message, FlushModel flushModel);
 
     /**
      * 获取消息

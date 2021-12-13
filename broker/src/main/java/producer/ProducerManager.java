@@ -2,8 +2,9 @@ package producer;
 
 import message.Message;
 import store.DefaultMessageStore;
-import store.constant.FlushModel;
 import store.MessageStore;
+import store.constant.FlushModel;
+import store.constant.PutMessageResult;
 
 /**
  * @author Zexho
@@ -26,8 +27,8 @@ public class ProducerManager {
     /**
      * 投递消息
      */
-    public void putMessage(Message message, FlushModel model) {
+    public PutMessageResult putMessage(Message message, FlushModel model) {
         // 消息交给存储模块进行存储
-        messageStore.putMessage(message, model);
+        return messageStore.putMessage(message, model);
     }
 }

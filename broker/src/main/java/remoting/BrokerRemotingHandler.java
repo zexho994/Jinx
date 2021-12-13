@@ -12,6 +12,7 @@ import message.PropertiesKeys;
 import netty.server.NettyServerHandler;
 import producer.ProducerManager;
 import store.constant.FlushModel;
+import store.constant.PutMessageResult;
 
 /**
  * @author Zexho
@@ -67,13 +68,20 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     private void doProducerMessage(Message message, ChannelHandlerContext ctx) {
         MessageType messageType = MessageType.get(message.getProperty(PropertiesKeys.MESSAGE_TYPE));
         if (messageType == MessageType.Put_Message) {
-            producerManager.putMessage(message, FlushModel.SYNC);
+            PutMessageResult putMessageResult = producerManager.putMessage(message, FlushModel.SYNC);
+            ProducerMessageResponse resp = new ProducerMessageResponse();
+            resp.setTransactionId(message.getTransactionId());
+            switch (putMessageResult) {
+                case OK:
+                    resp.setCode(MessageResponseCode.SUCCESS.code);
+                    break;
+                case FAILURE:
+                    resp.setCode(MessageResponseCode.FAILURE.code);
+                    break;
+                default:
+            }
+            ctx.writeAndFlush(resp);
         }
-
-        ProducerMessageResponse resp = new ProducerMessageResponse();
-        resp.setTransactionId(message.getTransactionId());
-        resp.setCode(MessageResponseCode.FAILURE.code);
-        ctx.writeAndFlush(resp);
     }
 
     /**

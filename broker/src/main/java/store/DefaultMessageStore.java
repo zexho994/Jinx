@@ -1,7 +1,7 @@
 package store;
 
-import message.Message;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
 import store.commitlog.Commitlog;
 import store.constant.FlushModel;
 import store.constant.PutMessageResult;
@@ -33,10 +33,11 @@ public class DefaultMessageStore implements MessageStore {
      * 默认采用同步的方式
      *
      * @param message 消息对象
+     * @return
      */
     @Override
-    public void putMessage(Message message) {
-        this.putMessage(message, FlushModel.SYNC);
+    public PutMessageResult putMessage(Message message) {
+        return this.putMessage(message, FlushModel.SYNC);
     }
 
     /**
@@ -45,19 +46,20 @@ public class DefaultMessageStore implements MessageStore {
      *
      * @param message    消息对象
      * @param flushModel 刷盘模式
+     * @return
      */
     @Override
-    public void putMessage(final Message message, final FlushModel flushModel) {
+    public PutMessageResult putMessage(final Message message, final FlushModel flushModel) {
         // 检查存储状态
         if (!this.checkStoreStatus()) {
             log.error("Store status is abnormality");
-            return;
+            return PutMessageResult.FAILURE;
         }
 
         // 检查消息格式
         if (!this.checkMessage()) {
             log.error("The Message format is invalid");
-            return;
+            return PutMessageResult.FAILURE;
         }
 
         // 交给commitlog进行存储
@@ -65,9 +67,10 @@ public class DefaultMessageStore implements MessageStore {
 
         // 交给 consumeQueue 进行存储
         if (commitlogPutResult.getResult() == PutMessageResult.OK) {
-            PutMessageResult putMessageResult = this.consumeQueue.putMessage(message.getTopic(), commitlogPutResult.getOffset());
-        } else if (commitlogPutResult.getResult() == PutMessageResult.FAILURE) {
+            return this.consumeQueue.putMessage(message.getTopic(), commitlogPutResult.getOffset());
+        } else {
             log.error("Failed to put message to consumeQueue, topic = {}, commit offset = {}", message.getTopic(), commitlogPutResult.getOffset());
+            return PutMessageResult.FAILURE;
         }
     }
 
