@@ -1,7 +1,7 @@
 package store.commitlog;
 
-import message.Message;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
 import store.MappedFileQueue;
 import store.constant.FileType;
 import store.constant.FlushModel;
@@ -185,7 +185,7 @@ public class Commitlog {
      */
     public Message getMessage(long offset) throws IOException {
         MappedFile mappedFile = this.getFileByOffset(offset);
-        int size = mappedFile.getInt(offset);
+        int size = mappedFile.getInt(offset - mappedFile.getFromOffset());
         int pos = (int) (offset - mappedFile.getFromOffset() + MappedFile.INT_LENGTH);
         try {
             return mappedFile.loadMessage(pos, size);

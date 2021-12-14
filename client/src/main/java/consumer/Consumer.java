@@ -29,7 +29,6 @@ public class Consumer implements RemotingService {
         this.consumerClient.setClientHandler(consumerHandler);
         this.consumerClient.start();
 
-        // 开始执行 pull 任务
         this.pullConsumer = new PullConsumer();
         pullConsumer.pullMessageTask(this);
     }

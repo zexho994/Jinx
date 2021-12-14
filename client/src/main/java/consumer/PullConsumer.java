@@ -1,10 +1,10 @@
 package consumer;
 
-import message.Message;
-import message.PropertiesKeys;
 import enums.ClientType;
 import enums.MessageType;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
+import message.PropertiesKeys;
 
 /**
  * @author Zexho
@@ -13,12 +13,8 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class PullConsumer {
 
-    private Consumer consumer;
-
     /**
      * 从 broker 拉取消息
-     *
-     * @param consumer
      */
     public void pullMessageTask(Consumer consumer) {
         Message pullRequest = new Message();
@@ -38,7 +34,6 @@ public class PullConsumer {
     }
 
     public void shutdownTask() {
-
     }
 
 }

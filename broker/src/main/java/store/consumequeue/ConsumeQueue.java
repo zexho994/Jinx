@@ -171,14 +171,13 @@ public class ConsumeQueue {
      * 获取消息在 commitlog 文件中总偏移值 offset
      *
      * @param topic 消息主题
-     * @param gruop 消费组
+     * @param group 消费组
      * @return 获取结果对象
      * @throws Exception
      */
-    public long getCommitlogOffset(String topic, String gruop) throws Exception {
+    public long getCommitlogOffset(String topic, String group) throws Exception {
         ensureFileExist(topic);
-
-        long offset = consumeOffset.getOffset(topic, gruop);
+        long offset = consumeOffset.getOffset(topic, group);
 
         MappedFileQueue consumeQueueFiles = mappedFileMap.get(topic);
         long off = offset * MappedFile.LONG_LENGTH;
