@@ -51,7 +51,6 @@ public class ConsumerManager {
             if (message != null) {
                 consumeQueue.incOffset(topic, consumeGroup);
             }
-            // 释放锁
             return message;
         } finally {
             lock.unlock();

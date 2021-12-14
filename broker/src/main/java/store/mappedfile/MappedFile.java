@@ -1,8 +1,8 @@
 package store.mappedfile;
 
-import message.Message;
 import common.MemoryCapacity;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
 import store.constant.FileType;
 import store.constant.MessageAppendResult;
 import utils.ByteUtil;
@@ -149,16 +149,24 @@ public class MappedFile {
         return fileData;
     }
 
-    public long getLong(long offset) throws IOException {
-        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-        randomAccessFile.seek(offset);
-        return randomAccessFile.readLong();
+    public Long getLong(long offset) throws IOException {
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
+            if (offset + LONG_LENGTH > randomAccessFile.length()) {
+                return null;
+            }
+            randomAccessFile.seek(offset);
+            return randomAccessFile.readLong();
+        }
     }
 
-    public int getInt(long offset) throws IOException {
-        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-        randomAccessFile.seek(offset);
-        return randomAccessFile.readInt();
+    public Integer getInt(long offset) throws IOException {
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
+            if (offset + INT_LENGTH > randomAccessFile.length()) {
+                return null;
+            }
+            randomAccessFile.seek(offset);
+            return randomAccessFile.readInt();
+        }
     }
 
     /**
@@ -169,17 +177,22 @@ public class MappedFile {
      * @throws IOException
      */
     public void updateInt(int offset, int n) throws IOException {
-        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-        randomAccessFile.seek(offset);
-        randomAccessFile.writeInt(n);
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
+            randomAccessFile.seek(offset);
+            randomAccessFile.writeInt(n);
+        }
     }
 
     public Message loadMessage(long offset, int size) throws IOException {
-        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-        randomAccessFile.seek(offset);
-        byte[] b = new byte[size];
-        randomAccessFile.read(b);
-        return ByteUtil.to(b, Message.class);
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
+            if (offset + size > randomAccessFile.length()) {
+                return null;
+            }
+            randomAccessFile.seek(offset);
+            byte[] b = new byte[size];
+            randomAccessFile.read(b);
+            return ByteUtil.to(b, Message.class);
+        }
     }
 
     public String getFileName() {
@@ -203,7 +216,7 @@ public class MappedFile {
         this.accessChannel.position(pos);
     }
 
-    public String getAbsolutePath(){
+    public String getAbsolutePath() {
         return this.file.getAbsolutePath();
     }
 

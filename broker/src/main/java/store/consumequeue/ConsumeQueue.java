@@ -109,7 +109,10 @@ public class ConsumeQueue {
         long offset = 0;
         while (true) {
             try {
-                mappedFile.getLong(offset);
+                Long l = mappedFile.getLong(offset);
+                if (l == null) {
+                    break;
+                }
             } catch (IOException e) {
                 break;
             }
@@ -175,7 +178,7 @@ public class ConsumeQueue {
      * @return 获取结果对象
      * @throws Exception
      */
-    public long getCommitlogOffset(String topic, String group) throws Exception {
+    public Long getCommitlogOffset(String topic, String group) throws Exception {
         ensureFileExist(topic);
         long offset = consumeOffset.getOffset(topic, group);
 
@@ -183,7 +186,7 @@ public class ConsumeQueue {
         long off = offset * MappedFile.LONG_LENGTH;
         MappedFile mappedFile = consumeQueueFiles.getFileByOffset(off);
 
-        return mappedFile.getLong((off) - mappedFile.getFromOffset());
+        return mappedFile.getLong(off - mappedFile.getFromOffset());
     }
 
     public void incOffset(String topic, String group) {

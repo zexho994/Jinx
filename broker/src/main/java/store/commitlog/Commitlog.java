@@ -109,17 +109,16 @@ public class Commitlog {
         }
         MappedFile lastMappedFile = this.mappedFileQueue.getLastMappedFile();
         long offset = 0;
-        try {
-            while (true) {
-                int size = lastMappedFile.getInt(offset);
-                Message message = lastMappedFile.loadMessage(offset + MappedFile.INT_LENGTH, size);
-                if (message == null) {
-                    break;
-                }
-                offset += MappedFile.INT_LENGTH + size;
+        while (true) {
+            Integer size = lastMappedFile.getInt(offset);
+            if (size == null) {
+                break;
             }
-        } catch (Exception ignore) {
-
+            Message message = lastMappedFile.loadMessage(offset + MappedFile.INT_LENGTH, size);
+            if (message == null) {
+                break;
+            }
+            offset += MappedFile.INT_LENGTH + size;
         }
         try {
             lastMappedFile.setWrotePos(offset);
@@ -185,7 +184,7 @@ public class Commitlog {
      */
     public Message getMessage(long offset) throws IOException {
         MappedFile mappedFile = this.getFileByOffset(offset);
-        int size = mappedFile.getInt(offset - mappedFile.getFromOffset());
+        Integer size = mappedFile.getInt(offset - mappedFile.getFromOffset());
         int pos = (int) (offset - mappedFile.getFromOffset() + MappedFile.INT_LENGTH);
         try {
             return mappedFile.loadMessage(pos, size);

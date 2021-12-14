@@ -49,7 +49,7 @@ public class ConsumerTest {
 
         // 消息监听
         consumer.setConsumerListener(msg -> {
-            System.out.printf("消息消息 => topic = %s, group = %s, msg = %s \n", topic, group, msg);
+            System.out.printf("[Consumer] topic = %s, group = %s, msg = %s \n", topic, group, msg);
             Integer n = ProducerTest.SEND_DATA.get(msg.getTransactionId());
             if (n == 1) {
                 ProducerTest.SEND_DATA.remove(msg.getTransactionId());

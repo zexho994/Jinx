@@ -78,11 +78,14 @@ public class DefaultMessageStore implements MessageStore {
     public Message findMessage(String topic, String group) {
         try {
             // 获取commitlog文件偏移量
-            long commitlogOffset = consumeQueue.getCommitlogOffset(topic, group);
+            Long commitlogOffset = consumeQueue.getCommitlogOffset(topic, group);
+            if (commitlogOffset == null) {
+                return null;
+            }
             // 根据偏移量在commitlog文件中获取消息
             return commitlog.getMessage(commitlogOffset);
         } catch (Exception e) {
-            log.error("Failed to find message, topic = {}, group = {} ", topic, group);
+            log.error("Failed to find message, topic = {}, group = {}, e = {}", topic, group, e);
             return null;
         }
     }
