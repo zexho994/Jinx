@@ -31,8 +31,9 @@ public interface MessageStore {
     /**
      * 获取消息
      *
-     * @param topic
-     * @param group
+     * @param topic 消息主题
+     * @param group 消费组
+     * @return 消息对象
      */
     Message findMessage(String topic, String group);
 

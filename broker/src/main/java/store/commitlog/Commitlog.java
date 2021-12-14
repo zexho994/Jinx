@@ -181,7 +181,7 @@ public class Commitlog {
      * 获取消息
      *
      * @param offset 在文件中的偏移量
-     * @return
+     * @return 目标消息对象
      */
     public Message getMessage(long offset) throws IOException {
         MappedFile mappedFile = this.getFileByOffset(offset);

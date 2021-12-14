@@ -18,10 +18,10 @@ public class PullConsumer {
      */
     public void pullMessageTask(Consumer consumer) {
         Message pullRequest = new Message();
-        pullRequest.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Pull_Message.type);
         pullRequest.setTopic(consumer.getTopic());
         pullRequest.setConsumerGroup(consumer.getConsumerGroup());
         pullRequest.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Consumer.type);
+        pullRequest.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Pull_Message.type);
 
         while (true) {
             try {

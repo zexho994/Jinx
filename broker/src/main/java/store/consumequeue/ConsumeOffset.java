@@ -143,8 +143,8 @@ class ConsumeOffset {
     /**
      * 消费记录+1
      *
-     * @param topic
-     * @param consumeGroup
+     * @param topic        消息主题
+     * @param consumeGroup 消费组
      */
     public void incOffset(String topic, String consumeGroup) throws IOException {
         MappedFile file = this.getFile(topic, consumeGroup);

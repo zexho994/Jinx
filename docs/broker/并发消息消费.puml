@@ -1,0 +1,9 @@
+@startuml
+autonumber
+
+Consumer -> Broker : pull
+Broker -> Broker : 获取消息
+Broker -> Broker : 消费offset++
+Broker --> Consumer : msg
+
+@enduml

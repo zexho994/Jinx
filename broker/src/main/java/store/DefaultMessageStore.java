@@ -76,9 +76,10 @@ public class DefaultMessageStore implements MessageStore {
 
     @Override
     public Message findMessage(String topic, String group) {
-        // 获取commitlog文件偏移量
         try {
+            // 获取commitlog文件偏移量
             long commitlogOffset = consumeQueue.getCommitlogOffset(topic, group);
+            // 根据偏移量在commitlog文件中获取消息
             return commitlog.getMessage(commitlogOffset);
         } catch (Exception e) {
             log.error("Failed to find message, topic = {}, group = {} ", topic, group);
