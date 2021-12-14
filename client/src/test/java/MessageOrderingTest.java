@@ -26,7 +26,7 @@ public class MessageOrderingTest {
     }
 
     public void send(String topic) {
-        Producer producer = new Producer("group_1", "127.0.0.1");
+        Producer producer = new Producer( "127.0.0.1");
         producer.start();
 
         Message message = new Message();

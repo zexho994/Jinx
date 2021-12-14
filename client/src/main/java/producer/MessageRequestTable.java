@@ -55,28 +55,13 @@ public class MessageRequestTable {
     }
 
     /**
-     * 获取请求的重试次数
-     *
-     * @param msgId
-     * @return
-     */
-    public int getRetryCount(String msgId) {
-        MessageRequest messageRequest = this.get(msgId);
-        return messageRequest.getRetryCount();
-    }
-
-    /**
      * 获取请求对象
      *
      * @param msgId
      * @return
      */
     public MessageRequest get(String msgId) {
-        MessageRequest messageRequest = requestQueue.stream().filter(req -> req.getMessage().getTransactionId().equals(msgId)).findFirst().orElse(null);
-        if (messageRequest == null) {
-            log.warn("MessageRequestTable get message fail, msgId {} not found", msgId);
-        }
-        return messageRequest;
+        return requestQueue.stream().filter(req -> req.getMessage().getTransactionId().equals(msgId)).findFirst().orElse(null);
     }
 
     /**
@@ -103,7 +88,7 @@ public class MessageRequestTable {
      * 启动超时请求定时监控线程
      */
     public void start() {
-        new Thread(() -> scanTimeoutRequest()).start();
+        new Thread(this::scanTimeoutRequest).start();
     }
 
     public void scanTimeoutRequest() {

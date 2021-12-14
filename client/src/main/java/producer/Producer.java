@@ -19,12 +19,10 @@ import remoting.RemotingService;
 public class Producer implements RemotingService {
 
     private final NettyRemotingClientImpl nettyRemotingClient;
-    private final String group;
     final MessageRequestTable messageRequestTable;
     AfterRetryProcess afterRetryProcess;
 
-    public Producer(String group, String host) {
-        this.group = group;
+    public Producer(String host) {
         NettyClientConfig config = new NettyClientConfig(host);
         ProducerHandler handler = new ProducerHandler(this);
         this.nettyRemotingClient = new NettyRemotingClientImpl(config, handler);
@@ -44,7 +42,6 @@ public class Producer implements RemotingService {
 
     @Override
     public void sendMessage(Message message) {
-        message.setConsumerGroup(this.group);
         try {
             // 消息保存到发送队列中
             this.messageRequestTable.offer(message);
