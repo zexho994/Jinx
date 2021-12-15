@@ -12,7 +12,7 @@ public class NettyClientConfig {
     /**
      * 监听端口
      */
-    private final int listenPort = 9944;
+    private int listenPort = 9944;
     /**
      * 客户端工作线程数
      */

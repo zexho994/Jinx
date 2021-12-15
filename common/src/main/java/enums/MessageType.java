@@ -16,7 +16,9 @@ public enum MessageType {
 
     /////////// Producer ///////////////
     Put_Message("message"),
-    ;
+
+    /////////// Broker ///////////////
+    Heart_Beat("heartbeat");
 
     public final String type;
 

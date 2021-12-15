@@ -1,6 +1,8 @@
 import com.beust.jcommander.JCommander;
 import command.BrokerCommand;
 import lombok.extern.log4j.Log4j2;
+import netty.client.NettyClientConfig;
+import remoting.BrokerNamesrvService;
 import remoting.BrokerRemotingService;
 import store.commitlog.Commitlog;
 import store.consumequeue.ConsumeQueue;
@@ -19,18 +21,21 @@ public class BrokerStartup {
     private static String nameSrvHost;
 
     public static void main(String[] args) throws Exception {
+        // 启动参数解析
         try {
             parseCommander(args);
         } catch (Exception e) {
             throw new Exception("parse commander error.", e);
         }
 
+        // 系统初始化
         try {
             systemInit();
         } catch (Exception e) {
             throw new Exception("systemInit error.", e);
         }
 
+        // 恢复文件
         try {
             mappedFileRecover();
         } catch (IOException e) {
@@ -40,6 +45,12 @@ public class BrokerStartup {
         // 启动broker
         BrokerRemotingService brokerRemotingService = new BrokerRemotingService();
         brokerRemotingService.start();
+
+        // namesrv 连接服务
+        NettyClientConfig nettyClientConfig = new NettyClientConfig(nameSrvHost);
+        nettyClientConfig.setListenPort(9876);
+        BrokerNamesrvService brokerNamesrvService = new BrokerNamesrvService(nettyClientConfig);
+        brokerNamesrvService.start();
     }
 
     /**

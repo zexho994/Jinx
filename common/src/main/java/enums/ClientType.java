@@ -14,7 +14,11 @@ public enum ClientType {
     /**
      * 消费者身份
      */
-    Consumer("consumer");
+    Consumer("consumer"),
+    /**
+     * broker身份
+     */
+    Broker("broker");
 
     public final String type;
 
