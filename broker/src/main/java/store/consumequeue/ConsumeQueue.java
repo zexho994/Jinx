@@ -59,15 +59,13 @@ public class ConsumeQueue {
         mappedFileQueue.addMappedFile(mappedFile);
     }
 
-    public boolean init() {
+    public void init() throws Exception {
         try {
             this.ensureDirExist();
             this.consumeOffset.init();
         } catch (Exception e) {
-            log.error("ConsumeQueue init error", e);
-            return false;
+            throw new Exception("ConsumeQueue init error. ", e);
         }
-        return true;
     }
 
     /**

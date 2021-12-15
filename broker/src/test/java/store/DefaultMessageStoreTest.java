@@ -14,8 +14,12 @@ class DefaultMessageStoreTest {
     ConsumeQueue consumeQueue = ConsumeQueue.getInstance();
 
     {
-        commitlog.init();
-        consumeQueue.init();
+        try {
+            commitlog.init();
+            consumeQueue.init();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test

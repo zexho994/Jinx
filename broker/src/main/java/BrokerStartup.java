@@ -1,3 +1,5 @@
+import com.beust.jcommander.JCommander;
+import command.BrokerCommand;
 import lombok.extern.log4j.Log4j2;
 import remoting.BrokerRemotingService;
 import store.commitlog.Commitlog;
@@ -14,18 +16,25 @@ public class BrokerStartup {
 
     private static final Commitlog COMMITLOG = Commitlog.getInstance();
     private static final ConsumeQueue CONSUME_QUEUE = ConsumeQueue.getInstance();
+    private static String nameSrvHost;
 
-    public static void main(String[] args) {
-        // 初始化任务
-        if (!systemInit()) {
-            log.error("Failed to SystemInit");
-            System.exit(-1);
+    public static void main(String[] args) throws Exception {
+        try {
+            parseCommander(args);
+        } catch (Exception e) {
+            throw new Exception("parse commander error.", e);
         }
 
-        // 文件恢复
-        if (!mappedFileRecover()) {
-            log.error("MappedFile recover fail.");
-            System.exit(-1);
+        try {
+            systemInit();
+        } catch (Exception e) {
+            throw new Exception("systemInit error.", e);
+        }
+
+        try {
+            mappedFileRecover();
+        } catch (IOException e) {
+            throw new Exception("mappedFile recover error.", e);
         }
 
         // 启动broker
@@ -34,24 +43,38 @@ public class BrokerStartup {
     }
 
     /**
-     * 初始化配置
+     * 解析启动命令参数
      *
-     * @return 初始化结果，true 成功
+     * @param args 启动参数
      */
-    public static boolean systemInit() {
+    public static void parseCommander(String[] args) throws Exception {
+        BrokerCommand startCommand = new BrokerCommand();
+        JCommander jCommander = JCommander.newBuilder().addObject(startCommand).build();
+        jCommander.parse(args);
+
+        nameSrvHost = startCommand.getNamesrvHost();
+        if (nameSrvHost == null) {
+            throw new Exception("nameserver host cannot be null");
+        }
+    }
+
+    /**
+     * 初始化配置
+     */
+    public static void systemInit() throws Exception {
         // 初始化 Commitlog
-        if (!COMMITLOG.init()) {
-            log.error("Failed to init commitlog");
-            return false;
+        try {
+            COMMITLOG.init();
+        } catch (Exception e) {
+            throw new Exception("Failed init commitlog");
         }
 
         // 初始化 ConsumerQueue
-        if (!CONSUME_QUEUE.init()) {
-            log.error("Failed to init consumeQueue");
-            return false;
+        try {
+            CONSUME_QUEUE.init();
+        } catch (Exception e) {
+            throw new Exception("Failed init consumeQueue");
         }
-
-        return true;
     }
 
     /**
@@ -59,21 +82,17 @@ public class BrokerStartup {
      *
      * @return 恢复结果 true正常, false 发生异常
      */
-    public static boolean mappedFileRecover() {
+    public static void mappedFileRecover() throws Exception {
         try {
             COMMITLOG.recover();
         } catch (IOException e) {
-            log.error("Commitlog recover fail. ", e);
-            return false;
+            throw new Exception("commitlog recover error. ", e);
         }
 
         try {
             CONSUME_QUEUE.recover();
         } catch (Exception e) {
-            log.error("ConsumeQueue recover fail. ", e);
-            return false;
+            throw new Exception("ConsumeQueue recover fail. ", e);
         }
-
-        return true;
     }
 }

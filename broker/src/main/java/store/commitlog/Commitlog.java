@@ -60,7 +60,7 @@ public class Commitlog {
     /**
      * 初始化时候创建文件夹
      */
-    public boolean init() {
+    public void init() throws Exception {
         COMMITLOG_FOLDER = new File(COMMIT_DIR_PATH);
         int count = 0;
         if (COMMITLOG_FOLDER.exists()) {
@@ -86,8 +86,7 @@ public class Commitlog {
         } else {
             // 文件夹不存在
             if (!COMMITLOG_FOLDER.mkdirs()) {
-                log.error("Failed to mkdir commitlog");
-                return false;
+                throw new Exception("Failed to mkdir commitlog");
             }
         }
 
@@ -95,12 +94,9 @@ public class Commitlog {
             try {
                 this.createFirstMappedFile();
             } catch (IOException e) {
-                log.error("Failed create new MappedFile", e);
-                return false;
+                throw new Exception("Failed create new MappedFile", e);
             }
         }
-
-        return true;
     }
 
     public void recover() throws IOException {
