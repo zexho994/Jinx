@@ -12,7 +12,7 @@
 
     <artifactId>remote</artifactId>
     <packaging>jar</packaging>
-    <name>remote ${project.version}</name>
+    <name>remote</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
