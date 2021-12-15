@@ -10,7 +10,7 @@ import java.io.IOException;
  * @date 2021/11/18 4:16 下午
  */
 @Log4j2
-public class Main {
+public class BrokerStartup {
 
     private static final Commitlog COMMITLOG = Commitlog.getInstance();
     private static final ConsumeQueue CONSUME_QUEUE = ConsumeQueue.getInstance();
@@ -33,6 +33,11 @@ public class Main {
         brokerRemotingService.start();
     }
 
+    /**
+     * 初始化配置
+     *
+     * @return 初始化结果，true 成功
+     */
     public static boolean systemInit() {
         // 初始化 Commitlog
         if (!COMMITLOG.init()) {
@@ -49,6 +54,11 @@ public class Main {
         return true;
     }
 
+    /**
+     * 文件恢复
+     *
+     * @return 恢复结果 true正常, false 发生异常
+     */
     public static boolean mappedFileRecover() {
         try {
             COMMITLOG.recover();

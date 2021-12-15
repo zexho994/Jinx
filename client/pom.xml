@@ -12,7 +12,7 @@
 
     <artifactId>client</artifactId>
     <packaging>jar</packaging>
-    <name>client</name>
+    <name>client ${project.version}</name>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
