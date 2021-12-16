@@ -22,4 +22,9 @@ public class PropertiesKeys {
      */
     public static final String BROKER_HOST = "brokerHost";
 
+    /**
+     * broker名称，在broker启动时设置
+     */
+    public static final String BROKER_NAME = "brokerName";
+
 }

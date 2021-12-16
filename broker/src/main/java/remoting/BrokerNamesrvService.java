@@ -36,6 +36,7 @@ public class BrokerNamesrvService {
         heartbeat.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Broker.type);
         heartbeat.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Heart_Beat.type);
         heartbeat.addProperties(PropertiesKeys.BROKER_HOST, BrokerConfig.brokerHost);
+        heartbeat.addProperties(PropertiesKeys.BROKER_NAME, BrokerConfig.brokerName);
     }
 
     public void start() {

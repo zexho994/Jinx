@@ -16,4 +16,6 @@ public class BrokerCommand {
     @Parameter(names = {"-broker", "-B"}, description = "broker服务的公有ip地址")
     private String brokerHost;
 
+    @Parameter(names = {"-name", "-n"}, description = "broker实例名称")
+    private String brokerName;
 }

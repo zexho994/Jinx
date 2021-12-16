@@ -69,6 +69,10 @@ public class BrokerStartup {
             throw new Exception("broker host cannot be null");
         }
         BrokerConfig.brokerHost = startCommand.getBrokerHost();
+
+        if (startCommand.getBrokerName() != null) {
+            BrokerConfig.brokerName = startCommand.getBrokerName();
+        }
     }
 
     /**

@@ -72,7 +72,7 @@ public class Producer implements RemotingService {
 
         try {
             RemotingCommand remotingCommand = new RemotingCommand();
-            remotingCommand.setMessage(ByteUtil.to(message));
+            remotingCommand.setBody(ByteUtil.to(message));
             remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Producer.type);
             remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Put_Message.type);
             ChannelFuture sync = channel.writeAndFlush(remotingCommand).sync();

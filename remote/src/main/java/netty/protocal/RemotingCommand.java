@@ -1,8 +1,6 @@
 package netty.protocal;
 
 import lombok.Data;
-import message.Message;
-import utils.ByteUtil;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -19,7 +17,7 @@ public class RemotingCommand implements Serializable {
 
     private Map<String, String> properties = new ConcurrentHashMap<>();
 
-    private byte[] message;
+    private byte[] body;
 
     public void addProperties(String key, String val) {
         properties.put(key, val);
@@ -29,19 +27,19 @@ public class RemotingCommand implements Serializable {
         return properties.get(key);
     }
 
-    public void setMessage(byte[] message) {
-        this.message = message;
+    public void setBody(byte[] body) {
+        this.body = body;
     }
 
-    public byte[] getMessage() {
-        return this.message;
+    public byte[] getBody() {
+        return this.body;
     }
 
     @Override
     public String toString() {
         return "RemotingCommand{" +
                 "properties=" + properties +
-                ", message=" + Arrays.toString(message) +
+                ", body=" + Arrays.toString(body) +
                 '}';
     }
 }

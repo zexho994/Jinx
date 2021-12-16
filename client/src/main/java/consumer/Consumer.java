@@ -49,7 +49,7 @@ public class Consumer implements RemotingService {
         Channel channel = this.consumerClient.getChannel();
 
         RemotingCommand remotingCommand = new RemotingCommand();
-        remotingCommand.setMessage(ByteUtil.to(message));
+        remotingCommand.setBody(ByteUtil.to(message));
         remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Consumer.type);
         remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Pull_Message.type);
 
