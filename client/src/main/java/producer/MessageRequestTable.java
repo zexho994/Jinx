@@ -75,7 +75,7 @@ public class MessageRequestTable {
         if (retryCount >= MAX_RETRY_COUNT) {
             // 调用用户定义的处理方法
             log.info("the retry count reached the upper limit. msgId = {}", msgId);
-            this.producer.afterRetryProcess.process(messageRequest.getMessage());
+            ProducerConfig.afterRetryProcess.process(messageRequest.getMessage());
         } else {
             messageRequest.incRetryCount();
             messageRequest.setSendDate(System.currentTimeMillis());

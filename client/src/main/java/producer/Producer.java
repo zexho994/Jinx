@@ -22,7 +22,6 @@ public class Producer implements RemotingService {
 
     private final NettyRemotingClientImpl nettyRemotingClient;
     final MessageRequestTable messageRequestTable;
-    AfterRetryProcess afterRetryProcess;
 
     public Producer(String host) {
         NettyClientConfig config = new NettyClientConfig(host);
@@ -63,7 +62,6 @@ public class Producer implements RemotingService {
     void sendMessageSync(Message message) throws InterruptedException {
         log.info("SEND MESSAGE => {}", message);
 
-
         Channel channel = this.nettyRemotingClient.getChannel();
         if (!channel.isActive()) {
             log.warn("channel is inactive");
@@ -86,6 +84,6 @@ public class Producer implements RemotingService {
     }
 
     public void setAfterRetryProcess(AfterRetryProcess afterRetryProcess) {
-        this.afterRetryProcess = afterRetryProcess;
+        ProducerConfig.afterRetryProcess = afterRetryProcess;
     }
 }
