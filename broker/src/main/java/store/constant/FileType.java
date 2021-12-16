@@ -23,7 +23,8 @@ public enum FileType {
     CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator, MemoryCapacity.KB),
 
     CONSUME_OFFSET(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeOffset" + File.separator, MemoryCapacity.B * 8),
-    ;
+
+    BROKER_CONFIG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "config" + File.separator + "broker", 4 * MemoryCapacity.KB);
 
     public final String basePath;
     public final int fileSize;

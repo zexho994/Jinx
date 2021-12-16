@@ -40,10 +40,6 @@ public class Commitlog {
     }
 
     /**
-     * commit文件夹路径 $HOME/jinx/commit
-     */
-    public static final String COMMIT_DIR_PATH = System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator;
-    /**
      * 文件夹对象
      */
     public static File COMMITLOG_FOLDER;
@@ -61,7 +57,7 @@ public class Commitlog {
      * 初始化时候创建文件夹
      */
     public void init() throws Exception {
-        COMMITLOG_FOLDER = new File(COMMIT_DIR_PATH);
+        COMMITLOG_FOLDER = new File(FileType.COMMITLOG.basePath);
         int count = 0;
         if (COMMITLOG_FOLDER.exists()) {
             // 文件夹存在
