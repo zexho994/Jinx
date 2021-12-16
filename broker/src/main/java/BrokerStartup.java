@@ -1,7 +1,7 @@
 import com.beust.jcommander.JCommander;
 import command.BrokerCommand;
+import config.BrokerConfig;
 import lombok.extern.log4j.Log4j2;
-import netty.client.NettyClientConfig;
 import remoting.BrokerNamesrvService;
 import remoting.BrokerRemotingService;
 import store.commitlog.Commitlog;
@@ -18,7 +18,6 @@ public class BrokerStartup {
 
     private static final Commitlog COMMITLOG = Commitlog.getInstance();
     private static final ConsumeQueue CONSUME_QUEUE = ConsumeQueue.getInstance();
-    private static String nameSrvHost;
 
     public static void main(String[] args) throws Exception {
         // 启动参数解析
@@ -47,9 +46,7 @@ public class BrokerStartup {
         brokerRemotingService.start();
 
         // namesrv 连接服务
-        NettyClientConfig nettyClientConfig = new NettyClientConfig(nameSrvHost);
-        nettyClientConfig.setListenPort(9876);
-        BrokerNamesrvService brokerNamesrvService = new BrokerNamesrvService(nettyClientConfig);
+        BrokerNamesrvService brokerNamesrvService = new BrokerNamesrvService();
         brokerNamesrvService.start();
     }
 
@@ -63,10 +60,15 @@ public class BrokerStartup {
         JCommander jCommander = JCommander.newBuilder().addObject(startCommand).build();
         jCommander.parse(args);
 
-        nameSrvHost = startCommand.getNamesrvHost();
-        if (nameSrvHost == null) {
+        if (startCommand.getNamesrvHost() == null) {
             throw new Exception("nameserver host cannot be null");
         }
+        BrokerConfig.nameSrvHost = startCommand.getNamesrvHost();
+
+        if (startCommand.getBrokerHost() == null) {
+            throw new Exception("broker host cannot be null");
+        }
+        BrokerConfig.brokerHost = startCommand.getBrokerHost();
     }
 
     /**
@@ -90,8 +92,6 @@ public class BrokerStartup {
 
     /**
      * 文件恢复
-     *
-     * @return 恢复结果 true正常, false 发生异常
      */
     public static void mappedFileRecover() throws Exception {
         try {

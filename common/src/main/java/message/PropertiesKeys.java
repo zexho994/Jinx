@@ -17,4 +17,9 @@ public class PropertiesKeys {
      */
     public static final String MESSAGE_TYPE = "messageType";
 
+    /**
+     * broker服务的域名,在broker启动时设置
+     */
+    public static final String BROKER_HOST = "brokerHost";
+
 }

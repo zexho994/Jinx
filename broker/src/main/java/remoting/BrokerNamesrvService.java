@@ -1,5 +1,6 @@
 package remoting;
 
+import config.BrokerConfig;
 import enums.ClientType;
 import enums.MessageType;
 import io.netty.channel.Channel;
@@ -20,18 +21,21 @@ import java.util.concurrent.TimeUnit;
 public class BrokerNamesrvService {
 
     private final NettyRemotingClientImpl client;
-    private final NettyClientConfig nettyClientConfig;
     private Channel channel;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    private final Message heartbeat;
-    private static final int namesrvPort = 9876;
+    private final Message heartbeat = new Message();
 
-    public BrokerNamesrvService(NettyClientConfig nettyClientConfig) {
-        this.nettyClientConfig = nettyClientConfig;
+    public BrokerNamesrvService() {
+        NettyClientConfig nettyClientConfig = new NettyClientConfig(BrokerConfig.brokerHost);
+        nettyClientConfig.setListenPort(BrokerConfig.NAMESRV_PORT);
         this.client = new NettyRemotingClientImpl(nettyClientConfig);
-        this.heartbeat = new Message();
+        initHeartbeat();
+    }
+
+    public void initHeartbeat() {
         heartbeat.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Broker.type);
         heartbeat.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Heart_Beat.type);
+        heartbeat.addProperties(PropertiesKeys.BROKER_HOST, BrokerConfig.brokerHost);
     }
 
     public void start() {

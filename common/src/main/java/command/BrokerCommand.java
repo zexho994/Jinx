@@ -10,7 +10,10 @@ import lombok.Data;
 @Data
 public class BrokerCommand {
 
-    @Parameter(names = {"-namesrv", "-N"}, description = "nameserver服务的ip地址。如果为集群，传入所有的ip地址", required = false)
+    @Parameter(names = {"-namesrv", "-N"}, description = "nameserver服务的共有ip地址。如果为集群，传入所有的ip地址")
     private String namesrvHost;
+
+    @Parameter(names = {"-broker", "-B"}, description = "broker服务的公有ip地址")
+    private String brokerHost;
 
 }
