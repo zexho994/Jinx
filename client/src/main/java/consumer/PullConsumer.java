@@ -5,6 +5,7 @@ import enums.MessageType;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
 import message.PropertiesKeys;
+import netty.protocal.RemotingCommand;
 
 /**
  * @author Zexho
@@ -20,8 +21,7 @@ public class PullConsumer {
         Message pullRequest = new Message();
         pullRequest.setTopic(consumer.getTopic());
         pullRequest.setConsumerGroup(consumer.getConsumerGroup());
-        pullRequest.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Consumer.type);
-        pullRequest.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Pull_Message.type);
+
 
         while (true) {
             try {

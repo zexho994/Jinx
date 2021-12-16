@@ -42,6 +42,10 @@ public class ByteUtil {
     }
 
     public static <T> T to(byte[] bytes, Class<T> t) {
+        if(bytes == null){
+            return null;
+        }
+
         try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes); ObjectInputStream in = new ObjectInputStream(bis)) {
             return (T) in.readObject();
         } catch (IOException | ClassNotFoundException e) {

@@ -1,10 +1,15 @@
 package consumer;
 
-import message.Message;
+import enums.ClientType;
+import enums.MessageType;
 import io.netty.channel.Channel;
+import message.Message;
+import message.PropertiesKeys;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;
+import netty.protocal.RemotingCommand;
 import remoting.RemotingService;
+import utils.ByteUtil;
 
 /**
  * @author Zexho
@@ -42,7 +47,13 @@ public class Consumer implements RemotingService {
     @Override
     public void sendMessage(Message message) {
         Channel channel = this.consumerClient.getChannel();
-        channel.writeAndFlush(message);
+
+        RemotingCommand remotingCommand = new RemotingCommand();
+        remotingCommand.setMessage(ByteUtil.to(message));
+        remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Consumer.type);
+        remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Pull_Message.type);
+
+        channel.writeAndFlush(remotingCommand);
     }
 
     public void setTopic(String topic) {

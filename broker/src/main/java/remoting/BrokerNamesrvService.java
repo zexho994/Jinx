@@ -4,10 +4,10 @@ import config.BrokerConfig;
 import enums.ClientType;
 import enums.MessageType;
 import io.netty.channel.Channel;
-import message.Message;
 import message.PropertiesKeys;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;
+import netty.protocal.RemotingCommand;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,7 +23,7 @@ public class BrokerNamesrvService {
     private final NettyRemotingClientImpl client;
     private Channel channel;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    private final Message heartbeat = new Message();
+    private final RemotingCommand heartbeat = new RemotingCommand();
 
     public BrokerNamesrvService() {
         NettyClientConfig nettyClientConfig = new NettyClientConfig(BrokerConfig.brokerHost);

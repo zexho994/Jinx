@@ -1,8 +1,6 @@
 package message;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -26,11 +24,6 @@ public class Message implements Serializable {
     private String consumerGroup;
 
     /**
-     * 消息扩展属性
-     */
-    private final Map<String, String> properties;
-
-    /**
      * 消息体
      */
     private Object body;
@@ -40,7 +33,6 @@ public class Message implements Serializable {
     }
 
     public Message(String transactionId, String topic, byte[] body) {
-        this.properties = new HashMap<>();
         this.transactionId = transactionId;
         this.topic = topic;
         this.body = body;
@@ -60,14 +52,6 @@ public class Message implements Serializable {
 
     public void setTopic(String topic) {
         this.topic = topic;
-    }
-
-    public String getProperty(String key) {
-        return properties.get(key);
-    }
-
-    public void addProperties(String key, String val) {
-        this.properties.put(key, val);
     }
 
     public String getConsumerGroup() {
@@ -92,7 +76,6 @@ public class Message implements Serializable {
                 "transactionId='" + transactionId + '\'' +
                 ", topic='" + topic + '\'' +
                 ", consumerGroup='" + consumerGroup + '\'' +
-                ", properties=" + properties +
                 ", body=" + body +
                 '}';
     }
@@ -102,14 +85,11 @@ public class Message implements Serializable {
         if (this == o) return true;
         if (!(o instanceof Message)) return false;
         Message message = (Message) o;
-        return Objects.equals(getTransactionId(), message.getTransactionId()) && Objects.equals(getTopic(),
-                message.getTopic()) && Objects.equals(getConsumerGroup(),
-                message.getConsumerGroup()) && Objects.equals(properties, message.properties)
-                && Objects.equals(getBody(), message.getBody());
+        return getTransactionId().equals(message.getTransactionId()) && getTopic().equals(message.getTopic()) && Objects.equals(getConsumerGroup(), message.getConsumerGroup()) && Objects.equals(getBody(), message.getBody());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTransactionId(), getTopic(), getConsumerGroup(), properties, getBody());
+        return Objects.hash(getTransactionId(), getTopic(), getConsumerGroup(), getBody());
     }
 }

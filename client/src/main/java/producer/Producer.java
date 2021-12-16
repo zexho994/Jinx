@@ -9,7 +9,9 @@ import message.Message;
 import message.PropertiesKeys;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;
+import netty.protocal.RemotingCommand;
 import remoting.RemotingService;
+import utils.ByteUtil;
 
 /**
  * @author Zexho
@@ -60,16 +62,20 @@ public class Producer implements RemotingService {
      */
     void sendMessageSync(Message message) throws InterruptedException {
         log.info("SEND MESSAGE => {}", message);
-        message.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Producer.type);
-        message.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Put_Message.type);
+
 
         Channel channel = this.nettyRemotingClient.getChannel();
         if (!channel.isActive()) {
             log.warn("channel is inactive");
             return;
         }
+
         try {
-            ChannelFuture sync = channel.writeAndFlush(message).sync();
+            RemotingCommand remotingCommand = new RemotingCommand();
+            remotingCommand.setMessage(ByteUtil.to(message));
+            remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Producer.type);
+            remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Put_Message.type);
+            ChannelFuture sync = channel.writeAndFlush(remotingCommand).sync();
             if (!sync.isSuccess()) {
                 log.warn("Send message fail,transactionId = {}", message.getTransactionId());
                 messageRequestTable.retryRequest(message.getTransactionId());
