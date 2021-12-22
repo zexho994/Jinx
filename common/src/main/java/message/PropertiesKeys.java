@@ -26,5 +26,6 @@ public class PropertiesKeys {
      * broker名称，在broker启动时设置
      */
     public static final String BROKER_NAME = "brokerName";
+    public static final String CLUSTER_NAME = "clusterName";
 
 }

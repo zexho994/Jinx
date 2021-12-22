@@ -8,6 +8,7 @@ import message.PropertiesKeys;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;
 import netty.protocal.RemotingCommand;
+import utils.ByteUtil;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -34,9 +35,11 @@ public class BrokerNamesrvService {
 
     public void initHeartbeat() {
         heartbeat.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Broker.type);
-        heartbeat.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Heart_Beat.type);
+        heartbeat.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker.type);
         heartbeat.addProperties(PropertiesKeys.BROKER_HOST, BrokerConfig.brokerHost);
         heartbeat.addProperties(PropertiesKeys.BROKER_NAME, BrokerConfig.brokerName);
+        heartbeat.addProperties(PropertiesKeys.CLUSTER_NAME, BrokerConfig.clusterName);
+        heartbeat.setBody(ByteUtil.to(BrokerConfig.topics));
     }
 
     public void start() {

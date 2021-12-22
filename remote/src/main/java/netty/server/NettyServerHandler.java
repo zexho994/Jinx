@@ -26,7 +26,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.warn("捕捉异常:" + cause.getMessage());
+        log.warn("捕捉异常 => " + cause);
     }
 
 }

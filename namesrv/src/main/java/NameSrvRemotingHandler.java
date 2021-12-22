@@ -1,7 +1,6 @@
 import enums.ClientType;
 import enums.MessageType;
 import io.netty.channel.ChannelHandlerContext;
-import kvconfig.BrokerManager;
 import lombok.extern.log4j.Log4j2;
 import message.PropertiesKeys;
 import netty.protocal.RemotingCommand;
@@ -28,14 +27,15 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
         }
 
         String messageType = cmd.getProperty(PropertiesKeys.MESSAGE_TYPE);
-        if (!MessageType.Heart_Beat.type.equals(messageType)) {
+        if (!MessageType.Register_Broker.type.equals(messageType)) {
             log.warn("message type error, tt should be <heartbeat>, but now it's <{}>", messageType);
             return;
         }
 
         String brokerName = cmd.getProperty(PropertiesKeys.BROKER_NAME);
         String brokerHost = cmd.getProperty(PropertiesKeys.BROKER_HOST);
-        brokerManager.addBroker(brokerName, brokerHost);
+        String clusterName = cmd.getProperty(PropertiesKeys.CLUSTER_NAME);
+        brokerManager.addBroker(brokerName, brokerHost, clusterName);
     }
 
 }

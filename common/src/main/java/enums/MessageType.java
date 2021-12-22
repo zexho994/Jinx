@@ -18,7 +18,7 @@ public enum MessageType {
     Put_Message("message"),
 
     /////////// Broker ///////////////
-    Heart_Beat("heartbeat");
+    Register_Broker("registerBroker");
 
     public final String type;
 

@@ -64,7 +64,7 @@ public class BrokerStartup {
      *
      * @param args 启动参数
      */
-    public static void parseCommander(String[] args) throws Exception {
+    private static void parseCommander(String[] args) throws Exception {
         BrokerCommand startCommand = new BrokerCommand();
         JCommander jCommander = JCommander.newBuilder().addObject(startCommand).build();
         jCommander.parse(args);
@@ -88,7 +88,7 @@ public class BrokerStartup {
     /**
      * 初始化配置
      */
-    public static void systemInit() throws Exception {
+    private static void systemInit() throws Exception {
         // 初始化 Commitlog
         try {
             COMMITLOG.init();
