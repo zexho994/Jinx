@@ -1,6 +1,5 @@
 package config;
 
-import config.file.BrokerInfo;
 import store.constant.FileType;
 import utils.Json;
 
@@ -13,7 +12,7 @@ import java.io.IOException;
  */
 public class ConfigFileReader {
 
-    public BrokerInfo readLocalConfigFile() throws IOException {
+    public BrokerConfig readBrokerConfigFile() throws IOException {
         FileReader fr = new FileReader(FileType.BROKER_CONFIG.basePath);
         int i;
         StringBuilder str = new StringBuilder();
@@ -21,7 +20,7 @@ public class ConfigFileReader {
             str.append((char) i);
         }
         fr.close();
-        return Json.fromJson(str.toString(), BrokerInfo.class);
+        return Json.fromJson(str.toString(), BrokerConfig.class);
     }
 
 }

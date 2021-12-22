@@ -1,0 +1,58 @@
+@startuml
+autonumber
+
+box BrokerStartup类
+participant main方法
+participant createBrokerController方法
+end box
+
+participant BrokerController类
+participant DefaultMessageStore类
+participant NettyRemotingServer类
+
+main方法 -> createBrokerController方法 ++: 创建broker controller
+group 自定义配置文件解析
+createBrokerController方法 -> createBrokerController方法 : 解析启动命令 'c'
+createBrokerController方法 -> createBrokerController方法 : 获取设定配置文件
+createBrokerController方法 -> createBrokerController方法 : 解析出 brokerConfig 对象
+createBrokerController方法 -> createBrokerController方法 : 解析出 nettyClientConfig 对象
+createBrokerController方法 -> createBrokerController方法 : 解析出 messageStoreConfig 对象
+end
+
+createBrokerController方法 -> createBrokerController方法 : 检查 rocketmqHome 是否配置
+createBrokerController方法 -> createBrokerController方法 : 检查 namesrvAddr 是否配置
+createBrokerController方法 -> createBrokerController方法 : 根据 broker 角色进行 brokerId 配置
+
+createBrokerController方法 -> BrokerController类 ++: new
+return controller
+createBrokerController方法 -> BrokerController类 ++: 执行 initialize() 初始化方法
+group 配置文件初始化
+BrokerController类 -> BrokerController类 : topicConfigManager.load()
+BrokerController类 -> BrokerController类 : consumerOffsetManager.load()
+BrokerController类 -> BrokerController类 : subscriptionGroupManager.load()
+BrokerController类 -> BrokerController类 : consumerFilterManager.load()
+end
+group 存储组件初始化
+BrokerController类 -> DefaultMessageStore类 ++: new
+return defaultMessageStore
+BrokerController类 -> BrokerController类 : defaultMessageStore.load()
+end
+group 网络组件初始化
+BrokerController类 -> NettyRemotingServer类 ++: new
+return nettyRemotingServer
+end
+'注册处理器
+BrokerController类 -> BrokerController类 : this.registerProcessor()
+group 定时任务初始化
+BrokerController类 -> BrokerController类 : 启动 brokerStats.record() 统计定时任务
+BrokerController类 -> BrokerController类 : 启动 namesrv 定时同步任务
+BrokerController类 -> BrokerController类 : 启动 主从相关定时任务
+end
+BrokerController类 -> BrokerController类 : this.initialTransaction()
+BrokerController类 -> BrokerController类 : this.initialAcl()
+BrokerController类 -> BrokerController类 : this.initialRpcHooks()
+return ok
+createBrokerController方法 -> createBrokerController方法 : 添加JVM钩子函数用于shutdown
+return controller
+main方法 -> main方法 : 启动 broker controller
+@enduml

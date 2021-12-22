@@ -12,19 +12,20 @@ import java.io.File;
  */
 public enum FileType {
 
+    // =================== 存储文件 ========================
     /**
      * {@link Commitlog}
      */
     COMMITLOG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator, 8 * MemoryCapacity.KB),
-
     /**
      * {@link ConsumeQueue}
      */
     CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator, MemoryCapacity.KB),
-
     CONSUME_OFFSET(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeOffset" + File.separator, MemoryCapacity.B * 8),
 
+    // =================== 配置文件 ========================
     BROKER_CONFIG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "config" + File.separator + "broker", 4 * MemoryCapacity.KB);
+//    TOPIC_CONFIG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "config" + File.separator + "topic", 4 * MemoryCapacity.KB);
 
     public final String basePath;
     public final int fileSize;

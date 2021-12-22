@@ -1,4 +1,4 @@
-package config.file;
+package config;
 
 import lombok.Data;
 import lombok.ToString;
@@ -9,7 +9,7 @@ import lombok.ToString;
  */
 @Data
 @ToString
-public class TopicInfo {
+public class TopicConfig {
     private String topic;
     private String queue;
 }

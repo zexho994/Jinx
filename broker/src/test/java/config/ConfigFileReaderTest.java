@@ -1,7 +1,5 @@
 package config;
 
-import config.file.BrokerInfo;
-import config.file.TopicInfo;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -14,9 +12,9 @@ class ConfigFileReaderTest {
     @Test
     void readLocalConfigFile() {
         try {
-            BrokerInfo brokerInfo = configFileReader.readLocalConfigFile();
-            List<TopicInfo> topics = brokerInfo.getTopics();
-            topics.forEach(e -> System.out.println(e.toString()));
+            BrokerConfig brokerConfig = configFileReader.readBrokerConfigFile();
+            List<TopicConfig> topics = brokerConfig.getTopics();
+            topics.forEach(System.out::println);
         } catch (IOException e) {
             e.printStackTrace();
         }
