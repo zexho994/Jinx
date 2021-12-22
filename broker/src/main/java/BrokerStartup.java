@@ -1,6 +1,8 @@
 import com.beust.jcommander.JCommander;
 import command.BrokerCommand;
 import config.BrokerConfig;
+import config.BrokerConfigFile;
+import config.ConfigFileReader;
 import lombok.extern.log4j.Log4j2;
 import remoting.BrokerNamesrvService;
 import remoting.BrokerRemotingService;
@@ -20,6 +22,13 @@ public class BrokerStartup {
     private static final ConsumeQueue CONSUME_QUEUE = ConsumeQueue.getInstance();
 
     public static void main(String[] args) throws Exception {
+        // 配置文件加载
+        try {
+            parseConfig();
+        } catch (Exception e) {
+            throw new Exception("parse config error.", e);
+        }
+
         // 启动参数解析
         try {
             parseCommander(args);
@@ -63,6 +72,7 @@ public class BrokerStartup {
         if (startCommand.getNamesrvHost() == null) {
             throw new Exception("nameserver host cannot be null");
         }
+
         BrokerConfig.nameSrvHost = startCommand.getNamesrvHost();
 
         if (startCommand.getBrokerHost() == null) {
@@ -97,7 +107,7 @@ public class BrokerStartup {
     /**
      * 文件恢复
      */
-    public static void mappedFileRecover() throws Exception {
+    private static void mappedFileRecover() throws Exception {
         try {
             COMMITLOG.recover();
         } catch (IOException e) {
@@ -108,6 +118,17 @@ public class BrokerStartup {
             CONSUME_QUEUE.recover();
         } catch (Exception e) {
             throw new Exception("ConsumeQueue recover fail. ", e);
+        }
+    }
+
+    private static void parseConfig() throws Exception {
+        try {
+            BrokerConfigFile brokerConfigFile = ConfigFileReader.readBrokerConfigFile();
+            BrokerConfig.brokerName = brokerConfigFile.getBrokerName();
+            BrokerConfig.clusterName = brokerConfigFile.getClusterName();
+            BrokerConfig.topics = brokerConfigFile.getTopics();
+        } catch (IOException e) {
+            throw new Exception("read broker config file error.", e);
         }
     }
 }

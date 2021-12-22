@@ -12,9 +12,8 @@ class ConfigFileReaderTest {
     @Test
     void readLocalConfigFile() {
         try {
-            BrokerConfig brokerConfig = configFileReader.readBrokerConfigFile();
-            List<TopicConfig> topics = brokerConfig.getTopics();
-            topics.forEach(System.out::println);
+            BrokerConfigFile brokerConfig = configFileReader.readBrokerConfigFile();
+            System.out.println(brokerConfig);
         } catch (IOException e) {
             e.printStackTrace();
         }

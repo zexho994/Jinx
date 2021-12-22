@@ -12,7 +12,7 @@ import java.io.IOException;
  */
 public class ConfigFileReader {
 
-    public BrokerConfig readBrokerConfigFile() throws IOException {
+    public static BrokerConfigFile readBrokerConfigFile() throws IOException {
         FileReader fr = new FileReader(FileType.BROKER_CONFIG.basePath);
         int i;
         StringBuilder str = new StringBuilder();
@@ -20,7 +20,7 @@ public class ConfigFileReader {
             str.append((char) i);
         }
         fr.close();
-        return Json.fromJson(str.toString(), BrokerConfig.class);
+        return Json.fromJson(str.toString(), BrokerConfigFile.class);
     }
 
 }
