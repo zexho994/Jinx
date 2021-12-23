@@ -6,7 +6,6 @@ import store.mappedfile.MappedFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,26 +48,22 @@ class ConsumeOffset {
     }
 
     public void recover() throws Exception {
-        if (CONSUME_OFFSET_FOLDER == null) {
-            throw new Exception("CONSUME_OFFSET_FOLDER is null");
+        this.ensureDirExist();
+        for (File topicDir : CONSUME_OFFSET_FOLDER.listFiles()) {
+            if (topicDir.getName().contains(".")) {
+                continue;
+            }
+            Map<String, MappedFile> mappedFileMap = new ConcurrentHashMap<>(16);
+            this.consumeOffsetMap.put(topicDir.getName(), mappedFileMap);
+            for (File file : topicDir.listFiles()) {
+                if (file.getName().contains(".")) {
+                    continue;
+                }
+                MappedFile mf = new MappedFile(FileType.CONSUME_OFFSET, file);
+                mappedFileMap.put(file.getName(), mf);
+                log.info("Recover ConsumeOffset success. file = {} , consume offset = {}", mf.getAbsolutePath(), mf.getInt(0));
+            }
         }
-        Arrays.stream(CONSUME_OFFSET_FOLDER.listFiles())
-                .filter(file -> !file.getName().contains("."))
-                .forEach(topicDir -> {
-                    Map<String, MappedFile> mappedFileMap = new ConcurrentHashMap<>(16);
-                    this.consumeOffsetMap.put(topicDir.getName(), mappedFileMap);
-                    Arrays.stream(topicDir.listFiles())
-                            .filter(file -> !file.getName().contains("."))
-                            .forEach(file -> {
-                                try {
-                                    MappedFile mf = new MappedFile(FileType.CONSUME_OFFSET, file);
-                                    mappedFileMap.put(file.getName(), mf);
-                                    log.info("Recover ConsumeOffset success. file = {} , consume offset = {}", mf.getAbsolutePath(), mf.getInt(0));
-                                } catch (IOException e) {
-                                    log.error("Create mapped file error. ", e);
-                                }
-                            });
-                });
     }
 
     /**
