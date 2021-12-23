@@ -12,7 +12,6 @@ import utils.ByteUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +74,9 @@ public class ConsumeQueue {
         }
     }
 
+    /**
+     *
+     */
     private void mkdirTopicDir() {
         List<TopicUnit> topics = BrokerConfig.configBody.getTopics();
         topics.forEach(topic -> {
@@ -113,32 +115,42 @@ public class ConsumeQueue {
 
     /**
      * consumeQueue 文件恢复
+     * step1: 遍历 consumeQueue 文件夹下topic文件夹 ,如果topic文件夹为空，退出恢复流程
+     * step2: 保存 topic 信息到 {@link #mappedFileMap} 中
+     * step3: 遍历 topic 文件夹下queueId文件夹
+     * step4: 每一个文件封装成 {@link MappedFile} 保存到 {@link #mappedFileMap} 下
      */
     public void recover() throws Exception {
         this.ensureDirExist();
-        Arrays.stream(CONSUMER_QUEUE_FOLDER.listFiles())
-                .filter(file -> !file.getName().contains("."))
-                .forEach(topicDirs -> Arrays.stream(topicDirs.listFiles())
-                        .filter(file -> !file.getName().contains("."))
-                        .forEach(queueDirs -> {
-                            MappedFileQueue mappedFileQueue = new MappedFileQueue();
-                            this.mappedFileMap.put(topicDirs.getName(), new ConcurrentHashMap<>());
-                            this.mappedFileMap.get(topicDirs.getName()).put(Integer.valueOf(queueDirs.getName()), mappedFileQueue);
-                            Arrays.stream(queueDirs.listFiles())
-                                    .filter(file -> !file.getName().contains("."))
-                                    .forEach(file -> {
-                                        try {
-                                            MappedFile mf = new MappedFile(FileType.CONSUME_QUEUE, file);
-                                            mappedFileQueue.addMappedFile(mf);
-                                        } catch (IOException e) {
-                                            log.error("Create mapped file error. ", e);
-                                        }
-                                    });
-                            if (!mappedFileQueue.isEmpty()) {
-                                this.checkConsumeQueueFile(mappedFileQueue.getLastMappedFile());
-                            }
-                        })
-                );
+        for (File file : CONSUMER_QUEUE_FOLDER.listFiles()) {
+            if (file.getName().contains(".")) {
+                continue;
+            }
+            this.mappedFileMap.put(file.getName(), new ConcurrentHashMap<>(4));
+            this.recoverQueueFile(file);
+        }
+    }
+
+    private void recoverQueueFile(File topicDir) throws IOException {
+        if (topicDir.listFiles() == null) {
+            return;
+        }
+        for (File queueDirs : topicDir.listFiles()) {
+            if (queueDirs.getName().contains(".")) {
+                continue;
+            }
+            MappedFileQueue mappedFileQueue = new MappedFileQueue();
+            this.mappedFileMap.get(topicDir.getName()).put(Integer.valueOf(queueDirs.getName()), mappedFileQueue);
+            for (File file : queueDirs.listFiles()) {
+                if (file.getName().contains(".")) {
+                    continue;
+                }
+                mappedFileQueue.addMappedFile(new MappedFile(FileType.CONSUME_QUEUE, file));
+            }
+            if (!mappedFileQueue.isEmpty()) {
+                this.checkConsumeQueueFile(mappedFileQueue.getLastMappedFile());
+            }
+        }
     }
 
     public void checkConsumeQueueFile(MappedFile mappedFile) {

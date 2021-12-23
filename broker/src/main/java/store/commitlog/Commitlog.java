@@ -59,27 +59,7 @@ public class Commitlog {
      */
     public void init() throws Exception {
         ensureDirExist();
-        if (!this.mappedFileQueue.isEmpty()) {
-            MappedFile lastMappedFile = this.mappedFileQueue.getLastMappedFile();
-            long offset = 0;
-            while (true) {
-                Integer size = lastMappedFile.getInt(offset);
-                if (size == null) {
-                    break;
-                }
-                Message message = lastMappedFile.loadMessage(offset + MappedFile.INT_LENGTH, size);
-                if (message == null) {
-                    break;
-                }
-                offset += MappedFile.INT_LENGTH + size;
-            }
-            try {
-                lastMappedFile.setWrotePos(offset);
-                this.fileFormOffset.set(offset);
-            } catch (IOException e) {
-                log.error("set wrote position error. ", e);
-            }
-        } else {
+        if (this.mappedFileQueue.isEmpty()) {
             File file = new File(COMMITLOG_FOLDER, "0");
             this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, file));
         }
@@ -103,6 +83,7 @@ public class Commitlog {
      * step1: 如果 commitlog 文件不存在，不需要恢复
      * step2: 遍历 commitlog 文件夹下文件，从偏移量低的文件开始恢复(需要进行排序)
      * step3: 封装文件成 MappedFile 对象，然后保存到 {@link #mappedFileQueue} 中
+     * step4: 设置wrotePos和fileFormOffset
      *
      * @throws IOException
      */
@@ -113,7 +94,6 @@ public class Commitlog {
             return;
         }
         Arrays.stream(files).filter(file -> !file.getName().contains("."))
-                // 排序
                 .sorted((o1, o2) -> {
                     int offset1 = Integer.parseInt(o1.getName());
                     int offset2 = Integer.parseInt(o2.getName());
@@ -126,6 +106,29 @@ public class Commitlog {
                         e.printStackTrace();
                     }
                 });
+
+        // 如果进行了恢复，设置wrotePos和fileFormOffset
+        if (!this.mappedFileQueue.isEmpty()) {
+            MappedFile lastMappedFile = this.mappedFileQueue.getLastMappedFile();
+            long offset = 0;
+            while (true) {
+                Integer size = lastMappedFile.getInt(offset);
+                if (size == null) {
+                    break;
+                }
+                Message message = lastMappedFile.loadMessage(offset + MappedFile.INT_LENGTH, size);
+                if (message == null) {
+                    break;
+                }
+                offset += MappedFile.INT_LENGTH + size;
+            }
+            try {
+                lastMappedFile.setWrotePos(offset);
+                this.fileFormOffset.set(offset);
+            } catch (IOException e) {
+                log.error("set wrote position error. ", e);
+            }
+        }
     }
 
     /**
