@@ -1,8 +1,6 @@
 package topic;
 
-import config.TopicInfoUnit;
-
-import java.util.List;
+import message.ConfigBody;
 
 /**
  * @author Zexho
@@ -10,9 +8,9 @@ import java.util.List;
  */
 public class TopicManager {
 
-    private List<TopicInfoUnit> topics;
+    private ConfigBody topics;
 
-    public void setTopics(List<TopicInfoUnit> topics) {
+    public void setTopics(ConfigBody topics) {
         this.topics = topics;
     }
 }

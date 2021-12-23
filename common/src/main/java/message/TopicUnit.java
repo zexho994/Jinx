@@ -1,4 +1,4 @@
-package config;
+package message;
 
 import lombok.Data;
 
@@ -6,11 +6,11 @@ import java.io.Serializable;
 
 /**
  * @author Zexho
- * @date 2021/12/22 7:23 PM
+ * @date 2021/12/23 9:56 AM
  */
 @Data
-public class TopicInfoUnit implements Serializable {
-    private static final long serialVersionUID = 6708065748466902809L;
+public class TopicUnit implements Serializable {
+    private static final long serialVersionUID = -4034766843271352723L;
 
     /**
      * topic名称

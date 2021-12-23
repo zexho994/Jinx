@@ -42,7 +42,7 @@ public class ByteUtil {
     }
 
     public static <T> T to(byte[] bytes, Class<T> t) {
-        if(bytes == null){
+        if (bytes == null) {
             return null;
         }
 
@@ -53,5 +53,4 @@ public class ByteUtil {
             return null;
         }
     }
-
 }

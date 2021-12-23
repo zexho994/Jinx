@@ -2,8 +2,7 @@ package config;
 
 import lombok.Data;
 import lombok.ToString;
-
-import java.util.List;
+import message.ConfigBody;
 
 /**
  * @author Zexho
@@ -26,5 +25,5 @@ public class BrokerConfigFile {
     /**
      * topic配置
      */
-    public List<TopicInfoUnit> topics;
+    public ConfigBody body;
 }

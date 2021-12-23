@@ -39,7 +39,7 @@ public class BrokerNamesrvService {
         heartbeat.addProperties(PropertiesKeys.BROKER_HOST, BrokerConfig.brokerHost);
         heartbeat.addProperties(PropertiesKeys.BROKER_NAME, BrokerConfig.brokerName);
         heartbeat.addProperties(PropertiesKeys.CLUSTER_NAME, BrokerConfig.clusterName);
-        heartbeat.setBody(ByteUtil.to(BrokerConfig.topics));
+        heartbeat.setBody(ByteUtil.to(BrokerConfig.configBody));
     }
 
     public void start() {

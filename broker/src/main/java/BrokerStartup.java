@@ -126,7 +126,7 @@ public class BrokerStartup {
             BrokerConfigFile brokerConfigFile = ConfigFileReader.readBrokerConfigFile();
             BrokerConfig.brokerName = brokerConfigFile.getBrokerName();
             BrokerConfig.clusterName = brokerConfigFile.getClusterName();
-            BrokerConfig.topics = brokerConfigFile.getTopics();
+            BrokerConfig.configBody = brokerConfigFile.getBody();
         } catch (IOException e) {
             throw new Exception("read broker config file error.", e);
         }

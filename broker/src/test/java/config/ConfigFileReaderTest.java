@@ -12,7 +12,7 @@ class ConfigFileReaderTest {
     @Test
     void readLocalConfigFile() {
         try {
-            BrokerConfigFile brokerConfig = configFileReader.readBrokerConfigFile();
+            BrokerConfigFile brokerConfig = ConfigFileReader.readBrokerConfigFile();
             System.out.println(brokerConfig);
         } catch (IOException e) {
             e.printStackTrace();

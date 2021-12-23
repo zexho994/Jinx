@@ -1,6 +1,6 @@
 package config;
 
-import java.util.List;
+import message.ConfigBody;
 
 /**
  * @author Zexho
@@ -28,7 +28,7 @@ public class BrokerConfig {
      */
     public static String brokerName = "default_broker";
 
-    public static List<TopicInfoUnit> topics;
+    public static ConfigBody configBody;
 
     /**
      * nameserver 服务的端口
