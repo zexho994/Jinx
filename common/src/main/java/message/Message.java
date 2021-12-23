@@ -88,6 +88,7 @@ public class Message implements Serializable {
         return "Message{" +
                 "transactionId='" + transactionId + '\'' +
                 ", topic='" + topic + '\'' +
+                ", queueId=" + queueId +
                 ", consumerGroup='" + consumerGroup + '\'' +
                 ", body=" + body +
                 '}';
