@@ -45,7 +45,7 @@ public class BrokerStartup {
 
         // 系统初始化
         try {
-            systemInit();
+            mappedFileInit();
         } catch (Exception e) {
             throw new Exception("systemInit error.", e);
         }
@@ -89,7 +89,7 @@ public class BrokerStartup {
     /**
      * 初始化配置
      */
-    private static void systemInit() throws Exception {
+    private static void mappedFileInit() throws Exception {
         // 初始化 Commitlog
         try {
             COMMITLOG.init();

@@ -15,11 +15,9 @@ import utils.ByteUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 /**
  * @author Zexho
@@ -54,41 +52,45 @@ public class Commitlog {
     private final Lock lock = new ReentrantLock();
 
     /**
-     * 初始化时候创建文件夹
+     * commitlog 初始化设置
+     * step1:
+     * - 如果mappedFileQueue不为空，说明commitlog进行了恢复,设置wrotePos和fileFormOffset
+     * - 如果为空，创建一个"0"文件即可
      */
     public void init() throws Exception {
-        this.ensureDirExist();
-
-        int count = 0;
-        // 文件夹存在
-        File[] files = COMMITLOG_FOLDER.listFiles();
-        if (files != null) {
-            List<File> fileList = Arrays.stream(files).filter(file -> !file.getName().contains(".")).collect(Collectors.toList());
-            count = fileList.size();
-            fileList.stream().sorted((o1, o2) -> {
-                int offset1 = Integer.parseInt(o1.getName());
-                int offset2 = Integer.parseInt(o2.getName());
-                return offset1 - offset2;
-            }).forEach(file -> {
-                try {
-                    int fileOffset = Integer.parseInt(file.getName());
-                    this.fileFormOffset.set(fileOffset);
-                    this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, file));
-                } catch (IOException e) {
-                    e.printStackTrace();
+        ensureDirExist();
+        if (!this.mappedFileQueue.isEmpty()) {
+            MappedFile lastMappedFile = this.mappedFileQueue.getLastMappedFile();
+            long offset = 0;
+            while (true) {
+                Integer size = lastMappedFile.getInt(offset);
+                if (size == null) {
+                    break;
                 }
-            });
+                Message message = lastMappedFile.loadMessage(offset + MappedFile.INT_LENGTH, size);
+                if (message == null) {
+                    break;
+                }
+                offset += MappedFile.INT_LENGTH + size;
+            }
+            try {
+                lastMappedFile.setWrotePos(offset);
+                this.fileFormOffset.set(offset);
+            } catch (IOException e) {
+                log.error("set wrote position error. ", e);
+            }
+        } else {
+            File file = new File(COMMITLOG_FOLDER, "0");
+            this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, file));
         }
 
-        if (count == 0) {
-            try {
-                this.createFirstMappedFile();
-            } catch (IOException e) {
-                throw new Exception("Failed create new MappedFile", e);
-            }
-        }
     }
 
+    /**
+     * 确保文件夹存在
+     *
+     * @return true已经存在. false不存在
+     */
     private void ensureDirExist() {
         if (COMMITLOG_FOLDER == null) {
             COMMITLOG_FOLDER = new File(FileType.COMMITLOG.basePath);
@@ -96,30 +98,34 @@ public class Commitlog {
         }
     }
 
+    /**
+     * commitlog 文件恢复
+     * step1: 如果 commitlog 文件不存在，不需要恢复
+     * step2: 遍历 commitlog 文件夹下文件，从偏移量低的文件开始恢复(需要进行排序)
+     * step3: 封装文件成 MappedFile 对象，然后保存到 {@link #mappedFileQueue} 中
+     *
+     * @throws IOException
+     */
     public void recover() throws IOException {
-        if (this.mappedFileQueue.isEmpty()) {
+        this.ensureDirExist();
+        File[] files = COMMITLOG_FOLDER.listFiles();
+        if (files == null) {
             return;
         }
-        MappedFile lastMappedFile = this.mappedFileQueue.getLastMappedFile();
-        long offset = 0;
-        while (true) {
-            Integer size = lastMappedFile.getInt(offset);
-            if (size == null) {
-                break;
-            }
-            Message message = lastMappedFile.loadMessage(offset + MappedFile.INT_LENGTH, size);
-            if (message == null) {
-                break;
-            }
-            offset += MappedFile.INT_LENGTH + size;
-        }
-        try {
-            lastMappedFile.setWrotePos(offset);
-            this.fileFormOffset.set(offset);
-            log.info("Recover Commitlog success. file = {}, wrote position = {}", lastMappedFile.getAbsolutePath(), offset);
-        } catch (IOException e) {
-            log.error("set wrote position error. ", e);
-        }
+        Arrays.stream(files).filter(file -> !file.getName().contains("."))
+                // 排序
+                .sorted((o1, o2) -> {
+                    int offset1 = Integer.parseInt(o1.getName());
+                    int offset2 = Integer.parseInt(o2.getName());
+                    return offset1 - offset2;
+                }).forEach(file -> {
+                    try {
+                        this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, file));
+                        log.info("Recover Commitlog success. file = {}, wrote position = {}", file.getAbsolutePath(), file.getName());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
     }
 
     /**
