@@ -35,6 +35,6 @@ public interface MessageStore {
      * @param group 消费组
      * @return 消息对象
      */
-    Message findMessage(String topic, String group);
+    Message findMessage(String topic, int queueId, String group);
 
 }

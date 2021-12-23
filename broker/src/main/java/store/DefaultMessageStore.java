@@ -67,7 +67,7 @@ public class DefaultMessageStore implements MessageStore {
 
         // 交给 consumeQueue 进行存储
         if (commitlogPutResult.getResult() == PutMessageResult.OK) {
-            return this.consumeQueue.putMessage(message.getTopic(), commitlogPutResult.getOffset());
+            return this.consumeQueue.putMessage(message.getTopic(), message.getQueueId(), commitlogPutResult.getOffset());
         } else {
             log.error("Failed to put message to consumeQueue, topic = {}, commit offset = {}", message.getTopic(), commitlogPutResult.getOffset());
             return PutMessageResult.FAILURE;
@@ -75,10 +75,10 @@ public class DefaultMessageStore implements MessageStore {
     }
 
     @Override
-    public Message findMessage(String topic, String group) {
+    public Message findMessage(String topic, int queueId, String group) {
         try {
             // 获取commitlog文件偏移量
-            Long commitlogOffset = consumeQueue.getCommitlogOffset(topic, group);
+            Long commitlogOffset = consumeQueue.getCommitlogOffset(topic, queueId, group);
             if (commitlogOffset == null) {
                 return null;
             }

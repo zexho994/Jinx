@@ -64,8 +64,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     /**
      * 处理生产者的消息
      *
-     * @param message 生产者发送的消息
-     * @param ctx
+     * @param cmd 生产者发送的包
      */
     private void doProducerMessage(RemotingCommand cmd, ChannelHandlerContext ctx) {
         MessageType messageType = MessageType.get(cmd.getProperty(PropertiesKeys.MESSAGE_TYPE));
@@ -97,7 +96,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
         Message message = ByteUtil.to(cmd.getBody(), Message.class);
         String topic = message.getTopic();
         try {
-            Message pullMessage = consumerManager.pullMessage(topic, message.getConsumerGroup());
+            Message pullMessage = consumerManager.pullMessage(topic, 1, message.getConsumerGroup());
             if (pullMessage != null) {
                 ctx.writeAndFlush(pullMessage);
             }

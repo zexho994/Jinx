@@ -57,33 +57,27 @@ public class Commitlog {
      * 初始化时候创建文件夹
      */
     public void init() throws Exception {
-        COMMITLOG_FOLDER = new File(FileType.COMMITLOG.basePath);
+        this.ensureDirExist();
+
         int count = 0;
-        if (COMMITLOG_FOLDER.exists()) {
-            // 文件夹存在
-            File[] files = COMMITLOG_FOLDER.listFiles();
-            if (files != null) {
-                List<File> fileList = Arrays.stream(files).filter(file -> !file.getName().contains(".")).collect(Collectors.toList());
-                count = fileList.size();
-                fileList.stream().sorted((o1, o2) -> {
-                    int offset1 = Integer.parseInt(o1.getName());
-                    int offset2 = Integer.parseInt(o2.getName());
-                    return offset1 - offset2;
-                }).forEach(file -> {
-                    try {
-                        int fileOffset = Integer.parseInt(file.getName());
-                        this.fileFormOffset.set(fileOffset);
-                        this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, file));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-            }
-        } else {
-            // 文件夹不存在
-            if (!COMMITLOG_FOLDER.mkdirs()) {
-                throw new Exception("Failed to mkdir commitlog");
-            }
+        // 文件夹存在
+        File[] files = COMMITLOG_FOLDER.listFiles();
+        if (files != null) {
+            List<File> fileList = Arrays.stream(files).filter(file -> !file.getName().contains(".")).collect(Collectors.toList());
+            count = fileList.size();
+            fileList.stream().sorted((o1, o2) -> {
+                int offset1 = Integer.parseInt(o1.getName());
+                int offset2 = Integer.parseInt(o2.getName());
+                return offset1 - offset2;
+            }).forEach(file -> {
+                try {
+                    int fileOffset = Integer.parseInt(file.getName());
+                    this.fileFormOffset.set(fileOffset);
+                    this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, file));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }
 
         if (count == 0) {
@@ -92,6 +86,13 @@ public class Commitlog {
             } catch (IOException e) {
                 throw new Exception("Failed create new MappedFile", e);
             }
+        }
+    }
+
+    private void ensureDirExist() {
+        if (COMMITLOG_FOLDER == null) {
+            COMMITLOG_FOLDER = new File(FileType.COMMITLOG.basePath);
+            COMMITLOG_FOLDER.mkdirs();
         }
     }
 

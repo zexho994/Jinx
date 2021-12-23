@@ -15,10 +15,10 @@ public class TopicUnit implements Serializable {
     /**
      * topic名称
      */
-    private String topic;
+    private String topic = "default_topic";
 
     /**
      * 队列数量
      */
-    private int queue;
+    private int queue = 4;
 }

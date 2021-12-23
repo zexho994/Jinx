@@ -33,10 +33,11 @@ public class ProducerTest {
         Producer producer = new Producer("127.0.0.1");
         producer.start();
 
-        int n = 0;
+        int n = 1;
         sleep *= 1000;
         while (true) {
             Message message = new Message();
+            message.setQueueId(1);
             producer.setAfterRetryProcess(msg -> System.out.printf("== TOPIC = %s == \n", topic));
             message.setTopic(topic);
             String msgId = UUID.randomUUID().toString();

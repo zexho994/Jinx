@@ -21,6 +21,11 @@ public class Message implements Serializable {
      */
     private String topic;
 
+    /**
+     * 消费队列id
+     */
+    private int queueId;
+
     private String consumerGroup;
 
     /**
@@ -68,6 +73,14 @@ public class Message implements Serializable {
 
     public void setBody(Object data) {
         this.body = data;
+    }
+
+    public int getQueueId() {
+        return queueId;
+    }
+
+    public void setQueueId(int queueId) {
+        this.queueId = queueId;
     }
 
     @Override

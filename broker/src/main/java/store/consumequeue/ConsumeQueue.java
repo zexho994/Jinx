@@ -1,6 +1,8 @@
 package store.consumequeue;
 
+import config.BrokerConfig;
 import lombok.extern.log4j.Log4j2;
+import message.TopicUnit;
 import store.MappedFileQueue;
 import store.constant.FileType;
 import store.constant.MessageAppendResult;
@@ -11,6 +13,8 @@ import utils.ByteUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -40,16 +44,18 @@ public class ConsumeQueue {
 
     /**
      * Key: topic
-     * Val: fileQueue
+     * Val: Map<queueid,mappedfile>
      */
-    private final Map<String, MappedFileQueue> mappedFileMap = new ConcurrentHashMap<>();
+    private final Map<String, Map<Integer, MappedFileQueue>> mappedFileMap = new ConcurrentHashMap<>();
     private final ConsumeOffset consumeOffset = ConsumeOffset.getInstance();
 
     /**
      * 添加一个新文件
      */
-    public void createNewFile(String topic) throws IOException {
-        MappedFileQueue mappedFileQueue = this.mappedFileMap.get(topic);
+    public void createNewFile(String topic, int queueId) throws IOException {
+        Map<Integer, MappedFileQueue> integerMappedFileQueueMap = this.mappedFileMap.get(topic);
+        MappedFileQueue mappedFileQueue = integerMappedFileQueueMap.get(queueId);
+
         MappedFile lastFile = mappedFileQueue.getLastMappedFile();
         int fromOffset = lastFile.getFromOffset();
         long wrotePos = lastFile.getWrotePos();
@@ -62,41 +68,77 @@ public class ConsumeQueue {
     public void init() throws Exception {
         try {
             this.ensureDirExist();
+            this.mkdirTopicDir();
             this.consumeOffset.init();
         } catch (Exception e) {
             throw new Exception("ConsumeQueue init error. ", e);
         }
     }
 
+    private void mkdirTopicDir() {
+        List<TopicUnit> topics = BrokerConfig.configBody.getTopics();
+        topics.forEach(topic -> {
+            File topicDir = new File(CONSUMER_QUEUE_FOLDER, topic.getTopic());
+            if (!topicDir.exists()) {
+                topicDir.mkdir();
+            }
+            for (int i = 1; i <= topic.getQueue(); i++) {
+                File queueDir = new File(topicDir, String.valueOf(i));
+                if (!queueDir.exists()) {
+                    queueDir.mkdirs();
+                }
+                try {
+                    if (this.mappedFileMap.get(topic.getTopic()) == null) {
+                        this.mappedFileMap.put(topic.getTopic(), new ConcurrentHashMap<>(topic.getQueue()));
+                    }
+                    if (this.mappedFileMap.get(topic.getTopic()).get(i) == null) {
+                        this.mappedFileMap.get(topic.getTopic()).put(i, new MappedFileQueue());
+                    }
+                    if (this.mappedFileMap.get(topic.getTopic()).get(i).isEmpty()) {
+                        File file = new File(queueDir, "0");
+                        try {
+                            file.createNewFile();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
+                        this.mappedFileMap.get(topic.getTopic()).get(i).addMappedFile(mappedFile);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
     /**
      * consumeQueue 文件恢复
      */
     public void recover() throws Exception {
-        if (CONSUMER_QUEUE_FOLDER == null) {
-            throw new Exception("CONSUMER_QUEUE_FOLDER is null");
-        }
-
+        this.ensureDirExist();
         Arrays.stream(CONSUMER_QUEUE_FOLDER.listFiles())
                 .filter(file -> !file.getName().contains("."))
-                .forEach(topicDir -> {
-                    MappedFileQueue mappedFileQueue = new MappedFileQueue();
-                    this.mappedFileMap.put(topicDir.getName(), mappedFileQueue);
-                    Arrays.stream(topicDir.listFiles())
-                            .filter(file -> !file.getName().contains("."))
-                            .sorted((o1, o2) -> {
-                                int offset1 = Integer.parseInt(o1.getName());
-                                int offset2 = Integer.parseInt(o2.getName());
-                                return offset1 - offset2;
-                            }).forEach(file -> {
-                                try {
-                                    MappedFile mf = new MappedFile(FileType.CONSUME_QUEUE, file);
-                                    mappedFileQueue.addMappedFile(mf);
-                                } catch (IOException e) {
-                                    log.error("Create mapped file error. ", e);
-                                }
-                            });
-                    this.checkConsumeQueueFile(mappedFileQueue.getLastMappedFile());
-                });
+                .forEach(topicDirs -> Arrays.stream(topicDirs.listFiles())
+                        .filter(file -> !file.getName().contains("."))
+                        .forEach(queueDirs -> {
+                            MappedFileQueue mappedFileQueue = new MappedFileQueue();
+                            this.mappedFileMap.put(topicDirs.getName(), new ConcurrentHashMap<>());
+                            this.mappedFileMap.get(topicDirs.getName()).put(Integer.valueOf(queueDirs.getName()), mappedFileQueue);
+                            Arrays.stream(queueDirs.listFiles())
+                                    .filter(file -> !file.getName().contains("."))
+                                    .forEach(file -> {
+                                        try {
+                                            MappedFile mf = new MappedFile(FileType.CONSUME_QUEUE, file);
+                                            mappedFileQueue.addMappedFile(mf);
+                                        } catch (IOException e) {
+                                            log.error("Create mapped file error. ", e);
+                                        }
+                                    });
+                            if (!mappedFileQueue.isEmpty()) {
+                                this.checkConsumeQueueFile(mappedFileQueue.getLastMappedFile());
+                            }
+                        })
+                );
     }
 
     public void checkConsumeQueueFile(MappedFile mappedFile) {
@@ -139,12 +181,12 @@ public class ConsumeQueue {
      * @param topic           消息主题
      * @param commitlogOffset 消息在commit中的偏移量,总偏移量
      */
-    public PutMessageResult putMessage(String topic, long commitlogOffset) {
+    public PutMessageResult putMessage(String topic, int queueId, long commitlogOffset) {
         lock.lock();
         try {
             ensureFileExist(topic);
 
-            MappedFileQueue mappedFileQueue = mappedFileMap.get(topic);
+            MappedFileQueue mappedFileQueue = mappedFileMap.get(topic).get(queueId);
             MappedFile mappedFile = mappedFileQueue.getLastMappedFile();
 
             byte[] data = ByteUtil.to(commitlogOffset);
@@ -154,7 +196,7 @@ public class ConsumeQueue {
                 mappedFile.flush();
             } else if (MessageAppendResult.INSUFFICIENT_SPACE == appendResult) {
                 log.warn("ConsumeQueue INSUFFICIENT_SPACE");
-                this.createNewFile(topic);
+                this.createNewFile(topic, queueId);
                 mappedFile = mappedFileQueue.getLastMappedFile();
                 mappedFile.append(data);
                 mappedFile.flush();
@@ -176,11 +218,11 @@ public class ConsumeQueue {
      * @return 获取结果对象
      * @throws Exception
      */
-    public Long getCommitlogOffset(String topic, String group) throws Exception {
+    public Long getCommitlogOffset(String topic, int queueId, String group) throws Exception {
         ensureFileExist(topic);
         long offset = consumeOffset.getOffset(topic, group);
 
-        MappedFileQueue consumeQueueFiles = mappedFileMap.get(topic);
+        MappedFileQueue consumeQueueFiles = mappedFileMap.get(topic).get(queueId);
         long off = offset * MappedFile.LONG_LENGTH;
         MappedFile mappedFile = consumeQueueFiles.getFileByOffset(off);
 
@@ -211,17 +253,30 @@ public class ConsumeQueue {
             if (mappedFileMap.containsKey(topic)) {
                 return;
             }
-            // 创建文件
-            File topicFolder = new File(FileType.CONSUME_QUEUE.basePath + topic);
-            topicFolder.mkdirs();
-            File file = new File(topicFolder.getAbsolutePath() + File.separator + "0");
-            file.createNewFile();
 
-            // 记录保存到 map 中
-            MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
-            MappedFileQueue mappedFileQueue = new MappedFileQueue();
-            mappedFileQueue.addMappedFile(mappedFile);
-            this.mappedFileMap.put(topic, mappedFileQueue);
+            List<TopicUnit> topics = BrokerConfig.configBody.getTopics();
+            for (TopicUnit unit : topics) {
+                if (!unit.getTopic().equals(topic)) {
+                    continue;
+                }
+                File topicFolder = new File(FileType.CONSUME_QUEUE.basePath + topic);
+                topicFolder.mkdirs();
+                Map<Integer, MappedFileQueue> integerMappedFileQueueMap = new HashMap<>();
+                for (int i = 1; i < unit.getQueue(); i++) {
+                    File queueFolder = new File(topicFolder, String.valueOf(i));
+                    queueFolder.mkdirs();
+                    File file = new File(queueFolder.getAbsolutePath() + File.separator + "0");
+                    file.createNewFile();
+
+                    // 记录保存到 map 中
+                    MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
+                    MappedFileQueue mappedFileQueue = new MappedFileQueue();
+                    mappedFileQueue.addMappedFile(mappedFile);
+                    integerMappedFileQueueMap.put(i, mappedFileQueue);
+                }
+                this.mappedFileMap.put(topic, integerMappedFileQueueMap);
+            }
+
         } finally {
             this.lock.unlock();
         }

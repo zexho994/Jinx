@@ -54,7 +54,6 @@ class DefaultMessageStoreTest {
         assert message3.equals(message_3);
     }
 
-
     void putMessage(Message message) {
         message.setTransactionId(UUID.randomUUID().toString());
         message.setConsumerGroup("consume group 1");
@@ -64,7 +63,7 @@ class DefaultMessageStoreTest {
     }
 
     Message getMessage(String topic, String group) throws Exception {
-        long commitlogOffset = consumeQueue.getCommitlogOffset(topic, group);
+        long commitlogOffset = consumeQueue.getCommitlogOffset(topic, 1, group);
         return commitlog.getMessage(commitlogOffset);
     }
 

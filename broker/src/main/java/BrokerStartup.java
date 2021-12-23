@@ -36,6 +36,13 @@ public class BrokerStartup {
             throw new Exception("parse commander error.", e);
         }
 
+        // 恢复文件
+        try {
+            mappedFileRecover();
+        } catch (IOException e) {
+            throw new Exception("mappedFile recover error.", e);
+        }
+
         // 系统初始化
         try {
             systemInit();
@@ -43,12 +50,6 @@ public class BrokerStartup {
             throw new Exception("systemInit error.", e);
         }
 
-        // 恢复文件
-        try {
-            mappedFileRecover();
-        } catch (IOException e) {
-            throw new Exception("mappedFile recover error.", e);
-        }
 
         // 启动broker
         BrokerRemotingService brokerRemotingService = new BrokerRemotingService();
