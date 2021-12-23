@@ -1,3 +1,4 @@
+import remote.NameSrvRemoting;
 
 /**
  * @author Zexho

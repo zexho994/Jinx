@@ -1,3 +1,5 @@
+package meta;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

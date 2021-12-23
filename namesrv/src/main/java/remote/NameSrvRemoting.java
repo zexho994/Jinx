@@ -1,3 +1,5 @@
+package remote;
+
 import netty.server.NettyRemotingServerImpl;
 import netty.server.NettyServerConfig;
 
