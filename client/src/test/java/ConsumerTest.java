@@ -21,20 +21,20 @@ public class ConsumerTest {
 
         // step2: 启动消费者集群
         // 同一集群，同一topic
-        new Thread(() -> ConsumerTest.startConsumer(topic_1, group_1)).start();
-        new Thread(() -> ConsumerTest.startConsumer(topic_1, group_1)).start();
-        new Thread(() -> ConsumerTest.startConsumer(topic_1, group_1)).start();
-        new Thread(() -> ConsumerTest.startConsumer(topic_1, group_1)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_1, group_1, 1)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_1, group_1, 2)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_1, group_1, 3)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_1, group_1, 4)).start();
         // topic下不同group
-        new Thread(() -> ConsumerTest.startConsumer(topic_2, group_1)).start();
-        new Thread(() -> ConsumerTest.startConsumer(topic_2, group_1)).start();
-        new Thread(() -> ConsumerTest.startConsumer(topic_2, group_2)).start();
-        new Thread(() -> ConsumerTest.startConsumer(topic_2, group_2)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_2, group_1, 2)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_2, group_1, 5)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_2, group_2, 4)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_2, group_2, 6)).start();
         // group 订阅不同topic
-        new Thread(() -> ConsumerTest.startConsumer(topic_3, group_1)).start();
-        new Thread(() -> ConsumerTest.startConsumer(topic_3, group_1)).start();
-        new Thread(() -> ConsumerTest.startConsumer(topic_3, group_2)).start();
-        new Thread(() -> ConsumerTest.startConsumer(topic_3, group_2)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_3, group_1, 1)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_3, group_1, 2)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_3, group_2, 1)).start();
+        new Thread(() -> ConsumerTest.startConsumer(topic_3, group_2, 2)).start();
 
         //阻塞
         while (true) {
@@ -42,20 +42,16 @@ public class ConsumerTest {
 
     }
 
-    public static void startConsumer(String topic, String group) {
+    public static void startConsumer(String topic, String group, int queueId) {
         Consumer consumer = new Consumer("127.0.0.1");
         consumer.setTopic(topic);
         consumer.setConsumerGroup(group);
+        consumer.setQueueId(queueId);
 
         // 消息监听
         consumer.setConsumerListener(msg -> {
-            System.out.printf("[Consumer] topic = %s, group = %s, msg = %s \n", topic, group, msg);
-            Integer n = ProducerTest.SEND_DATA.get(msg.getTransactionId());
-            if (n == 1) {
-                ProducerTest.SEND_DATA.remove(msg.getTransactionId());
-            } else {
-                ProducerTest.SEND_DATA.put(msg.getTransactionId(), n - 1);
-            }
+            System.out.printf("[Consumer] topic = %s, group = %s, queue = %s, msg = %s \n", topic, group, queueId, msg);
+            ProducerTest.SEND_DATA_MAP.get(topic).get(queueId).remove(msg.getTransactionId());
         });
         consumer.start();
     }

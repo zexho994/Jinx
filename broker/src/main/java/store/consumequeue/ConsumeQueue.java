@@ -232,18 +232,21 @@ public class ConsumeQueue {
      */
     public Long getCommitlogOffset(String topic, int queueId, String group) throws Exception {
         ensureFileExist(topic);
-        long offset = consumeOffset.getOffset(topic, group);
+        long offset = consumeOffset.getOffset(topic, String.valueOf(queueId), group);
 
-        MappedFileQueue consumeQueueFiles = mappedFileMap.get(topic).get(queueId);
         long off = offset * MappedFile.LONG_LENGTH;
-        MappedFile mappedFile = consumeQueueFiles.getFileByOffset(off);
+        MappedFile mappedFile = this.getMappedQueue(topic, queueId).getFileByOffset(off);
 
         return mappedFile.getLong(off - mappedFile.getFromOffset());
     }
 
-    public void incOffset(String topic, String group) {
+    private MappedFileQueue getMappedQueue(String topic, int queueId) {
+        return this.mappedFileMap.get(topic).get(queueId);
+    }
+
+    public void incOffset(String topic, int queueId, String group) {
         try {
-            this.consumeOffset.incOffset(topic, group);
+            this.consumeOffset.incOffset(topic, String.valueOf(queueId), group);
         } catch (IOException e) {
             log.error("consumeOffset +1 error.", e);
         }

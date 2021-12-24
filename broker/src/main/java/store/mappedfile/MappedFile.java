@@ -62,17 +62,34 @@ public class MappedFile {
             this.fromOffset = 0;
         }
         this.fileSize = fileType.fileSize;
-        init();
+
+        fileInit();
+        setDefaultData(fileType);
     }
 
-    private void init() throws IOException {
+    /**
+     * 为文件设置默认内容
+     *
+     * @param fileType
+     */
+    private void setDefaultData(FileType fileType) throws IOException {
+        if (fileType == FileType.CONSUME_OFFSET) {
+            try {
+                this.append(ByteUtil.to(0));
+            } catch (IOException e) {
+                throw new IOException("consume offset set default data error.", e);
+            }
+        }
+    }
+
+    private void fileInit() throws IOException {
         ensureDirExist(this.file.getParent());
 
         boolean initSuccess = false;
         try {
             this.randomAccessFile = new RandomAccessFile(file, "rw");
             this.accessChannel = randomAccessFile.getChannel();
-            this.byteBuffer = ByteBuffer.allocate(MemoryCapacity.MB);
+            this.byteBuffer = ByteBuffer.allocate(32 * MemoryCapacity.KB);
             initSuccess = true;
         } catch (FileNotFoundException e) {
             log.error("Failed to create file " + file.getName(), e);

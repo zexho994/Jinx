@@ -43,13 +43,13 @@ public class ConsumerManager {
      * @param consumeGroup 消费组
      * @return 未消费的消息
      */
-    public Message pullMessage(String topic,int queueId, String consumeGroup) {
+    public Message pullMessage(String topic, int queueId, String consumeGroup) {
         Lock lock = this.getLock(topic, consumeGroup);
         lock.lock();
         try {
-            Message message = messageStore.findMessage(topic,queueId, consumeGroup);
+            Message message = messageStore.findMessage(topic, queueId, consumeGroup);
             if (message != null) {
-                consumeQueue.incOffset(topic, consumeGroup);
+                consumeQueue.incOffset(topic, queueId, consumeGroup);
             }
             return message;
         } finally {

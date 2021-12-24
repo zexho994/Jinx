@@ -13,23 +13,31 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ProducerTest {
 
+    /**
+     * key = msgId
+     * val = Map<queueId,Map<msgId,count>>
+     */
+    public static final Map<String, Map<Integer, Map<String, Integer>>> SEND_DATA_MAP = new ConcurrentHashMap<>(16);
     public static final Map<String, Integer> SEND_DATA = new ConcurrentHashMap<>(64);
 
     @Test
     public void producer() {
-        new Thread(() -> ProducerTest.startProducer(10, "topic_1", 1)).start();
-        new Thread(() -> ProducerTest.startProducer(12, "topic_1", 1)).start();
-        new Thread(() -> ProducerTest.startProducer(15, "topic_2", 2)).start();
-        new Thread(() -> ProducerTest.startProducer(18, "topic_2", 2)).start();
+        new Thread(() -> ProducerTest.startProducer(10, "topic_1", 4)).start();
+        new Thread(() -> ProducerTest.startProducer(12, "topic_1", 4)).start();
+        new Thread(() -> ProducerTest.startProducer(15, "topic_2", 6)).start();
+        new Thread(() -> ProducerTest.startProducer(18, "topic_2", 6)).start();
         new Thread(() -> ProducerTest.startProducer(15, "topic_3", 2)).start();
     }
 
     /**
-     * @param sleep      循环间隔（秒）
-     * @param topic      消息主题
-     * @param groupCount 数量为订阅该 topic 的 consumeGroup 数量
+     * @param sleep    循环间隔（秒）
+     * @param topic    消息主题
+     * @param queueNum 队列数量
      */
-    public static void startProducer(int sleep, String topic, int groupCount) {
+    public static void startProducer(int sleep, String topic, int queueNum) {
+        if (!SEND_DATA_MAP.containsKey(topic)) {
+            SEND_DATA_MAP.put(topic, new ConcurrentHashMap<>());
+        }
         Producer producer = new Producer("127.0.0.1");
         producer.start();
 
@@ -37,14 +45,20 @@ public class ProducerTest {
         sleep *= 1000;
         while (true) {
             Message message = new Message();
-            message.setQueueId(1);
+            int queueId = (n % queueNum) + 1;
+            message.setQueueId(queueId);
             producer.setAfterRetryProcess(msg -> System.out.printf("== TOPIC = %s == \n", topic));
             message.setTopic(topic);
             String msgId = UUID.randomUUID().toString();
             message.setTransactionId(msgId);
             message.setBody(++n);
             producer.sendMessage(message);
-            SEND_DATA.put(msgId, groupCount);
+
+            if (!SEND_DATA_MAP.get(topic).containsKey(queueId)) {
+                SEND_DATA_MAP.get(topic).put(queueId, new ConcurrentHashMap<>());
+            }
+            SEND_DATA_MAP.get(topic).get(queueId).put(msgId, 1);
+
             try {
                 Thread.sleep(sleep);
             } catch (InterruptedException e) {

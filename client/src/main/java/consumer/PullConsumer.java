@@ -1,11 +1,7 @@
 package consumer;
 
-import enums.ClientType;
-import enums.MessageType;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
-import message.PropertiesKeys;
-import netty.protocal.RemotingCommand;
 
 /**
  * @author Zexho
@@ -19,6 +15,7 @@ public class PullConsumer {
      */
     public void pullMessageTask(Consumer consumer) {
         Message pullRequest = new Message();
+        pullRequest.setQueueId(consumer.getQueueId());
         pullRequest.setTopic(consumer.getTopic());
         pullRequest.setConsumerGroup(consumer.getConsumerGroup());
 

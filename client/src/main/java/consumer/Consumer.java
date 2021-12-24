@@ -22,6 +22,7 @@ public class Consumer implements RemotingService {
     private PullConsumer pullConsumer;
 
     private String topic;
+    private int queueId;
     private String consumerGroup;
 
     public Consumer(String host) {
@@ -74,5 +75,13 @@ public class Consumer implements RemotingService {
 
     public void setConsumerListener(ConsumerListener consumerListener) {
         this.consumerListener = consumerListener;
+    }
+
+    public int getQueueId() {
+        return queueId;
+    }
+
+    public void setQueueId(int queueId) {
+        this.queueId = queueId;
     }
 }

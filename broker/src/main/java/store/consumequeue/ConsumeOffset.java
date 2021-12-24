@@ -29,11 +29,14 @@ class ConsumeOffset {
         return ConsumeOffset.Inner.INSTANCE;
     }
 
-    private final Map<String, Map<String, MappedFile>> consumeOffsetMap = new ConcurrentHashMap<>();
+    /**
+     * key = topic
+     * val = Map<queueId,MappedFile>>
+     */
+    private final Map<String, Map<String, Map<String, MappedFile>>> consumeOffsetMap = new ConcurrentHashMap<>();
 
     void init() {
         try {
-            this.ensureDirExist();
             this.recover();
         } catch (Exception e) {
             log.error("ConsumeOffset init error", e);
@@ -49,19 +52,22 @@ class ConsumeOffset {
 
     public void recover() throws Exception {
         this.ensureDirExist();
+        String topic, queue;
         for (File topicDir : CONSUME_OFFSET_FOLDER.listFiles()) {
-            if (topicDir.getName().contains(".")) {
+            if ((topic = topicDir.getName()).contains(".")) {
                 continue;
             }
-            Map<String, MappedFile> mappedFileMap = new ConcurrentHashMap<>(16);
-            this.consumeOffsetMap.put(topicDir.getName(), mappedFileMap);
-            for (File file : topicDir.listFiles()) {
-                if (file.getName().contains(".")) {
+            this.addTopic(topic);
+            for (File queueDir : topicDir.listFiles()) {
+                if ((queue = queueDir.getName()).contains(".")) {
                     continue;
                 }
-                MappedFile mf = new MappedFile(FileType.CONSUME_OFFSET, file);
-                mappedFileMap.put(file.getName(), mf);
-                log.info("Recover ConsumeOffset success. file = {} , consume offset = {}", mf.getAbsolutePath(), mf.getInt(0));
+                this.addQueue(topic, queue);
+                for (File file : queueDir.listFiles()) {
+                    MappedFile mf = new MappedFile(FileType.CONSUME_OFFSET, file);
+                    this.addConsumeGroup(topic, queue, file.getName(), new MappedFile(FileType.CONSUME_OFFSET, file));
+                    log.info("Recover ConsumeOffset success. file = {} , consume offset = {}", mf.getAbsolutePath(), mf.getInt(0));
+                }
             }
         }
     }
@@ -75,64 +81,55 @@ class ConsumeOffset {
         if (this.consumeOffsetMap.containsKey(topic)) {
             return;
         }
-
-        File file = new File(CONSUME_OFFSET_FOLDER, topic);
-        file.mkdirs();
-
+        File file = new File(FileType.CONSUME_OFFSET.basePath + topic);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
         this.consumeOffsetMap.put(topic, new ConcurrentHashMap<>(4));
     }
 
-    private void addConsumeGroup(String topic, String consumeGroup) throws IOException {
-        Map<String, MappedFile> topicMap = this.consumeOffsetMap.get(topic);
-        if (topicMap.containsKey(consumeGroup)) {
+    private void addQueue(String topic, String queueId) {
+        this.addTopic(topic);
+        if (this.consumeOffsetMap.get(topic).containsKey(queueId)) {
             return;
         }
-        File file = new File(CONSUME_OFFSET_FOLDER, topic + File.separator + consumeGroup);
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            throw new IOException("Failed to create a new file" + e);
+        File file = new File(FileType.CONSUME_OFFSET.basePath + topic + File.separator + queueId);
+        if (!file.exists()) {
+            file.mkdirs();
         }
+        this.consumeOffsetMap.get(topic).put(queueId, new ConcurrentHashMap<>());
+    }
 
-        try {
-            topicMap.put(consumeGroup, new MappedFile(FileType.CONSUME_OFFSET, file));
-        } catch (IOException e) {
-            throw new IOException("Failed to create mappedFile." + e);
+    private void addConsumeGroup(String topic, String queueId, String group, MappedFile mappedFile) {
+        this.addQueue(topic, queueId);
+        if (this.consumeOffsetMap.get(topic).get(queueId).containsKey(group)) {
+            return;
         }
-
-        try {
-            topicMap.get(consumeGroup).appendInt(0);
-            topicMap.get(consumeGroup).flush();
-        } catch (IOException e) {
-            throw new IOException("Failed to append number(int) to file,consumeGroup = " + consumeGroup + ", n = " + 0, e);
+        File file = new File(FileType.CONSUME_OFFSET.basePath + topic + File.separator + queueId + File.separator + group);
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+                if (mappedFile == null) {
+                    mappedFile = new MappedFile(FileType.CONSUME_OFFSET, file);
+                }
+            } catch (IOException e) {
+                log.warn("failed to create consume offset file error. ", e);
+            }
         }
+        this.consumeOffsetMap.get(topic).get(queueId).put(group, mappedFile);
     }
 
     /**
-     * 获取group的消费进度
+     * 获取group的在queueId下的消费进度
      *
-     * @param topic
-     * @param consumeGroup
+     * @param topic        主题
+     * @param queueId      队列id
+     * @param consumeGroup 消费组
      * @return
      */
-    public long getOffset(String topic, String consumeGroup) throws Exception {
-        Map<String, MappedFile> topicMap = consumeOffsetMap.get(topic);
-        if (topicMap == null) {
-            this.addTopic(topic);
-            topicMap = consumeOffsetMap.get(topic);
-        }
-
-        MappedFile mappedFile = topicMap.get(consumeGroup);
-        if (mappedFile == null) {
-            try {
-                addConsumeGroup(topic, consumeGroup);
-            } catch (IOException e) {
-                throw new IOException("Failed to add consumeGroup,topic = " + topic + ", consumeGroup = " + consumeGroup, e);
-            }
-            mappedFile = topicMap.get(consumeGroup);
-        }
-
-        return mappedFile.getInt(0);
+    public long getOffset(String topic, String queueId, String consumeGroup) throws Exception {
+        this.addConsumeGroup(topic, String.valueOf(queueId), consumeGroup, null);
+        return this.getFile(topic, queueId, consumeGroup).getInt(0);
     }
 
     /**
@@ -141,8 +138,8 @@ class ConsumeOffset {
      * @param topic        消息主题
      * @param consumeGroup 消费组
      */
-    public void incOffset(String topic, String consumeGroup) throws IOException {
-        MappedFile file = this.getFile(topic, consumeGroup);
+    public void incOffset(String topic, String queue, String consumeGroup) throws IOException {
+        MappedFile file = this.getFile(topic, queue, consumeGroup);
         try {
             int seq = file.getInt(0);
             file.updateInt(0, seq + 1);
@@ -151,8 +148,8 @@ class ConsumeOffset {
         }
     }
 
-    public MappedFile getFile(String topic, String consumeGroup) {
-        Map<String, MappedFile> topicMap = this.consumeOffsetMap.get(topic);
-        return topicMap.get(consumeGroup);
+    public MappedFile getFile(String topic, String queue, String consumeGroup) {
+        return this.consumeOffsetMap.get(topic).get(queue).get(consumeGroup);
     }
+
 }
