@@ -18,15 +18,15 @@ public class ProducerTest {
      * val = Map<queueId,Map<msgId,count>>
      */
     public static final Map<String, Map<Integer, Map<String, Integer>>> SEND_DATA_MAP = new ConcurrentHashMap<>(16);
-    public static final Map<String, Integer> SEND_DATA = new ConcurrentHashMap<>(64);
 
     @Test
     public void producer() {
-        new Thread(() -> ProducerTest.startProducer(10, "topic_1", 4)).start();
-        new Thread(() -> ProducerTest.startProducer(12, "topic_1", 4)).start();
-        new Thread(() -> ProducerTest.startProducer(15, "topic_2", 6)).start();
-        new Thread(() -> ProducerTest.startProducer(18, "topic_2", 6)).start();
-        new Thread(() -> ProducerTest.startProducer(15, "topic_3", 2)).start();
+        new Thread(() -> ProducerTest.startProducer(6, "topic_1", 3)).start();
+        new Thread(() -> ProducerTest.startProducer(8, "topic_1", 3)).start();
+        new Thread(() -> ProducerTest.startProducer(7, "topic_2", 2)).start();
+        new Thread(() -> ProducerTest.startProducer(9, "topic_2", 2)).start();
+        new Thread(() -> ProducerTest.startProducer(10, "topic_3", 1)).start();
+        new Thread(() -> ProducerTest.startProducer(12, "topic_3", 1)).start();
     }
 
     /**
@@ -57,7 +57,7 @@ public class ProducerTest {
             if (!SEND_DATA_MAP.get(topic).containsKey(queueId)) {
                 SEND_DATA_MAP.get(topic).put(queueId, new ConcurrentHashMap<>());
             }
-            SEND_DATA_MAP.get(topic).get(queueId).put(msgId, 1);
+            SEND_DATA_MAP.get(topic).get(queueId).put(msgId, 3);
 
             try {
                 Thread.sleep(sleep);
