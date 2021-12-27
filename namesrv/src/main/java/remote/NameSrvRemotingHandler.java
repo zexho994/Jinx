@@ -5,14 +5,15 @@ import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 import manager.BrokerManager;
 import manager.TopicManager;
-import message.ConfigBody;
-import message.PropertiesKeys;
-import message.TopicUnit;
+import message.*;
+import meta.BrokerData;
 import netty.protocal.RemotingCommand;
 import netty.server.NettyServerHandler;
 import utils.ByteUtil;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Zexho
@@ -41,6 +42,12 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
                 boolean result = this.doRegisterBroker(command);
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker_Resp.type);
                 resp.setBody(ByteUtil.to(result));
+                break;
+            case Get_Topic_Route:
+                TopicRouteInfos topicRouteInfos = this.doGetTopicRouteData(ByteUtil.to(command.getBody(), String.class));
+                resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Get_Topic_Route.type);
+                resp.setBody(ByteUtil.to(topicRouteInfos));
+                break;
             default:
                 break;
         }
@@ -58,6 +65,28 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
         topicManager.addTopic(brokerName, topics);
 
         return true;
+    }
+
+    private TopicRouteInfos doGetTopicRouteData(String topic) {
+        log.info("Get topic <{}> route data", topic);
+        Set<String> brokerNames = this.topicManager.getBrokerNameByTopic(topic);
+        List<TopicRouteInfo> topicRouteInfoList = new LinkedList<>();
+
+        brokerNames.forEach(e -> {
+            BrokerData brokerData = this.brokerManager.getBrokerData(e);
+            this.topicManager.getTopicsByBrokerName(e).stream()
+                    .filter(tu -> tu.getTopic().equals(topic))
+                    .forEach(tu -> {
+                        TopicRouteInfo tri = new TopicRouteInfo();
+                        tri.setBrokerName(brokerData.getBrokerName());
+                        tri.setClusterName(brokerData.getClusterName());
+                        tri.setBrokerHost(brokerData.getBrokerHost());
+                        tri.setTopic(tu.getTopic());
+                        tri.setQueueNum(tu.getQueue());
+                        topicRouteInfoList.add(tri);
+                    });
+        });
+        return new TopicRouteInfos(topicRouteInfoList);
     }
 
 }

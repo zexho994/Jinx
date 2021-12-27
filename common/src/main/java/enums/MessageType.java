@@ -8,7 +8,14 @@ import java.util.Objects;
  */
 public enum MessageType {
 
+    /////////// Common ///////////////
+    /**
+     * 获取topic的路由信息
+     */
+    Get_Topic_Route("getTopicRoute"),
+
     /////////// Consumer ///////////////
+
     /**
      * consumer 执行 pullMessage 时发送的消息
      */
@@ -19,6 +26,7 @@ public enum MessageType {
 
     /////////// Broker ///////////////
     Register_Broker("registerBroker"),
+
     Register_Broker_Resp("registerBrokerResp");
 
     public final String type;
