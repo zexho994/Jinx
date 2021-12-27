@@ -52,5 +52,6 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
         RemotingCommand response = (RemotingCommand) msg;
         SyncFuture<RemotingCommand> remotingCommandSyncFuture = this.client.syncFutureMap.get(response.getTraceId());
         remotingCommandSyncFuture.setResponse(response);
+        this.client.syncFutureMap.remove(response.getTraceId());
     }
 }
