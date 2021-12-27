@@ -9,7 +9,12 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.extern.log4j.Log4j2;
 import netty.IRemotingService;
+import netty.future.SyncFuture;
+import netty.protocal.RemotingCommand;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,6 +29,7 @@ public class NettyRemotingClientImpl implements IRemotingService {
     private final EventLoopGroup eventLoopGroupWorker;
     private Channel channel;
     private NettyClientHandler clientHandler;
+    public final Map<String, SyncFuture<RemotingCommand>> syncFutureMap = new ConcurrentHashMap<>();
 
     public NettyRemotingClientImpl(final NettyClientConfig config) {
         this(config, null);
@@ -72,6 +78,13 @@ public class NettyRemotingClientImpl implements IRemotingService {
                                 clientHandler);
                     }
                 });
+    }
+
+    public RemotingCommand sendSync(RemotingCommand command) throws ExecutionException, InterruptedException {
+        SyncFuture<RemotingCommand> future = new SyncFuture<>();
+        syncFutureMap.put(command.getTraceId(), future);
+        this.channel.writeAndFlush(command);
+        return future.get();
     }
 
     @Override

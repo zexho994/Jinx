@@ -4,6 +4,8 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.log4j.Log4j2;
+import netty.future.SyncFuture;
+import netty.protocal.RemotingCommand;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -45,4 +47,10 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
         log.info("客户端异常 -> " + Arrays.toString(cause.getStackTrace()));
     }
 
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        RemotingCommand response = (RemotingCommand) msg;
+        SyncFuture<RemotingCommand> remotingCommandSyncFuture = this.client.syncFutureMap.get(response.getTraceId());
+        remotingCommandSyncFuture.setResponse(response);
+    }
 }

@@ -1,10 +1,10 @@
 package remote;
 
-import manager.BrokerManager;
-import manager.TopicManager;
 import enums.MessageType;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
+import manager.BrokerManager;
+import manager.TopicManager;
 import message.ConfigBody;
 import message.PropertiesKeys;
 import message.TopicUnit;
@@ -28,22 +28,26 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         RemotingCommand cmd = (RemotingCommand) msg;
         log.info("[NameServer] remoting command => {}", msg);
-        this.processCommand(cmd);
+        RemotingCommand response = this.processCommand(cmd);
+        ctx.writeAndFlush(response);
     }
 
-    private void processCommand(RemotingCommand command) {
+    private RemotingCommand processCommand(RemotingCommand command) {
         MessageType messageType = MessageType.get(command.getProperty(PropertiesKeys.MESSAGE_TYPE));
         assert messageType != null;
+        RemotingCommand resp = new RemotingCommand(command.getTraceId());
         switch (messageType) {
             case Register_Broker:
-                this.doRegisterBroker(command);
-                break;
+                boolean result = this.doRegisterBroker(command);
+                resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker_Resp.type);
+                resp.setBody(ByteUtil.to(result));
             default:
                 break;
         }
+        return resp;
     }
 
-    private void doRegisterBroker(RemotingCommand command) {
+    private boolean doRegisterBroker(RemotingCommand command) {
         String brokerName = command.getProperty(PropertiesKeys.BROKER_NAME);
         String brokerHost = command.getProperty(PropertiesKeys.BROKER_HOST);
         String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
@@ -51,7 +55,9 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
 
         ConfigBody body = ByteUtil.to(command.getBody(), ConfigBody.class);
         List<TopicUnit> topics = body.getTopics();
-        topicManager.addTopic(brokerName,topics);
+        topicManager.addTopic(brokerName, topics);
+
+        return true;
     }
 
 }
