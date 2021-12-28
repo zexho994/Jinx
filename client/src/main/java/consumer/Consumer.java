@@ -45,7 +45,6 @@ public class Consumer implements RemotingService {
         this.consumerClient.shutdown();
     }
 
-    @Override
     public void sendMessage(Message message) {
         Channel channel = this.consumerClient.getChannel();
 

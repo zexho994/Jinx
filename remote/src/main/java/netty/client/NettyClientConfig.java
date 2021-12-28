@@ -38,4 +38,9 @@ public class NettyClientConfig {
     public NettyClientConfig(String host) {
         this.listenHost = host;
     }
+
+    public NettyClientConfig(String host, int listenPort) {
+        this.listenHost = host;
+        this.listenPort = listenPort;
+    }
 }

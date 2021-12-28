@@ -12,5 +12,4 @@ public interface RemotingService {
 
     void shutdown();
 
-    void sendMessage(Message message);
 }

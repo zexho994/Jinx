@@ -80,6 +80,23 @@ public class NettyRemotingClientImpl implements IRemotingService {
                 });
     }
 
+    /**
+     * 异步发送消息
+     *
+     * @param command 请求体
+     */
+    public void send(RemotingCommand command) {
+        this.channel.writeAndFlush(command);
+    }
+
+    /**
+     * 同步发送消息
+     *
+     * @param command 请求体
+     * @return 响应结果
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
     public RemotingCommand sendSync(RemotingCommand command) throws ExecutionException, InterruptedException {
         SyncFuture<RemotingCommand> future = new SyncFuture<>();
         syncFutureMap.put(command.getTraceId(), future);

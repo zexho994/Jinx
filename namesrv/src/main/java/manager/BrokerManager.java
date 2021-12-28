@@ -32,7 +32,7 @@ public class BrokerManager {
         if (BROKER_INFO.containsKey(brokerName)) {
             return;
         }
-        BROKER_INFO.put(brokerName, new BrokerData(brokerName, brokerHost, clusterName));
+        BROKER_INFO.put(brokerName, new BrokerData(clusterName, brokerName, brokerHost));
     }
 
     public BrokerData getBrokerData(String brokerName) {
