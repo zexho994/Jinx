@@ -19,8 +19,7 @@ public class NamesrvServiceImpl implements RemotingService {
     private final NettyRemotingClientImpl client;
 
     public NamesrvServiceImpl(String namesrvHost, int namesrvPort) {
-        NettyClientConfig nettyClientConfig = new NettyClientConfig(namesrvHost);
-        nettyClientConfig.setListenPort(namesrvPort);
+        NettyClientConfig nettyClientConfig = new NettyClientConfig(namesrvHost, namesrvPort);
         this.client = new NettyRemotingClientImpl(nettyClientConfig);
     }
 

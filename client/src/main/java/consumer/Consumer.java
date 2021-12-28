@@ -1,15 +1,15 @@
 package consumer;
 
-import enums.ClientType;
-import enums.MessageType;
-import io.netty.channel.Channel;
-import message.Message;
-import message.PropertiesKeys;
-import netty.client.NettyClientConfig;
-import netty.client.NettyRemotingClientImpl;
-import netty.protocal.RemotingCommand;
+import common.Host;
+import message.TopicRouteInfos;
+import netty.common.RemotingCommandFactory;
+import remoting.BrokerRemoteManager;
+import remoting.NamesrvServiceImpl;
 import remoting.RemotingService;
-import utils.ByteUtil;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Random;
 
 /**
  * @author Zexho
@@ -17,43 +17,48 @@ import utils.ByteUtil;
  */
 public class Consumer implements RemotingService {
 
-    private final NettyRemotingClientImpl consumerClient;
     private ConsumerListener consumerListener;
-    private PullConsumer pullConsumer;
+    private final NamesrvServiceImpl namesrvService;
+    private final BrokerRemoteManager brokerRemoteManager;
 
     private String topic;
     private int queueId;
     private String consumerGroup;
+    private final int cid;
 
     public Consumer(String host) {
-        this.consumerClient = new NettyRemotingClientImpl(new NettyClientConfig(host));
+        this.namesrvService = new NamesrvServiceImpl(host, Host.NAMESERVER_PORT);
+        this.brokerRemoteManager = new BrokerRemoteManager();
+        int address;
+        Random random = new Random();
+        try {
+            address = InetAddress.getLocalHost().getHostAddress().hashCode();
+        } catch (UnknownHostException e) {
+            address = (int) (random.nextDouble() * 9944);
+        }
+        this.cid = ((int) (System.currentTimeMillis() % 10000) << 4) + (address % 10000);
     }
 
     @Override
     public void start() {
-        ConsumerHandler consumerHandler = new ConsumerHandler(this.consumerListener);
-        this.consumerClient.setClientHandler(consumerHandler);
-        this.consumerClient.start();
+        if (this.topic == null || this.consumerGroup == null) {
+            throw new RuntimeException("topic or group is null");
+        }
 
-        this.pullConsumer = new PullConsumer();
-        pullConsumer.pullMessageTask(this);
+        // 与 namesrv 连接
+        this.namesrvService.start();
+        // 获取topic路由信息
+        TopicRouteInfos topicRouteInfo = this.namesrvService.getTopicRouteInfo(this.topic);
+        // 和broker建立连接,并发送注册消息
+        topicRouteInfo.getData().forEach(tf -> {
+            this.brokerRemoteManager.connect(tf.getBrokerName(), tf.getBrokerHost(), new ConsumerHandler(this.consumerListener));
+            this.brokerRemoteManager.send(tf.getBrokerName(), RemotingCommandFactory.registerConsumer(cid, this.topic, this.consumerGroup));
+        });
     }
 
     @Override
     public void shutdown() {
-        this.pullConsumer.shutdownTask();
-        this.consumerClient.shutdown();
-    }
-
-    public void sendMessage(Message message) {
-        Channel channel = this.consumerClient.getChannel();
-
-        RemotingCommand remotingCommand = new RemotingCommand();
-        remotingCommand.setBody(ByteUtil.to(message));
-        remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Consumer.type);
-        remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Pull_Message.type);
-
-        channel.writeAndFlush(remotingCommand);
+        this.namesrvService.shutdown();
     }
 
     public void setTopic(String topic) {
@@ -64,20 +69,8 @@ public class Consumer implements RemotingService {
         this.consumerGroup = consumerGroup;
     }
 
-    public String getTopic() {
-        return topic;
-    }
-
-    public String getConsumerGroup() {
-        return consumerGroup;
-    }
-
     public void setConsumerListener(ConsumerListener consumerListener) {
         this.consumerListener = consumerListener;
-    }
-
-    public int getQueueId() {
-        return queueId;
     }
 
     public void setQueueId(int queueId) {

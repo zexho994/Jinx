@@ -1,0 +1,16 @@
+@startuml
+autonumber
+
+group 绑定消费队列与消费者
+consumer -> broker : 注册
+broker -> broker : 保存consumer信息
+broker -> broker : 执行订阅关系重平衡
+end
+
+group 分发消息
+producer -> broker : 发送消息
+broker -> broker : 查询消费队列的订阅者们
+broker -> consumer : push
+end
+
+@enduml

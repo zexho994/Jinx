@@ -9,6 +9,7 @@ import lombok.extern.log4j.Log4j2;
 import message.Message;
 import message.ProducerMessageResponse;
 import message.PropertiesKeys;
+import message.RegisterConsumer;
 import netty.protocal.RemotingCommand;
 import netty.server.NettyServerHandler;
 import producer.ProducerManager;
@@ -93,17 +94,14 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      * @param cmd 消费者发送的消息
      */
     private void doConsumerMessage(RemotingCommand cmd, ChannelHandlerContext ctx) {
-        Message message = ByteUtil.to(cmd.getBody(), Message.class);
-        String topic = message.getTopic();
-        try {
-            Message pullMessage = consumerManager.pullMessage(topic, message.getQueueId(), message.getConsumerGroup());
-            if (pullMessage != null) {
-                ctx.writeAndFlush(pullMessage);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        String messageType = cmd.getProperty(PropertiesKeys.MESSAGE_TYPE);
+        switch (MessageType.get(messageType)) {
+            case Register_Consumer:
+                this.consumerManager.registerConsumer(ByteUtil.to(cmd.getBody(), RegisterConsumer.class), ctx);
+                break;
+            case Pull_Message:
+            default:
         }
-
     }
 
 }

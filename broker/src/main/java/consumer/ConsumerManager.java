@@ -1,6 +1,9 @@
 package consumer;
 
+import io.netty.channel.ChannelHandlerContext;
+import lombok.extern.log4j.Log4j2;
 import message.Message;
+import message.RegisterConsumer;
 import store.DefaultMessageStore;
 import store.MessageStore;
 import store.consumequeue.ConsumeQueue;
@@ -14,6 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Zexho
  * @date 2021/12/6 10:47 上午
  */
+@Log4j2
 public class ConsumerManager {
 
     private ConsumerManager() {
@@ -29,9 +33,11 @@ public class ConsumerManager {
 
     private final MessageStore messageStore = DefaultMessageStore.getInstance();
     private final ConsumeQueue consumeQueue = ConsumeQueue.getInstance();
-
     private final Map<String, Map<String, Lock>> locks = new ConcurrentHashMap<>();
 
+    public void registerConsumer(RegisterConsumer registerConsumer, ChannelHandlerContext ctx) {
+        log.info("Register consumer. data = {}", registerConsumer);
+    }
 
     /**
      * 消费消息

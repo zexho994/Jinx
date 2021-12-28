@@ -6,15 +6,11 @@ import lombok.extern.log4j.Log4j2;
 import message.Message;
 import message.TopicRouteInfo;
 import message.TopicRouteInfos;
-import netty.client.NettyClientConfig;
-import netty.client.NettyRemotingClientImpl;
 import netty.common.RemotingCommandFactory;
 import netty.protocal.RemotingCommand;
+import remoting.BrokerRemoteManager;
 import remoting.NamesrvServiceImpl;
 import remoting.RemotingService;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Zexho
@@ -25,15 +21,14 @@ public class Producer implements RemotingService {
 
     final MessageRequestTable messageRequestTable;
     private final NamesrvServiceImpl namesrvService;
-    private final Map<String, NettyRemotingClientImpl> brokerRemoteMap;
-
+    private final BrokerRemoteManager brokerRemoteManager;
 
     /**
      * @param host namesrv 服务的域名
      */
     public Producer(String host) {
         this.namesrvService = new NamesrvServiceImpl(host, Host.NAMESERVER_PORT);
-        this.brokerRemoteMap = new ConcurrentHashMap<>();
+        this.brokerRemoteManager = new BrokerRemoteManager();
         this.messageRequestTable = new MessageRequestTable(this);
     }
 
@@ -61,15 +56,14 @@ public class Producer implements RemotingService {
         // 获取路由信息
         TopicRouteInfos topicRouteInfo = this.namesrvService.getTopicRouteInfo(message.getTopic());
         // 检查与broker的连接
-        this.checkBrokerConnected(topicRouteInfo);
+        this.ensureBrokerConnected(topicRouteInfo);
         // 消息包
         RemotingCommand command = RemotingCommandFactory.putMessage(message);
         // 选择一个发送队列,随机选择一个
         int size = topicRouteInfo.getData().size();
         TopicRouteInfo tf = topicRouteInfo.getData().get((int) (System.currentTimeMillis() % size));
-        this.brokerRemoteMap.get(tf.getBrokerName()).send(command);
+        this.brokerRemoteManager.send(tf.getBrokerName(), command);
     }
-
 
     public void setAfterRetryProcess(AfterRetryProcess afterRetryProcess) {
         ProducerConfig.afterRetryProcess = afterRetryProcess;
@@ -81,15 +75,10 @@ public class Producer implements RemotingService {
      *
      * @param topicRouteInfo 路由信息
      */
-    private void checkBrokerConnected(TopicRouteInfos topicRouteInfo) {
+    private void ensureBrokerConnected(TopicRouteInfos topicRouteInfo) {
         topicRouteInfo.getData().stream()
-                .filter(tf -> !this.brokerRemoteMap.containsKey(tf.getBrokerName()))
-                .forEach(tf -> {
-                    NettyClientConfig config = new NettyClientConfig(tf.getBrokerHost(), Host.BROKER_PORT);
-                    NettyRemotingClientImpl client = new NettyRemotingClientImpl(config);
-                    client.start();
-                    this.brokerRemoteMap.put(tf.getBrokerName(), client);
-                });
+                .filter(tf -> !brokerRemoteManager.checkConnectStatus(tf.getBrokerName()))
+                .forEach(tf -> this.brokerRemoteManager.connect(tf.getBrokerName(), tf.getBrokerHost(), null));
     }
 
 }
