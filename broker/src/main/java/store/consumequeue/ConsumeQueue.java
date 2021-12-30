@@ -183,7 +183,9 @@ public class ConsumeQueue {
     private void ensureDirExist() {
         if (CONSUMER_QUEUE_FOLDER == null) {
             CONSUMER_QUEUE_FOLDER = new File(FileType.CONSUME_QUEUE.basePath);
-            CONSUMER_QUEUE_FOLDER.mkdirs();
+            if (!CONSUMER_QUEUE_FOLDER.exists()) {
+                CONSUMER_QUEUE_FOLDER.mkdirs();
+            }
         }
     }
 
@@ -200,7 +202,6 @@ public class ConsumeQueue {
 
             MappedFileQueue mappedFileQueue = mappedFileMap.get(topic).get(queueId);
             MappedFile mappedFile = mappedFileQueue.getLastMappedFile();
-
             byte[] data = ByteUtil.to(commitlogOffset);
 
             MessageAppendResult appendResult = mappedFile.append(data);

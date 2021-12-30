@@ -19,6 +19,7 @@ public enum MessageType {
     /**
      * consumer 执行 pullMessage 时发送的消息
      */
+    Push_Message("pushMessage"),
     Pull_Message("pullMessage"),
     Register_Consumer("registerConsumer"),
 

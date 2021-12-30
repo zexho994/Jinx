@@ -63,26 +63,11 @@ public class MappedFile {
         }
         this.fileSize = fileType.fileSize;
 
-        fileInit();
-        setDefaultData(fileType);
+        fieldsInit();
     }
 
-    /**
-     * 为文件设置默认内容
-     *
-     * @param fileType
-     */
-    private void setDefaultData(FileType fileType) throws IOException {
-        if (fileType == FileType.CONSUME_OFFSET) {
-            try {
-                this.append(ByteUtil.to(0));
-            } catch (IOException e) {
-                throw new IOException("consume offset set default data error.", e);
-            }
-        }
-    }
 
-    private void fileInit() throws IOException {
+    private void fieldsInit() throws IOException {
         ensureDirExist(this.file.getParent());
 
         boolean initSuccess = false;

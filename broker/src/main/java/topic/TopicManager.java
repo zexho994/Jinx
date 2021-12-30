@@ -1,6 +1,11 @@
 package topic;
 
-import message.ConfigBody;
+import config.BrokerConfig;
+import message.TopicUnit;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Zexho
@@ -8,9 +13,40 @@ import message.ConfigBody;
  */
 public class TopicManager {
 
-    private ConfigBody topics;
-
-    public void setTopics(ConfigBody topics) {
-        this.topics = topics;
+    private TopicManager() {
     }
+
+    private static class Inner {
+        private static final TopicManager INSTANCE = new TopicManager();
+    }
+
+    public static TopicManager getInstance() {
+        return TopicManager.Inner.INSTANCE;
+    }
+
+    private List<TopicUnit> topics;
+    private final Map<String, TopicUnit> topicUnitMap = new ConcurrentHashMap<>();
+    private boolean isInit = false;
+
+    /**
+     * 获取broker所有topic信息
+     */
+    public List<TopicUnit> getTopics() {
+        this.checkInit();
+        return this.topics;
+    }
+
+    public TopicUnit getTopic(String topic) {
+        this.checkInit();
+        return topicUnitMap.get(topic);
+    }
+
+    private void checkInit() {
+        if (!isInit) {
+            this.topics = BrokerConfig.configBody.getTopics();
+            topics.forEach(unit -> this.topicUnitMap.put(unit.getTopic(), unit));
+            isInit = true;
+        }
+    }
+
 }

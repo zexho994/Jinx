@@ -7,10 +7,6 @@ import remoting.BrokerRemoteManager;
 import remoting.NamesrvServiceImpl;
 import remoting.RemotingService;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Random;
-
 /**
  * @author Zexho
  * @date 2021/11/15 7:33 下午
@@ -22,21 +18,13 @@ public class Consumer implements RemotingService {
     private final BrokerRemoteManager brokerRemoteManager;
 
     private String topic;
-    private int queueId;
     private String consumerGroup;
     private final int cid;
 
-    public Consumer(String host) {
+    public Consumer(String host, int cid) {
         this.namesrvService = new NamesrvServiceImpl(host, Host.NAMESERVER_PORT);
         this.brokerRemoteManager = new BrokerRemoteManager();
-        int address;
-        Random random = new Random();
-        try {
-            address = InetAddress.getLocalHost().getHostAddress().hashCode();
-        } catch (UnknownHostException e) {
-            address = (int) (random.nextDouble() * 9944);
-        }
-        this.cid = ((int) (System.currentTimeMillis() % 10000) << 4) + (address % 10000);
+        this.cid = cid;
     }
 
     @Override
@@ -71,9 +59,5 @@ public class Consumer implements RemotingService {
 
     public void setConsumerListener(ConsumerListener consumerListener) {
         this.consumerListener = consumerListener;
-    }
-
-    public void setQueueId(int queueId) {
-        this.queueId = queueId;
     }
 }

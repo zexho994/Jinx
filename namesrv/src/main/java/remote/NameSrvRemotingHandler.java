@@ -28,7 +28,6 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         RemotingCommand cmd = (RemotingCommand) msg;
-        log.info("[NameServer] remoting command => {}", msg);
         RemotingCommand response = this.processCommand(cmd);
         ctx.writeAndFlush(response);
     }
@@ -39,12 +38,15 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
         RemotingCommand resp = new RemotingCommand(command.getTraceId());
         switch (messageType) {
             case Register_Broker:
+                log.info("[NameServer] broker register => {}", ByteUtil.to(command.getBody(), ConfigBody.class));
                 boolean result = this.doRegisterBroker(command);
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker_Resp.type);
                 resp.setBody(ByteUtil.to(result));
                 break;
             case Get_Topic_Route:
-                TopicRouteInfos topicRouteInfos = this.doGetTopicRouteData(ByteUtil.to(command.getBody(), String.class));
+                String topic = ByteUtil.to(command.getBody(), String.class);
+                log.info("[NameServer] get topic route info => {}", topic);
+                TopicRouteInfos topicRouteInfos = this.doGetTopicRouteData(topic);
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Get_Topic_Route.type);
                 resp.setBody(ByteUtil.to(topicRouteInfos));
                 break;

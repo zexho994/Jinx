@@ -1,8 +1,8 @@
 package remoting;
 
 import common.Host;
+import consumer.ConsumerHandler;
 import netty.client.NettyClientConfig;
-import netty.client.NettyClientHandler;
 import netty.client.NettyRemotingClientImpl;
 import netty.protocal.RemotingCommand;
 
@@ -21,7 +21,7 @@ public class BrokerRemoteManager {
         this.brokerRemoteMap = new ConcurrentHashMap<>();
     }
 
-    public void connect(String brokerName, String brokerHost, NettyClientHandler handler) {
+    public void connect(String brokerName, String brokerHost, ConsumerHandler handler) {
         NettyRemotingClientImpl client = new NettyRemotingClientImpl(new NettyClientConfig(brokerHost, Host.BROKER_PORT));
         if (handler != null) {
             client.setClientHandler(handler);

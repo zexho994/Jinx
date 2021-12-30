@@ -57,11 +57,12 @@ public class Producer implements RemotingService {
         TopicRouteInfos topicRouteInfo = this.namesrvService.getTopicRouteInfo(message.getTopic());
         // 检查与broker的连接
         this.ensureBrokerConnected(topicRouteInfo);
-        // 消息包
-        RemotingCommand command = RemotingCommandFactory.putMessage(message);
-        // 选择一个发送队列,随机选择一个
+        // 随机选择一个发送队列
         int size = topicRouteInfo.getData().size();
         TopicRouteInfo tf = topicRouteInfo.getData().get((int) (System.currentTimeMillis() % size));
+        message.setQueueId((int) (System.currentTimeMillis() % tf.getQueueNum()) + 1);
+
+        RemotingCommand command = RemotingCommandFactory.putMessage(message);
         this.brokerRemoteManager.send(tf.getBrokerName(), command);
     }
 

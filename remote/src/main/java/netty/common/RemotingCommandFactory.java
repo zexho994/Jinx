@@ -42,4 +42,18 @@ public class RemotingCommandFactory {
         return remotingCommand;
     }
 
+    /**
+     * 执行消息推送,broker -> consumer
+     *
+     * @param message 消息体
+     * @return
+     */
+    public static RemotingCommand messagePush(Message message) {
+        RemotingCommand remotingCommand = new RemotingCommand();
+        remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Broker.type);
+        remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Push_Message.type);
+        remotingCommand.setBody(ByteUtil.to(message));
+        return remotingCommand;
+    }
+
 }

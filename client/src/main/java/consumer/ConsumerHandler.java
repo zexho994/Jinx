@@ -1,9 +1,11 @@
 package consumer;
 
-import message.Message;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
 import netty.client.NettyClientHandler;
+import netty.protocal.RemotingCommand;
+import utils.ByteUtil;
 
 /**
  * @author Zexho
@@ -20,6 +22,9 @@ public class ConsumerHandler extends NettyClientHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        this.consumerListener.consume((Message) msg);
+        RemotingCommand command = (RemotingCommand) msg;
+        Message message = ByteUtil.to(command.getBody(), Message.class);
+        log.debug("channel read msg => {}", message);
+        this.consumerListener.consume(message);
     }
 }

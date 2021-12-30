@@ -47,7 +47,7 @@ public class MessageOrderingTest {
     }
 
     public void consume(String topic, String group) {
-        Consumer consumer = new Consumer("127.0.0.1");
+        Consumer consumer = new Consumer("127.0.0.1",1);
         AtomicInteger n = new AtomicInteger(1);
         consumer.setConsumerListener(msg -> {
             System.out.printf("\n[CONSUME] Receiver message => %s \n\n", msg);
