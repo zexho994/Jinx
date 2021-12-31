@@ -160,6 +160,7 @@ public class ConsumerManager {
         try {
             Message message = messageStore.findMessage(topic, queueId, consumeGroup);
             if (message != null) {
+                log.debug("find message => {}", message);
                 consumeQueue.incOffset(topic, queueId, consumeGroup);
             }
             return message;

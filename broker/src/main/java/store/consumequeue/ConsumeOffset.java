@@ -146,9 +146,8 @@ class ConsumeOffset {
         MappedFile file = this.getFile(topic, queue, consumeGroup);
         try {
             int seq = file.getInt(0);
-            log.info("before inc offset ,topic = {}, queue = {}, group = {}, seq = {}", topic, queue, consumeGroup, seq);
+            log.debug("inc offset ,topic = {}, queue = {}, group = {}, seq = {}", topic, queue, consumeGroup, seq);
             file.updateInt(0, seq + 1);
-            log.info("after inc offset ,topic = {}, queue = {}, group = {}, seq = {}", topic, queue, consumeGroup, file.getInt(0));
         } catch (IOException e) {
             throw new IOException("accumulation offset error, topic = " + topic + ", consumeGroup = " + consumeGroup, e);
         }

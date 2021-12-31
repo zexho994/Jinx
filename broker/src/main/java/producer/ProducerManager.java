@@ -1,6 +1,7 @@
 package producer;
 
 import consumer.ConsumerManager;
+import lombok.extern.log4j.Log4j2;
 import message.Message;
 import store.DefaultMessageStore;
 import store.MessageStore;
@@ -12,6 +13,7 @@ import store.consumequeue.ConsumeQueue;
  * @author Zexho
  * @date 2021/12/7 5:39 下午
  */
+@Log4j2
 public class ProducerManager {
     private ProducerManager() {
     }
@@ -39,13 +41,9 @@ public class ProducerManager {
      * @param model   消息刷盘模式
      */
     public PutMessageResult putMessage(Message message, FlushModel model) {
+        log.debug("producer put message : {}", message);
         // 消息交给存储模块进行存储
-        PutMessageResult storeResult = messageStore.putMessage(message, model);
-
-        // todo 判断客户端消费模式,pull or push
-        // 消息执行推送
-        consumerManager.doMessagePush(message.getTopic(), message.getQueueId(), message);
-
-        return storeResult;
+        return messageStore.putMessage(message, model);
     }
+    
 }

@@ -50,6 +50,7 @@ public class DefaultMessageStore implements MessageStore {
      */
     @Override
     public PutMessageResult putMessage(final Message message, final FlushModel flushModel) {
+        log.trace("default message store message");
         // 检查存储状态
         if (!this.checkStoreStatus()) {
             log.error("Store status is abnormality");

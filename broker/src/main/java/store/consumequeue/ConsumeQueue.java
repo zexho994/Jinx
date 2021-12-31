@@ -198,6 +198,7 @@ public class ConsumeQueue {
     public PutMessageResult putMessage(String topic, int queueId, long commitlogOffset) {
         lock.lock();
         try {
+            log.trace("consumeQueue put message");
             ensureFileExist(topic);
 
             MappedFileQueue mappedFileQueue = mappedFileMap.get(topic).get(queueId);

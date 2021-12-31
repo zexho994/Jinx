@@ -48,6 +48,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         RemotingCommand cmd = (RemotingCommand) msg;
+        log.trace("[Broker] channel read msg");
 
         // 获取客户端类型
         String clientType = cmd.getProperty(PropertiesKeys.CLIENT_TYPE);
@@ -68,6 +69,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      * @param cmd 生产者发送的包
      */
     private void doProducerMessage(RemotingCommand cmd, ChannelHandlerContext ctx) {
+        log.trace("do producer message");
         MessageType messageType = MessageType.get(cmd.getProperty(PropertiesKeys.MESSAGE_TYPE));
         Message message = ByteUtil.to(cmd.getBody(), Message.class);
         if (messageType == MessageType.Put_Message) {
