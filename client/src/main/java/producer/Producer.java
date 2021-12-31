@@ -24,10 +24,10 @@ public class Producer implements RemotingService {
     private final BrokerRemoteManager brokerRemoteManager;
 
     /**
-     * @param host namesrv 服务的域名
+     * @param namesrvHost namesrv 服务的域名
      */
-    public Producer(String host) {
-        this.namesrvService = new NamesrvServiceImpl(host, Host.NAMESERVER_PORT);
+    public Producer(String namesrvHost) {
+        this.namesrvService = new NamesrvServiceImpl(namesrvHost, Host.NAMESERVER_PORT);
         this.brokerRemoteManager = new BrokerRemoteManager();
         this.messageRequestTable = new MessageRequestTable(this);
     }
