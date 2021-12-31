@@ -56,4 +56,12 @@ public class RemotingCommandFactory {
         return remotingCommand;
     }
 
+    public static RemotingCommand putMessageResp(String transactionId, byte[] body) {
+        RemotingCommand remotingCommand = new RemotingCommand(transactionId);
+        remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Broker.type);
+        remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Put_Message_Resp.type);
+        remotingCommand.setBody(body);
+        return remotingCommand;
+
+    }
 }

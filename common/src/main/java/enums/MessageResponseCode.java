@@ -17,7 +17,7 @@ public enum MessageResponseCode {
      */
     FAILURE(2);
 
-    public int code;
+    public final int code;
 
     MessageResponseCode(int code) {
         this.code = code;

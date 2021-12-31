@@ -2,14 +2,13 @@ package remoting;
 
 import consumer.ConsumerManager;
 import enums.ClientType;
-import enums.MessageResponseCode;
 import enums.MessageType;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
-import message.ProducerMessageResponse;
 import message.PropertiesKeys;
 import message.RegisterConsumer;
+import netty.common.RemotingCommandFactory;
 import netty.protocal.RemotingCommand;
 import netty.server.NettyServerHandler;
 import producer.ProducerManager;
@@ -74,17 +73,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
         Message message = ByteUtil.to(cmd.getBody(), Message.class);
         if (messageType == MessageType.Put_Message) {
             PutMessageResult putMessageResult = producerManager.putMessage(message, FlushModel.SYNC);
-            ProducerMessageResponse resp = new ProducerMessageResponse();
-            resp.setTransactionId(message.getTransactionId());
-            switch (putMessageResult) {
-                case OK:
-                    resp.setCode(MessageResponseCode.SUCCESS.code);
-                    break;
-                case FAILURE:
-                    resp.setCode(MessageResponseCode.FAILURE.code);
-                    break;
-                default:
-            }
+            RemotingCommand resp = RemotingCommandFactory.putMessageResp(message.getTransactionId(), ByteUtil.to(putMessageResult));
             ctx.writeAndFlush(resp);
         }
     }

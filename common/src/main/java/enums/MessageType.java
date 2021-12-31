@@ -24,7 +24,8 @@ public enum MessageType {
     Register_Consumer("registerConsumer"),
 
     /////////// Producer ///////////////
-    Put_Message("message"),
+    Put_Message("putMessage"),
+    Put_Message_Resp("putMessageResp"),
 
     /////////// Broker ///////////////
     Register_Broker("registerBroker"),

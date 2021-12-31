@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RemotingCommand implements Serializable {
     private static final long serialVersionUID = 6798972145219873378L;
 
-    private final String traceId;
+    private String traceId;
 
     private Map<String, String> properties = new ConcurrentHashMap<>();
 

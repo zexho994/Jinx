@@ -8,10 +8,16 @@ public enum PutMessageResult {
     /**
      * 成功
      */
-    OK,
+    OK(1),
     /**
      * 失败
      */
-    FAILURE,
+    FAILURE(2),
     ;
+
+    final int code;
+
+    PutMessageResult(int code) {
+        this.code = code;
+    }
 }
