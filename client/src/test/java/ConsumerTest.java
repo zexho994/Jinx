@@ -66,18 +66,14 @@ public class ConsumerTest {
         consumer3.setTopic("topic_1");
         consumer3.setConsumerListener(message -> System.out.printf("[Consumer] cid = 3, message = %s \n", message));
         consumer3.start();
-//        Consumer consumer4 = new Consumer("127.0.0.1", 4);
-//        consumer4.setConsumerGroup("register_group_3");
-//        consumer4.setTopic("topic_1");
-//        consumer4.setConsumerListener(message -> System.out.printf("[Consumer] cid = 4, message = %s \n", message));
-//        consumer4.start();
+
+        Consumer consumer4 = new Consumer("127.0.0.1", 4);
+        consumer4.setConsumerGroup("register_group_3");
+        consumer4.setTopic("topic_1");
+        consumer4.setConsumerListener(message -> System.out.printf("[Consumer] cid = 4, message = %s \n", message));
+        consumer4.start();
         while (true) {
         }
-//        Consumer consumer5 = new Consumer("127.0.0.1", 5);
-//        consumer5.setConsumerGroup("register_group_3");
-//        consumer5.setTopic("topic_1");
-//        consumer5.setConsumerListener(System.out::println);
-//        consumer5.start();
     }
 
 

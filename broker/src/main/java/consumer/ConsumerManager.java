@@ -45,6 +45,7 @@ public class ConsumerManager {
     private final Map<String/*topic*/, Set<String/*group*/>> topicGroupMap = new ConcurrentHashMap<>();
     private final Map<String/*group*/, Set<Integer/*cid*/>> groupCidsMap = new ConcurrentHashMap<>();
     private final Map<String/*topic*/, Map<String/*group*/, Map<Integer/*queueId*/, Integer/*cid*/>>> topicQueueSubMap = new ConcurrentHashMap<>();
+    private final ReentrantLock rebalancedLock = new ReentrantLock();
 
     /**
      * push 定时任务, 每100ms执行一次
@@ -100,47 +101,32 @@ public class ConsumerManager {
     }
 
     /**
-     * 推送消息
-     * step1: 找到topic的所有消费组
-     * step2: 在每个消费组中根据queueId发送消息
-     * step3: 更新queue offset
-     *
-     * @param topic   消息主题
-     * @param queueId 消息所属消费队列
-     * @param message 消息体
-     */
-    public void doMessagePush(String topic, int queueId, Message message) {
-        Set<String> groups = this.topicGroupMap.get(topic);
-        Map<String, Map<Integer, Integer>> groupQueueMap = this.topicQueueSubMap.get(topic);
-        if (groups == null || groupQueueMap == null) {
-            return;
-        }
-
-        groups.forEach(group -> {
-            Integer cid = groupQueueMap.get(group).get(queueId);
-            this.channelMap.get(cid).writeAndFlush(RemotingCommandFactory.messagePush(message));
-        });
-    }
-
-    /**
      * 执行消费者的重平衡
      * 何为重平衡：topic下所有queue都要分配给对应的consumer，并且要按照某种规则进行分配。
      * 目前按照循环的方式从头分配 : 队列数量为n，消费者数量c，遍历(1->n), 分配给(0->c)
      * TODO 支持更多的分配方式
      */
     private void rebalanced(String topic, String group) {
-        if (!this.topicQueueSubMap.containsKey(topic)) {
-            this.topicQueueSubMap.put(topic, new ConcurrentHashMap<>());
-        }
+        this.rebalancedLock.lock();
+        try {
+            if (!this.topicQueueSubMap.containsKey(topic)) {
+                this.topicQueueSubMap.put(topic, new ConcurrentHashMap<>());
+            }
 
-        TopicUnit topicUnit = topicManager.getTopic(topic);
-        int[] cids = this.groupCidsMap.get(group).stream().flatMapToInt(IntStream::of).toArray();
-        Map<Integer, Integer> queueCidMap = new ConcurrentHashMap<>(topicUnit.getQueue());
-        for (int i = 1; i <= topicUnit.getQueue(); i++) {
-            queueCidMap.put(i, cids[i % cids.length]);
+            TopicUnit topicUnit = topicManager.getTopic(topic);
+            int[] cids = this.groupCidsMap.get(group).stream().flatMapToInt(IntStream::of).toArray();
+            Map<Integer, Integer> queueCidMap = new ConcurrentHashMap<>(topicUnit.getQueue());
+            for (int i = 1; i <= topicUnit.getQueue(); i++) {
+                queueCidMap.put(i, cids[i % cids.length]);
+            }
+            log.debug("rebalanced done. topic = {}, GROUP = {}", topic, group);
+            if (log.isDebugEnabled()) {
+                queueCidMap.forEach((key, value) -> log.debug("queueId = {}, cid = {}", key, value));
+            }
+            this.topicQueueSubMap.get(topic).put(group, queueCidMap);
+        } finally {
+            this.rebalancedLock.unlock();
         }
-        log.info("TOPIC<{}> GROUP<{}> rebalanced success", topic, group);
-        this.topicQueueSubMap.get(topic).put(group, queueCidMap);
     }
 
 
