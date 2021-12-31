@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import producer.Producer;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,7 +19,7 @@ public class ProducerTest {
      */
     public static final Map<String, Map<Integer, Map<String, Integer>>> SEND_DATA_MAP = new ConcurrentHashMap<>(16);
 
-    public static void produceMessage(String topic, int count, Set<String> set) throws InterruptedException {
+    public static void produceMessage(String topic, int count, Map<String, Integer> set, int clusterSize) throws InterruptedException {
         Producer producer = new Producer("127.0.0.1");
         producer.start();
 
@@ -32,7 +31,7 @@ public class ProducerTest {
             String msgId = UUID.randomUUID().toString();
             message.setTransactionId(msgId);
             producer.sendMessage(message);
-            set.add(msgId);
+            set.put(msgId, clusterSize);
 
             Thread.sleep(500);
         }

@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Test;
 
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Zexho
@@ -10,25 +10,50 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class ClusterTest {
 
     String namesrvHost = "127.0.0.1";
+    String topic_1 = "topic_1";
+    String group_1 = "cluster_group";
+    String group_2 = "cluster_group_2";
 
     /**
      * consumer集群消费测试
-     * 1. 所有 consumer实例 同一group，同一topic
-     * 2.
+     * <p>
+     * 前提：
+     * 所有 consumer 实例 同一group，同一topic
+     * <p>
+     * 期望：
+     * 消息只会被集群下的 consumer 消费一次
      */
     @Test
     public void consumerClusterTest() throws InterruptedException {
-        String topic = "topic_1";
-        String group = "cluster_group";
-        Set<String> msgSet = new CopyOnWriteArraySet<>();
+        Map<String, Integer> msgMap = new ConcurrentHashMap<>();
 
         //step1: 启动consumer集群
-        ConsumerTest.startConsumer(topic, group, 1, msgSet);
-        ConsumerTest.startConsumer(topic, group, 2, msgSet);
-        ConsumerTest.startConsumer(topic, group, 3, msgSet);
+        ConsumerTest.startConsumer(topic_1, group_1, 1, msgMap);
+        ConsumerTest.startConsumer(topic_1, group_1, 2, msgMap);
+        ConsumerTest.startConsumer(topic_1, group_1, 3, msgMap);
 
         //step2: producer 发送消息
-        ProducerTest.produceMessage(topic, 10, msgSet);
+        ProducerTest.produceMessage(topic_1, 10, msgMap, 1);
+    }
+
+    /**
+     * 不同集群的 consumer 都会消费同一条消息
+     * <p>
+     * 前提：
+     * 2个集群，都订阅同一个 topic
+     * <p>
+     * 期望：
+     * 一条消息会分别被两个集群消费，每个集群消费一次
+     */
+    @Test
+    public void consumerClusterTest2() throws InterruptedException {
+        Map<String, Integer> msgMap = new ConcurrentHashMap<>();
+        ConsumerTest.startConsumer(topic_1, group_1, 1, msgMap);
+        ConsumerTest.startConsumer(topic_1, group_1, 2, msgMap);
+        ConsumerTest.startConsumer(topic_1, group_2, 4, msgMap);
+        ConsumerTest.startConsumer(topic_1, group_2, 5, msgMap);
+
+        ProducerTest.produceMessage(topic_1, 10, msgMap, 2);
     }
 
 
