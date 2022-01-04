@@ -18,7 +18,8 @@ public class ClusterTest {
      * consumer集群消费测试
      * <p>
      * 前提：
-     * 所有 consumer 实例 同一group，同一topic
+     * 1. namesrv 和 broker 应用已启动
+     * 2. 所有 consumer 实例 同一group，同一topic
      * <p>
      * 期望：
      * 消息只会被集群下的 consumer 消费一次
@@ -33,7 +34,7 @@ public class ClusterTest {
         ConsumerTest.startConsumer(topic_1, group_1, 3, msgMap);
 
         //step2: producer 发送消息
-        ProducerTest.produceMessage(topic_1, 10, msgMap, 1);
+        DefaultMQProducerTest.produceMessage(topic_1, 10, msgMap, 1);
     }
 
     /**
@@ -53,7 +54,7 @@ public class ClusterTest {
         ConsumerTest.startConsumer(topic_1, group_2, 4, msgMap);
         ConsumerTest.startConsumer(topic_1, group_2, 5, msgMap);
 
-        ProducerTest.produceMessage(topic_1, 10, msgMap, 2);
+        DefaultMQProducerTest.produceMessage(topic_1, 10, msgMap, 2);
     }
 
 

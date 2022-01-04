@@ -27,7 +27,6 @@ public class BrokerManager {
      */
     public final static Map<String, BrokerData> BROKER_INFO = new ConcurrentHashMap<>();
 
-
     public void addBroker(String brokerName, String brokerHost, String clusterName) {
         if (BROKER_INFO.containsKey(brokerName)) {
             return;

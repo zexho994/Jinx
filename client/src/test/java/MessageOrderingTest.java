@@ -1,7 +1,7 @@
 import message.Message;
 import consumer.Consumer;
 import org.junit.jupiter.api.Assertions;
-import producer.Producer;
+import producer.DefaultMQProducer;
 
 import java.util.Queue;
 import java.util.UUID;
@@ -26,8 +26,8 @@ public class MessageOrderingTest {
     }
 
     public void send(String topic) {
-        Producer producer = new Producer( "127.0.0.1");
-        producer.start();
+        DefaultMQProducer defaultMQProducer = new DefaultMQProducer( "127.0.0.1");
+        defaultMQProducer.start();
 
         Message message = new Message();
         message.setTopic(topic);
@@ -36,7 +36,7 @@ public class MessageOrderingTest {
             String msgId = UUID.randomUUID().toString();
             message.setTransactionId(msgId);
             message.setBody(++n);
-            producer.sendMessage(message);
+            defaultMQProducer.sendMessage(message);
             this.sendQueue.offer(msgId);
             try {
                 Thread.sleep(1000);

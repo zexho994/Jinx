@@ -1,7 +1,7 @@
 
 import message.Message;
 import org.junit.jupiter.api.Test;
-import producer.Producer;
+import producer.DefaultMQProducer;
 
 import java.util.Map;
 import java.util.UUID;
@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Zexho
  * @date 2021/11/16 8:59 上午
  */
-public class ProducerTest {
+public class DefaultMQProducerTest {
 
     /**
      * key = msgId
@@ -20,8 +20,8 @@ public class ProducerTest {
     public static final Map<String, Map<Integer, Map<String, Integer>>> SEND_DATA_MAP = new ConcurrentHashMap<>(16);
 
     public static void produceMessage(String topic, int count, Map<String, Integer> set, int clusterSize) throws InterruptedException {
-        Producer producer = new Producer("127.0.0.1");
-        producer.start();
+        DefaultMQProducer defaultMQProducer = new DefaultMQProducer("127.0.0.1");
+        defaultMQProducer.start();
 
         int s = 0;
         while (s < count) {
@@ -30,7 +30,7 @@ public class ProducerTest {
             message.setTopic(topic);
             String msgId = UUID.randomUUID().toString();
             message.setTransactionId(msgId);
-            producer.sendMessage(message);
+            defaultMQProducer.sendMessage(message);
             set.put(msgId, clusterSize);
 
             Thread.sleep(500);
@@ -39,23 +39,23 @@ public class ProducerTest {
 
     @Test
     public void producer() {
-        new Thread(() -> ProducerTest.startProducer(6, "topic_1")).start();
-        new Thread(() -> ProducerTest.startProducer(8, "topic_1")).start();
-        new Thread(() -> ProducerTest.startProducer(7, "topic_2")).start();
-        new Thread(() -> ProducerTest.startProducer(9, "topic_2")).start();
-        new Thread(() -> ProducerTest.startProducer(10, "topic_3")).start();
-        new Thread(() -> ProducerTest.startProducer(12, "topic_3")).start();
+        new Thread(() -> DefaultMQProducerTest.startProducer(6, "topic_1")).start();
+        new Thread(() -> DefaultMQProducerTest.startProducer(8, "topic_1")).start();
+        new Thread(() -> DefaultMQProducerTest.startProducer(7, "topic_2")).start();
+        new Thread(() -> DefaultMQProducerTest.startProducer(9, "topic_2")).start();
+        new Thread(() -> DefaultMQProducerTest.startProducer(10, "topic_3")).start();
+        new Thread(() -> DefaultMQProducerTest.startProducer(12, "topic_3")).start();
     }
 
     @Test
     public void producerTest() {
-        Producer producer = new Producer("127.0.0.1");
-        producer.start();
+        DefaultMQProducer defaultMQProducer = new DefaultMQProducer("127.0.0.1");
+        defaultMQProducer.start();
         Message message = new Message();
         message.setTopic("topic_1");
         String msgId = UUID.randomUUID().toString();
         message.setTransactionId(msgId);
-        producer.sendMessage(message);
+        defaultMQProducer.sendMessage(message);
     }
 
     /**
@@ -63,19 +63,18 @@ public class ProducerTest {
      * @param topic 消息主题
      */
     public static void startProducer(int sleep, String topic) {
-        Producer producer = new Producer("127.0.0.1");
-        producer.start();
+        DefaultMQProducer defaultMQProducer = new DefaultMQProducer("127.0.0.1");
+        defaultMQProducer.start();
 
         int n = 1;
         sleep *= 1000;
         while (true) {
             Message message = new Message();
-            producer.setAfterRetryProcess(msg -> System.out.printf("== TOPIC = %s == \n", topic));
             message.setTopic(topic);
             String msgId = UUID.randomUUID().toString();
             message.setTransactionId(msgId);
             message.setBody(++n);
-            producer.sendMessage(message);
+            defaultMQProducer.sendMessage(message);
 
             try {
                 Thread.sleep(sleep);
