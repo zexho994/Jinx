@@ -41,7 +41,9 @@ public class DefaultMQProducer extends Producer {
         // 随机选择一个发送队列
         int size = topicRouteInfo.getData().size();
         TopicRouteInfo tf = topicRouteInfo.getData().get((int) (System.currentTimeMillis() % size));
-        message.setQueueId((int) (System.currentTimeMillis() % tf.getQueueNum()) + 1);
+        if(message.getQueueId() == null){
+            message.setQueueId((int) (System.currentTimeMillis() % tf.getQueueNum()) + 1);
+        }
 
         RemotingCommand command = RemotingCommandFactory.putMessage(message);
         this.brokerRemoteManager.send(tf.getBrokerName(), command);

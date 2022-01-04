@@ -36,7 +36,7 @@ public abstract class Producer implements RemotingService {
      *
      * @param message 要发送的消息对象
      */
-    public abstract void sendMessage(Message message);
+    public abstract void sendMessage(Message message) throws Exception;
 
     /**
      * 与topic路由信息中的所有broker客户端进行连接

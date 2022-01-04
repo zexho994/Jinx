@@ -24,7 +24,7 @@ public class Message implements Serializable {
     /**
      * 消费队列id
      */
-    private int queueId;
+    private Integer queueId;
 
     private String consumerGroup;
 
@@ -75,7 +75,7 @@ public class Message implements Serializable {
         this.body = data;
     }
 
-    public int getQueueId() {
+    public Integer getQueueId() {
         return queueId;
     }
 
