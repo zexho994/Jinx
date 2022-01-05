@@ -8,6 +8,7 @@ import netty.protocal.RemotingCommand;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author Zexho
@@ -21,6 +22,13 @@ public class BrokerRemoteManager {
         this.brokerRemoteMap = new ConcurrentHashMap<>();
     }
 
+    /**
+     * 建立与broker的连接
+     *
+     * @param brokerName broker名称，用于保存路由信息
+     * @param brokerHost broker网络地址，用于建立连接
+     * @param handler    如果需要自定义处理器
+     */
     public void connect(String brokerName, String brokerHost, ConsumerHandler handler) {
         NettyRemotingClientImpl client = new NettyRemotingClientImpl(new NettyClientConfig(brokerHost, Host.BROKER_PORT));
         if (handler != null) {
@@ -57,6 +65,18 @@ public class BrokerRemoteManager {
     public void send(String brokerName, RemotingCommand remotingCommand) {
         NettyRemotingClientImpl broker = this.brokerRemoteMap.get(brokerName);
         broker.send(remotingCommand);
+    }
+
+    /**
+     * 同步发送消息
+     *
+     * @param brokerName      broker名称
+     * @param remotingCommand 要发送的消息包
+     * @return 请求返回体
+     */
+    public RemotingCommand sendSync(String brokerName, RemotingCommand remotingCommand) throws ExecutionException, InterruptedException {
+        NettyRemotingClientImpl broker = this.brokerRemoteMap.get(brokerName);
+        return broker.sendSync(remotingCommand);
     }
 
 }
