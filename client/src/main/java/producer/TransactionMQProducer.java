@@ -1,6 +1,8 @@
 package producer;
 
 import message.Message;
+import netty.common.RemotingCommandHelper;
+import netty.protocal.RemotingCommand;
 
 /**
  * 使用事务的生产者对象
@@ -27,9 +29,12 @@ public class TransactionMQProducer extends Producer {
             throw new Exception("the transaction listener is null");
         }
 
+        RemotingCommand command = new RemotingCommand();
         // 标记为half消息
+        RemotingCommandHelper.markHalf(command);
 
         // 发送half消息
+
 
         // 执行本地事务接口
         this.transactionListener.executeLocalTransaction(message);
