@@ -1,6 +1,7 @@
 package producer;
 
 import message.Message;
+import message.TopicRouteInfo;
 import netty.common.RemotingCommandHelper;
 import netty.protocal.RemotingCommand;
 
@@ -28,19 +29,20 @@ public class TransactionMQProducer extends Producer {
         if (this.transactionListener == null) {
             throw new Exception("the transaction listener is null");
         }
-
-        RemotingCommand command = new RemotingCommand();
         // 标记为half消息
+        RemotingCommand command = new RemotingCommand();
         RemotingCommandHelper.markHalf(command);
-
+        // 选择发送队列
+        TopicRouteInfo tf = namesrvService.getTopicRouteInfo(message.getTopic());
+        ensureBrokerConnected(tf);
+        if (message.getQueueId() == null) {
+            message.setQueueId((int) (System.currentTimeMillis() % tf.getQueueNum()) + 1);
+        }
         // 发送half消息
-
-
+        RemotingCommand resp = brokerRemoteManager.sendSync(tf.getBrokerName(), command);
         // 执行本地事务接口
         this.transactionListener.executeLocalTransaction(message);
-
         // 发送end消息
-
     }
 
     public void setTransactionListener(TransactionListener listener) {
