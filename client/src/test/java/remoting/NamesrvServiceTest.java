@@ -10,7 +10,7 @@ class NamesrvServiceTest {
         NamesrvServiceImpl namesrvService = new NamesrvServiceImpl("127.0.0.1", 9876);
         namesrvService.start();
 
-        TopicRouteInfos topicRouteInfo = namesrvService.getTopicRouteInfo("topic_1");
+        TopicRouteInfos topicRouteInfo = namesrvService.getTopicRouteInfos("topic_1");
         topicRouteInfo.getData().forEach(System.out::println);
     }
 }

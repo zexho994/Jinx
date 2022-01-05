@@ -4,7 +4,6 @@ import enums.MessageType;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
 import message.TopicRouteInfo;
-import message.TopicRouteInfos;
 import netty.common.RemotingCommandFactory;
 import netty.protocal.RemotingCommand;
 
@@ -35,13 +34,11 @@ public class DefaultMQProducer extends Producer {
     @Override
     public void sendMessage(Message message) {
         // 获取路由信息
-        TopicRouteInfos topicRouteInfo = namesrvService.getTopicRouteInfo(message.getTopic());
+        TopicRouteInfo tf = namesrvService.getTopicRouteInfo(message.getTopic());
         // 检查与broker的连接
-        ensureBrokerConnected(topicRouteInfo);
+        ensureBrokerConnected(tf);
         // 随机选择一个发送队列
-        int size = topicRouteInfo.getData().size();
-        TopicRouteInfo tf = topicRouteInfo.getData().get((int) (System.currentTimeMillis() % size));
-        if(message.getQueueId() == null){
+        if (message.getQueueId() == null) {
             message.setQueueId((int) (System.currentTimeMillis() % tf.getQueueNum()) + 1);
         }
 

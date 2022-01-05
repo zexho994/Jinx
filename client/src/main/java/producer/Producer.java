@@ -2,6 +2,7 @@ package producer;
 
 import common.Host;
 import message.Message;
+import message.TopicRouteInfo;
 import message.TopicRouteInfos;
 import remoting.BrokerRemoteManager;
 import remoting.NamesrvServiceImpl;
@@ -48,6 +49,17 @@ public abstract class Producer implements RemotingService {
         topicRouteInfo.getData().stream()
                 .filter(tf -> !brokerRemoteManager.checkConnectStatus(tf.getBrokerName()))
                 .forEach(tf -> this.brokerRemoteManager.connect(tf.getBrokerName(), tf.getBrokerHost(), null));
+    }
+
+    /**
+     * {@link #ensureBrokerConnected(TopicRouteInfos)}
+     *
+     * @param topicRouteInfo 单个的路由信息
+     */
+    protected void ensureBrokerConnected(TopicRouteInfo topicRouteInfo) {
+        if (!brokerRemoteManager.checkConnectStatus(topicRouteInfo.getBrokerName())) {
+            this.brokerRemoteManager.connect(topicRouteInfo.getBrokerName(), topicRouteInfo.getBrokerHost(), null);
+        }
     }
 
 }
