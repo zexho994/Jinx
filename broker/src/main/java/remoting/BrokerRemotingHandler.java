@@ -68,14 +68,24 @@ public class BrokerRemotingHandler extends NettyServerHandler {
      * @param cmd 生产者发送的包
      */
     private void doProducerMessage(RemotingCommand cmd, ChannelHandlerContext ctx) {
-        log.trace("do producer message");
         MessageType messageType = MessageType.get(cmd.getProperty(PropertiesKeys.MESSAGE_TYPE));
-        Message message = ByteUtil.to(cmd.getBody(), Message.class);
         if (messageType == MessageType.Put_Message) {
-            PutMessageResult putMessageResult = producerManager.putMessage(message, FlushModel.SYNC);
-            RemotingCommand resp = RemotingCommandFactory.putMessageResp(message.getTransactionId(), ByteUtil.to(putMessageResult));
+            PutMessageResult putMessageResult;
+            Message message = ByteUtil.to(cmd.getBody(), Message.class);
+            if (isTran(cmd)) {
+                log.trace("Processing transaction messages");
+                putMessageResult = producerManager.putHalfMessage(message, FlushModel.SYNC);
+            } else {
+                log.trace("Processing ordinary messages");
+                putMessageResult = producerManager.putMessage(message, FlushModel.SYNC);
+            }
+            RemotingCommand resp = RemotingCommandFactory.putMessageResp(cmd.getTraceId(), ByteUtil.to(putMessageResult));
             ctx.writeAndFlush(resp);
         }
+    }
+
+    private boolean isTran(RemotingCommand command) {
+        return command.getProperty(PropertiesKeys.TRAN) != null;
     }
 
     /**

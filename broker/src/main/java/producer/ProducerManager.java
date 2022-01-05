@@ -1,13 +1,11 @@
 package producer;
 
-import consumer.ConsumerManager;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
 import store.DefaultMessageStore;
 import store.MessageStore;
 import store.constant.FlushModel;
 import store.constant.PutMessageResult;
-import store.consumequeue.ConsumeQueue;
 
 /**
  * @author Zexho
@@ -27,11 +25,9 @@ public class ProducerManager {
     }
 
     private final MessageStore messageStore = DefaultMessageStore.getInstance();
-    private final ConsumeQueue consumeQueue = ConsumeQueue.getInstance();
-    private final ConsumerManager consumerManager = ConsumerManager.getInstance();
 
     /**
-     * 投递消息
+     * 投递普通消息
      * step1: 进行消息存储
      * step2: 获取topic的所有订阅consumer
      * step3: 执行推送到这些consumer
@@ -41,9 +37,21 @@ public class ProducerManager {
      * @param model   消息刷盘模式
      */
     public PutMessageResult putMessage(Message message, FlushModel model) {
-        log.debug("producer put message : {}", message);
+        log.debug("put message : {}", message);
         // 消息交给存储模块进行存储
         return messageStore.putMessage(message, model);
     }
-    
+
+    /**
+     * 投递事务消息
+     *
+     * @param message half消息
+     * @param sync    消息刷盘模式
+     */
+    public PutMessageResult putHalfMessage(Message message, FlushModel sync) {
+        log.debug("put half message : {}", message);
+
+        return PutMessageResult.OK;
+    }
+
 }

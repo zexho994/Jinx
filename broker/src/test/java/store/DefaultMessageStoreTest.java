@@ -55,7 +55,6 @@ class DefaultMessageStoreTest {
     }
 
     void putMessage(Message message) {
-        message.setTransactionId(UUID.randomUUID().toString());
         message.setConsumerGroup("consume group 1");
         message.setTopic("topic 1");
         message.setBody("{}");

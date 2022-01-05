@@ -16,12 +16,6 @@ public class ConsumerTest {
         // 消息监听
         consumer.setConsumerListener(msg -> {
             System.out.printf("[Consumer] cid =%s topic = %s, group = %s, msg = %s \n", cid, topic, group, msg);
-            Integer size = msgMap.get(msg.getTransactionId());
-            if (size == 1) {
-                msgMap.remove(msg.getTransactionId());
-            } else {
-                msgMap.put(msg.getTransactionId(), size - 1);
-            }
         });
         consumer.start();
     }

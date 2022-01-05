@@ -34,7 +34,6 @@ public class MessageOrderingTest {
         int n = 0;
         while (true) {
             String msgId = UUID.randomUUID().toString();
-            message.setTransactionId(msgId);
             message.setBody(++n);
             defaultMQProducer.sendMessage(message);
             this.sendQueue.offer(msgId);

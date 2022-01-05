@@ -50,6 +50,7 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         RemotingCommand response = (RemotingCommand) msg;
+        log.debug("channel read msg => {}", msg);
 
         // 如果该请求是通过 sendSync() 发送的，需要设置resp
         if (this.client.syncFutureMap.containsKey(response.getTraceId())) {

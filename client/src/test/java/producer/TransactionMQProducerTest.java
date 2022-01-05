@@ -38,5 +38,4 @@ class TransactionMQProducerTest {
 
         this.producer.sendMessage(message);
     }
-
 }

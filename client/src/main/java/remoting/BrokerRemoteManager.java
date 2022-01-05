@@ -2,6 +2,7 @@ package remoting;
 
 import common.Host;
 import consumer.ConsumerHandler;
+import lombok.extern.log4j.Log4j2;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;
 import netty.protocal.RemotingCommand;
@@ -14,6 +15,7 @@ import java.util.concurrent.ExecutionException;
  * @author Zexho
  * @date 2021/12/28 3:57 PM
  */
+@Log4j2
 public class BrokerRemoteManager {
 
     private final Map<String, NettyRemotingClientImpl> brokerRemoteMap;
@@ -63,6 +65,8 @@ public class BrokerRemoteManager {
      * @param remotingCommand 请求包
      */
     public void send(String brokerName, RemotingCommand remotingCommand) {
+        log.debug("send message. brokerName = {}. command = {}", brokerName, remotingCommand);
+
         NettyRemotingClientImpl broker = this.brokerRemoteMap.get(brokerName);
         broker.send(remotingCommand);
     }
@@ -75,6 +79,8 @@ public class BrokerRemoteManager {
      * @return 请求返回体
      */
     public RemotingCommand sendSync(String brokerName, RemotingCommand remotingCommand) throws ExecutionException, InterruptedException {
+        log.debug("sync send message. brokerName = {}. command = {}", brokerName, remotingCommand);
+
         NettyRemotingClientImpl broker = this.brokerRemoteMap.get(brokerName);
         return broker.sendSync(remotingCommand);
     }

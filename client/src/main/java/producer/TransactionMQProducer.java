@@ -1,9 +1,13 @@
 package producer;
 
+import lombok.extern.log4j.Log4j2;
 import message.Message;
 import message.TopicRouteInfo;
 import netty.common.RemotingCommandHelper;
 import netty.protocal.RemotingCommand;
+import utils.ByteUtil;
+
+import java.util.concurrent.ExecutionException;
 
 /**
  * 使用事务的生产者对象
@@ -11,6 +15,7 @@ import netty.protocal.RemotingCommand;
  * @author Zexho
  * @date 2022/1/4 5:32 PM
  */
+@Log4j2
 public class TransactionMQProducer extends Producer {
 
     private TransactionListener transactionListener;
@@ -29,24 +34,39 @@ public class TransactionMQProducer extends Producer {
         if (this.transactionListener == null) {
             throw new Exception("the transaction listener is null");
         }
+        // 发送half消息
+        RemotingCommand resp = this.sendHalfMessage(message);
+        // 执行本地事务接口
+        this.transactionListener.executeLocalTransaction(message);
+        // 发送end消息
+        this.sendEndMessage(message);
+    }
+
+    public void setTransactionListener(TransactionListener listener) {
+        this.transactionListener = listener;
+    }
+
+    private RemotingCommand sendHalfMessage(Message message) throws ExecutionException, InterruptedException {
+        log.debug("send half message");
         // 标记为half消息
         RemotingCommand command = new RemotingCommand();
         RemotingCommandHelper.markHalf(command);
+        command.setBody(ByteUtil.to(message));
+
         // 选择发送队列
         TopicRouteInfo tf = namesrvService.getTopicRouteInfo(message.getTopic());
         ensureBrokerConnected(tf);
         if (message.getQueueId() == null) {
             message.setQueueId((int) (System.currentTimeMillis() % tf.getQueueNum()) + 1);
         }
-        // 发送half消息
-        RemotingCommand resp = brokerRemoteManager.sendSync(tf.getBrokerName(), command);
-        // 执行本地事务接口
-        this.transactionListener.executeLocalTransaction(message);
-        // 发送end消息
+
+        // 发送
+        return brokerRemoteManager.sendSync(tf.getBrokerName(), command);
     }
 
-    public void setTransactionListener(TransactionListener listener) {
-        this.transactionListener = listener;
+    private void sendEndMessage(Message message) {
+        log.info("send end message");
+
     }
 
 }

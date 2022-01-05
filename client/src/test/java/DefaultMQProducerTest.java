@@ -29,7 +29,6 @@ public class DefaultMQProducerTest {
             Message message = new Message();
             message.setTopic(topic);
             String msgId = UUID.randomUUID().toString();
-            message.setTransactionId(msgId);
             defaultMQProducer.sendMessage(message);
             set.put(msgId, clusterSize);
 
@@ -53,8 +52,6 @@ public class DefaultMQProducerTest {
         defaultMQProducer.start();
         Message message = new Message();
         message.setTopic("topic_1");
-        String msgId = UUID.randomUUID().toString();
-        message.setTransactionId(msgId);
         defaultMQProducer.sendMessage(message);
     }
 
@@ -71,8 +68,6 @@ public class DefaultMQProducerTest {
         while (true) {
             Message message = new Message();
             message.setTopic(topic);
-            String msgId = UUID.randomUUID().toString();
-            message.setTransactionId(msgId);
             message.setBody(++n);
             defaultMQProducer.sendMessage(message);
 

@@ -67,7 +67,7 @@ public class ConsumerManager {
                     Message message = this.pullMessage(topic, queue, group);
                     if (message != null) {
                         Integer cid = topicQueueSubMap.get(topic).get(group).get(queue);
-                        log.info("[PushTask] push message to consumer. cid = {}, topic = {}, group = {}, msgId = {}, msgId ={}", cid, topic, group, queue, message.getTransactionId());
+                        log.info("[PushTask] push message to consumer. cid = {}, topic = {}, group = {}, msgId = {}", cid, topic, group, queue);
                         ChannelHandlerContext ctx = this.channelMap.get(cid);
                         ctx.writeAndFlush(RemotingCommandFactory.messagePush(message));
                     }
