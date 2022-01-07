@@ -51,15 +51,13 @@ public class TransactionMQProducer extends Producer {
         // 标记为half消息
         RemotingCommand command = new RemotingCommand();
         RemotingCommandHelper.markHalf(command);
-        command.setBody(ByteUtil.to(message));
-
         // 选择发送队列
         TopicRouteInfo tf = namesrvService.getTopicRouteInfo(message.getTopic());
         ensureBrokerConnected(tf);
         if (message.getQueueId() == null) {
             message.setQueueId((int) (System.currentTimeMillis() % tf.getQueueNum()) + 1);
         }
-
+        command.setBody(ByteUtil.to(message));
         // 发送
         return brokerRemoteManager.sendSync(tf.getBrokerName(), command);
     }

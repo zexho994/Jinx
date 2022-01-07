@@ -1,5 +1,6 @@
 package producer;
 
+import common.Transaction;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
 import store.DefaultMessageStore;
@@ -52,6 +53,7 @@ public class ProducerManager {
         log.debug("put half message : {}", message);
         // 消息持久化操作
         messageStore.putHalfMessage(message, model);
+        Message tt = messageStore.findMessage(Transaction.TRANS_HALF_TOPIC, 1, "tt");
 
         return PutMessageResult.OK;
     }
