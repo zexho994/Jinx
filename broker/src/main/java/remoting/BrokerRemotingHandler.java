@@ -72,7 +72,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
         if (messageType == MessageType.Put_Message) {
             PutMessageResult putMessageResult;
             Message message = ByteUtil.to(cmd.getBody(), Message.class);
-            if (isTran(cmd)) {
+            if (isTransactionMessage(cmd)) {
                 log.trace("Processing transaction messages");
                 putMessageResult = producerManager.putHalfMessage(message, FlushModel.SYNC);
             } else {
@@ -84,7 +84,10 @@ public class BrokerRemotingHandler extends NettyServerHandler {
         }
     }
 
-    private boolean isTran(RemotingCommand command) {
+    /**
+     * 判断是否是事务消息
+     */
+    private boolean isTransactionMessage(RemotingCommand command) {
         return command.getProperty(PropertiesKeys.TRAN) != null;
     }
 

@@ -46,10 +46,12 @@ public class ProducerManager {
      * 投递事务消息
      *
      * @param message half消息
-     * @param sync    消息刷盘模式
+     * @param model   消息刷盘模式
      */
-    public PutMessageResult putHalfMessage(Message message, FlushModel sync) {
+    public PutMessageResult putHalfMessage(Message message, FlushModel model) {
         log.debug("put half message : {}", message);
+        // 消息持久化操作
+        messageStore.putHalfMessage(message, model);
 
         return PutMessageResult.OK;
     }

@@ -40,12 +40,10 @@ public class ConsumeQueue {
     }
 
     public static File CONSUMER_QUEUE_FOLDER;
+    public static final String TRANS_HALF_TOPIC = "TRANS_HALF_TOPIC";
+    public static final String TRANS_HALF_OP_TOPIC = "TRANS_HALF_OP_TOPIC";
 
-    /**
-     * Key: topic
-     * Val: Map<queueid,mappedfile>
-     */
-    private final Map<String, Map<Integer, MappedFileQueue>> mappedFileMap = new ConcurrentHashMap<>();
+    private final Map<String/*topic*/, Map<Integer/*queueId*/, MappedFileQueue>> mappedFileMap = new ConcurrentHashMap<>();
     private final ConsumeOffset consumeOffset = ConsumeOffset.getInstance();
 
     /**
@@ -78,6 +76,13 @@ public class ConsumeQueue {
      *
      */
     private void mkdirTopicDir() {
+        // 用户定义的topic
+        this.mkdirCustomTopicDir();
+        // 事务使用的topic
+        this.mkdirTranTopicDir();
+    }
+
+    private void mkdirCustomTopicDir() {
         List<TopicUnit> topics = BrokerConfig.configBody.getTopics();
         topics.forEach(topic -> {
             File topicDir = new File(CONSUMER_QUEUE_FOLDER, topic.getTopic());
@@ -111,6 +116,37 @@ public class ConsumeQueue {
                 }
             }
         });
+    }
+
+    /**
+     * 创建事务相关的文件
+     */
+    private void mkdirTranTopicDir() {
+        File topicDir = new File(CONSUMER_QUEUE_FOLDER, TRANS_HALF_TOPIC);
+        if (!topicDir.exists()) {
+            topicDir.mkdir();
+        }
+        this.mappedFileMap.put(TRANS_HALF_TOPIC, new ConcurrentHashMap<>(1));
+        this.mappedFileMap.get(TRANS_HALF_TOPIC).put(1, new MappedFileQueue());
+        File queueDir = new File(topicDir, "1");
+        if (!queueDir.exists()) {
+            queueDir.mkdir();
+        }
+
+        File file = new File(queueDir, "0");
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
+            this.mappedFileMap.get(TRANS_HALF_TOPIC).get(1).addMappedFile(mappedFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -201,7 +237,7 @@ public class ConsumeQueue {
             log.trace("consumeQueue put message");
             ensureFileExist(topic);
 
-            MappedFileQueue mappedFileQueue = mappedFileMap.get(topic).get(queueId);
+            MappedFileQueue mappedFileQueue = this.getMappedQueue(topic, queueId);
             MappedFile mappedFile = mappedFileQueue.getLastMappedFile();
             byte[] data = ByteUtil.to(commitlogOffset);
 

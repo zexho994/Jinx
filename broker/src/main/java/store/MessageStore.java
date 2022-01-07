@@ -24,7 +24,7 @@ public interface MessageStore {
      *
      * @param message    消息对象
      * @param flushModel 刷盘模式
-     * @return
+     * @return 存储执行结果
      */
     PutMessageResult putMessage(Message message, FlushModel flushModel);
 
@@ -37,4 +37,11 @@ public interface MessageStore {
      */
     Message findMessage(String topic, int queueId, String group);
 
+    /**
+     * 存储half消息
+     *
+     * @param message 消息对象
+     * @return 存储执行结果
+     */
+    PutMessageResult putHalfMessage(Message message, FlushModel model);
 }

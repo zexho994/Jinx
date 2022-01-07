@@ -91,6 +91,30 @@ public class DefaultMessageStore implements MessageStore {
         }
     }
 
+    @Override
+    public PutMessageResult putHalfMessage(Message message, FlushModel model) {
+        // 检查存储状态
+        if (!this.checkStoreStatus()) {
+            log.error("Store status is abnormality");
+            return PutMessageResult.FAILURE;
+        }
+        // 检查消息格式
+        if (!this.checkMessage()) {
+            log.error("The Message format is invalid");
+            return PutMessageResult.FAILURE;
+        }
+        // 交给commitlog进行存储
+        CommitPutMessageResult commitlogPutResult = this.commitlog.putMessage(message, model);
+
+        // 交给 consumeQueue 进行存储
+        if (commitlogPutResult.getResult() == PutMessageResult.OK) {
+            return this.consumeQueue.putMessage("TRANS_HALF_TOPIC", 1, commitlogPutResult.getOffset());
+        } else {
+            log.error("Failed to put message to consumeQueue, topic = {}, commit offset = {}", message.getTopic(), commitlogPutResult.getOffset());
+            return PutMessageResult.FAILURE;
+        }
+    }
+
     public boolean checkStoreStatus() {
         return true;
     }
