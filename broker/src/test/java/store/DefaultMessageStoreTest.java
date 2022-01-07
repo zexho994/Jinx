@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Test;
 import store.commitlog.Commitlog;
 import store.consumequeue.ConsumeQueue;
 
-import java.util.UUID;
-
 class DefaultMessageStoreTest {
 
     Commitlog commitlog = Commitlog.getInstance();

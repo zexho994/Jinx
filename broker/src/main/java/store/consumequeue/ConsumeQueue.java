@@ -19,6 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static common.Transaction.TRANS_HALF_TOPIC;
+
 /**
  * @author Zexho
  * @date 2021/12/2 10:30 上午
@@ -40,8 +42,6 @@ public class ConsumeQueue {
     }
 
     public static File CONSUMER_QUEUE_FOLDER;
-    public static final String TRANS_HALF_TOPIC = "TRANS_HALF_TOPIC";
-    public static final String TRANS_HALF_OP_TOPIC = "TRANS_HALF_OP_TOPIC";
 
     private final Map<String/*topic*/, Map<Integer/*queueId*/, MappedFileQueue>> mappedFileMap = new ConcurrentHashMap<>();
     private final ConsumeOffset consumeOffset = ConsumeOffset.getInstance();
@@ -297,10 +297,6 @@ public class ConsumeQueue {
      * @throws IOException
      */
     private void ensureFileExist(String topic) throws IOException {
-        if (mappedFileMap.containsKey(topic)) {
-            return;
-        }
-
         this.lock.lock();
         try {
             if (mappedFileMap.containsKey(topic)) {

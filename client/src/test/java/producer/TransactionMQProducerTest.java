@@ -31,7 +31,7 @@ class TransactionMQProducerTest {
     }
 
     @Test
-    public void sendMessage() throws Exception {
+    public void sendTransactionMessage() throws Exception {
         Message message = new Message();
         message.setTopic("topic_1");
         message.setBody(ByteUtil.to(10001));

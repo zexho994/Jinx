@@ -8,6 +8,8 @@ import store.constant.PutMessageResult;
 import store.consumequeue.ConsumeQueue;
 import store.model.CommitPutMessageResult;
 
+import static common.Transaction.TRANS_HALF_TOPIC;
+
 /**
  * @author Zexho
  * @date 2021/12/2 9:26 上午
@@ -108,7 +110,7 @@ public class DefaultMessageStore implements MessageStore {
 
         // 交给 consumeQueue 进行存储
         if (commitlogPutResult.getResult() == PutMessageResult.OK) {
-            return this.consumeQueue.putMessage("TRANS_HALF_TOPIC", 1, commitlogPutResult.getOffset());
+            return this.consumeQueue.putMessage(TRANS_HALF_TOPIC, 1, commitlogPutResult.getOffset());
         } else {
             log.error("Failed to put message to consumeQueue, topic = {}, commit offset = {}", message.getTopic(), commitlogPutResult.getOffset());
             return PutMessageResult.FAILURE;

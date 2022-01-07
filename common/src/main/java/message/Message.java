@@ -74,7 +74,7 @@ public class Message implements Serializable {
     @Override
     public String toString() {
         return "Message{" +
-                ", topic='" + topic + '\'' +
+                "topic='" + topic + '\'' +
                 ", queueId=" + queueId +
                 ", consumerGroup='" + consumerGroup + '\'' +
                 ", body=" + body +
