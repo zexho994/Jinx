@@ -1,0 +1,31 @@
+@startuml
+autonumber
+
+participant 本地服务 as localServer
+participant mqProducer
+participant mqBroker
+participant mqConsumer
+
+mqProducer -> mqBroker ++: 发送half消息
+mqBroker -> mqBroker : 消息保存到halfQueue中
+return ack
+
+mqProducer -> localServer ++: 执行本地事务
+opt 事务完成
+    localServer -> mqProducer ++: commit
+    mqProducer -> mqBroker ++: 发送end消息
+    mqBroker -> mqBroker : 消息保存到原本的queue中
+    mqBroker -> mqBroker : 消息保存到opQueue
+    return ok
+    return ok
+else 事务失败
+    localServer -> mqProducer ++: rollback
+    mqProducer -> mqBroker ++: 发送end消息
+    mqBroker -> mqBroker : 消息保存到opQueue
+    return ok
+    return ok
+end
+
+return 执行结束
+
+@enduml
