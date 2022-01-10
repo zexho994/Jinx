@@ -6,7 +6,6 @@ import message.Message;
 import message.PropertiesKeys;
 import message.RegisterConsumer;
 import netty.protocal.RemotingCommand;
-import utils.ByteUtil;
 
 /**
  * @author Zexho
@@ -22,7 +21,7 @@ public class RemotingCommandFactory {
      */
     public static RemotingCommand putMessage(Message message) {
         RemotingCommand remotingCommand = new RemotingCommand();
-        remotingCommand.setBody(ByteUtil.to(message));
+        remotingCommand.setBody(message);
         remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Producer.type);
         remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Put_Message.type);
         return remotingCommand;
@@ -37,8 +36,10 @@ public class RemotingCommandFactory {
         RemotingCommand remotingCommand = new RemotingCommand();
         remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Consumer.type);
         remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Consumer.type);
+        Message message = new Message();
         RegisterConsumer registerConsumer = new RegisterConsumer(cid, topic, group);
-        remotingCommand.setBody(ByteUtil.to(registerConsumer));
+        message.setBody(registerConsumer);
+        remotingCommand.setBody(message);
         return remotingCommand;
     }
 
@@ -52,15 +53,16 @@ public class RemotingCommandFactory {
         RemotingCommand remotingCommand = new RemotingCommand();
         remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Broker.type);
         remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Push_Message.type);
-        remotingCommand.setBody(ByteUtil.to(message));
+        remotingCommand.setBody(message);
         return remotingCommand;
     }
 
-    public static RemotingCommand putMessageResp(int resp) {
+    public static RemotingCommand putMessageResp(Message msg, int resp) {
         RemotingCommand remotingCommand = new RemotingCommand();
         remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Broker.type);
         remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Put_Message_Resp.type);
         remotingCommand.addProperties(PropertiesKeys.RESP_DATA, String.valueOf(resp));
+        remotingCommand.setBody(msg);
         return remotingCommand;
 
     }

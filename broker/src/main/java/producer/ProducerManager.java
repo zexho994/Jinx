@@ -1,8 +1,10 @@
 package producer;
 
-import common.Transaction;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
+import message.PropertiesKeys;
+import message.TranType;
+import netty.protocal.RemotingCommand;
 import store.DefaultMessageStore;
 import store.MessageStore;
 import store.constant.FlushModel;
@@ -37,10 +39,20 @@ public class ProducerManager {
      * @param message 消息体
      * @param model   消息刷盘模式
      */
-    public PutMessageResult putMessage(Message message, FlushModel model) {
+    public PutMessageResult messageProcessor(Message message, FlushModel model) {
         log.debug("put message : {}", message);
         // 消息交给存储模块进行存储
         return messageStore.putMessage(message, model);
+    }
+
+    public PutMessageResult transactionMessageProcessor(RemotingCommand command, FlushModel model) {
+        String tranType = command.getProperty(PropertiesKeys.TRAN);
+        Message message = command.getBody();
+        if (tranType.equals(TranType.Half.type)) {
+            return this.halfMessageProcessor(message, model);
+        } else {
+            return this.endMessageProcessor(message, model);
+        }
     }
 
     /**
@@ -49,11 +61,15 @@ public class ProducerManager {
      * @param message half消息
      * @param model   消息刷盘模式
      */
-    public PutMessageResult putHalfMessage(Message message, FlushModel model) {
+    private PutMessageResult halfMessageProcessor(Message message, FlushModel model) {
         log.debug("put half message : {}", message);
         // 消息持久化操作
         messageStore.putHalfMessage(message, model);
-        Message tt = messageStore.findMessage(Transaction.TRANS_HALF_TOPIC, 1, "tt");
+        return PutMessageResult.OK;
+    }
+
+    private PutMessageResult endMessageProcessor(Message message, FlushModel model) {
+        log.debug("process end message => {}", message);
 
         return PutMessageResult.OK;
     }

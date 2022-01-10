@@ -66,10 +66,6 @@ public class Message implements Serializable {
         this.topic = topic;
     }
 
-    public String getConsumerGroup() {
-        return consumerGroup;
-    }
-
     public void setConsumerGroup(String consumerGroup) {
         this.consumerGroup = consumerGroup;
     }

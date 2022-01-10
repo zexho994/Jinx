@@ -1,9 +1,12 @@
 package producer;
 
+import lombok.Getter;
+
 /**
  * @author Zexho
  * @date 2022/1/4 5:58 PM
  */
+@Getter
 public enum LocalTransactionState {
     /**
      * 提交状态，表示事务完成

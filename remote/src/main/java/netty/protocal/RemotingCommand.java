@@ -33,16 +33,12 @@ public class RemotingCommand implements Serializable {
         return properties.get(key);
     }
 
-    public void setBody(byte[] body) {
-        this.body = body;
-    }
-
     public void setBody(Message message) {
         this.body = ByteUtil.to(message);
     }
 
-    public byte[] getBody() {
-        return this.body;
+    public Message getBody() {
+        return ByteUtil.toMessage(this.body);
     }
 
 }

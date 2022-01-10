@@ -12,7 +12,6 @@ import message.Message;
 import netty.IRemotingService;
 import netty.future.SyncFuture;
 import netty.protocal.RemotingCommand;
-import utils.ByteUtil;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -104,7 +103,7 @@ public class NettyRemotingClientImpl implements IRemotingService {
         if (command.getBody() == null) {
             command.setBody(new Message());
         }
-        syncFutureMap.put(ByteUtil.toMessage(command.getBody()).getMsgId(), future);
+        syncFutureMap.put(command.getBody().getMsgId(), future);
         this.channel.writeAndFlush(command);
         return future.get();
     }

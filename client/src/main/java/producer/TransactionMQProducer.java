@@ -3,6 +3,7 @@ package producer;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
 import message.TopicRouteInfo;
+import message.TranType;
 import netty.common.RemotingCommandHelper;
 import netty.protocal.RemotingCommand;
 
@@ -33,36 +34,48 @@ public class TransactionMQProducer extends Producer {
         if (this.transactionListener == null) {
             throw new Exception("the transaction listener is null");
         }
-        // 发送half消息
-        RemotingCommand resp = this.sendHalfMessage(message);
-        // 执行本地事务接口
-        this.transactionListener.executeLocalTransaction(message);
-        // 发送end消息
-        this.sendEndMessage(message);
-    }
-
-    public void setTransactionListener(TransactionListener listener) {
-        this.transactionListener = listener;
-    }
-
-    private RemotingCommand sendHalfMessage(Message message) throws ExecutionException, InterruptedException {
-        log.debug("send half message");
-        // 标记为half消息
-        RemotingCommand command = new RemotingCommand();
-        RemotingCommandHelper.markHalf(command);
         // 选择发送队列
         TopicRouteInfo tf = namesrvService.getTopicRouteInfo(message.getTopic());
         ensureBrokerConnected(tf);
         if (message.getQueueId() == null) {
             message.setQueueId((int) (System.currentTimeMillis() % tf.getQueueNum()) + 1);
         }
+        // 发送half消息
+        RemotingCommand halfResp = this.sendHalfMessage(message, tf);
+        // 执行本地事务接口
+        LocalTransactionState localTransactionState = this.transactionListener.executeLocalTransaction(message);
+        // 发送end消息
+        RemotingCommand endResp = this.sendEndMessage(message, localTransactionState, tf);
+    }
+
+    public void setTransactionListener(TransactionListener listener) {
+        this.transactionListener = listener;
+    }
+
+    private RemotingCommand sendHalfMessage(Message message, TopicRouteInfo tf) throws ExecutionException, InterruptedException {
+        log.debug("send half message");
+        // 标记为half消息
+        RemotingCommand command = new RemotingCommand();
+        RemotingCommandHelper.markHalf(command);
         command.setBody(message);
         return brokerRemoteManager.sendSync(tf.getBrokerName(), command);
     }
 
-    private void sendEndMessage(Message message) {
+    private RemotingCommand sendEndMessage(Message message, LocalTransactionState localTransactionState, TopicRouteInfo tf) throws Exception {
         log.info("send end message");
-
+        RemotingCommand command = new RemotingCommand();
+        switch (localTransactionState) {
+            case COMMIT:
+                RemotingCommandHelper.markEnd(command, TranType.Commit.type);
+                break;
+            case ROLLBACK:
+                RemotingCommandHelper.markEnd(command, TranType.Rollback.type);
+                break;
+            default:
+                throw new Exception("local transaction state error. state is " + localTransactionState);
+        }
+        command.setBody(message);
+        return brokerRemoteManager.sendSync(tf.getBrokerName(), command);
     }
 
 }

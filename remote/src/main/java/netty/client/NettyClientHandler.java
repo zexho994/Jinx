@@ -58,7 +58,7 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
         if (response.getBody() == null) {
             throw new Exception("response body is null, resp = " + response);
         }
-        Message message = ByteUtil.toMessage(response.getBody());
+        Message message = response.getBody();
         String msgId = message.getMsgId();
         if (this.client.syncFutureMap.containsKey(msgId)) {
             SyncFuture<RemotingCommand> remotingCommandSyncFuture = this.client.syncFutureMap.get(msgId);

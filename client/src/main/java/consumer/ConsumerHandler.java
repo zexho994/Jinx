@@ -23,7 +23,7 @@ public class ConsumerHandler extends NettyClientHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         RemotingCommand command = (RemotingCommand) msg;
-        Message message = ByteUtil.to(command.getBody(), Message.class);
+        Message message = command.getBody();
         log.debug("channel read msg => {}", message);
         this.consumerListener.consume(message);
     }

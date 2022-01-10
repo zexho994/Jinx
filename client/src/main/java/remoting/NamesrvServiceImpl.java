@@ -7,7 +7,6 @@ import message.TopicRouteInfos;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;
 import netty.protocal.RemotingCommand;
-import utils.ByteUtil;
 
 import java.util.concurrent.ExecutionException;
 
@@ -46,7 +45,7 @@ public class NamesrvServiceImpl implements RemotingService {
         command.addProperties(PropertiesKeys.TOPIC, topic);
         try {
             RemotingCommand resp = this.client.sendSync(command);
-            return (TopicRouteInfos) ByteUtil.toMessage(resp.getBody()).getBody();
+            return (TopicRouteInfos) resp.getBody().getBody();
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }

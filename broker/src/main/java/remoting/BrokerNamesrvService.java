@@ -9,7 +9,6 @@ import message.PropertiesKeys;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;
 import netty.protocal.RemotingCommand;
-import utils.ByteUtil;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -59,8 +58,9 @@ public class BrokerNamesrvService {
         try {
             RemotingCommand resp = this.client.sendSync(this.getHeartbeatCommand());
             if (resp.getProperty(PropertiesKeys.MESSAGE_TYPE).equals(MessageType.Register_Broker_Resp.type)) {
-                Boolean res = ByteUtil.to(resp.getBody(), Boolean.class);
-                if (res) {
+                Message res = resp.getBody();
+                boolean flag = (boolean) res.getBody();
+                if (flag) {
                     log.info("broker register success");
                 } else {
                     log.warn("broker register error");

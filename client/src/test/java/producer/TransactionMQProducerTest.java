@@ -14,13 +14,13 @@ class TransactionMQProducerTest {
             @Override
             public LocalTransactionState executeLocalTransaction(Message msg) {
                 System.out.println("[Test] executeLocalTransaction, message => " + msg);
-                return LocalTransactionState.UNKNOWN;
+                return LocalTransactionState.COMMIT;
             }
 
             @Override
             public LocalTransactionState checkLocalTransaction(Message msg) {
                 System.out.println("[Test] checkLocalTransaction, message => " + msg);
-                return LocalTransactionState.UNKNOWN;
+                return LocalTransactionState.COMMIT;
             }
         });
         producer.start();

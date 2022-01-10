@@ -14,7 +14,6 @@ import netty.server.NettyServerHandler;
 import producer.ProducerManager;
 import store.constant.FlushModel;
 import store.constant.PutMessageResult;
-import utils.ByteUtil;
 
 /**
  * @author Zexho
@@ -47,7 +46,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         RemotingCommand cmd = (RemotingCommand) msg;
-        log.trace("[Broker] channel read msg");
+        log.debug("read remoting command => {}", cmd);
 
         // 获取客户端类型
         String clientType = cmd.getProperty(PropertiesKeys.CLIENT_TYPE);
@@ -71,15 +70,15 @@ public class BrokerRemotingHandler extends NettyServerHandler {
         MessageType messageType = MessageType.get(cmd.getProperty(PropertiesKeys.MESSAGE_TYPE));
         if (messageType == MessageType.Put_Message) {
             PutMessageResult putMessageResult;
-            Message message = ByteUtil.to(cmd.getBody(), Message.class);
+            Message message = cmd.getBody();
             if (isTransactionMessage(cmd)) {
                 log.trace("Processing transaction messages");
-                putMessageResult = producerManager.putHalfMessage(message, FlushModel.SYNC);
+                putMessageResult = producerManager.transactionMessageProcessor(cmd, FlushModel.SYNC);
             } else {
                 log.trace("Processing ordinary messages");
-                putMessageResult = producerManager.putMessage(message, FlushModel.SYNC);
+                putMessageResult = producerManager.messageProcessor(message, FlushModel.SYNC);
             }
-            RemotingCommand resp = RemotingCommandFactory.putMessageResp(putMessageResult.code);
+            RemotingCommand resp = RemotingCommandFactory.putMessageResp(message, putMessageResult.code);
             ctx.writeAndFlush(resp);
         }
     }
@@ -101,7 +100,9 @@ public class BrokerRemotingHandler extends NettyServerHandler {
         String messageType = cmd.getProperty(PropertiesKeys.MESSAGE_TYPE);
         switch (MessageType.get(messageType)) {
             case Register_Consumer:
-                this.consumerManager.registerConsumer(ByteUtil.to(cmd.getBody(), RegisterConsumer.class), ctx);
+                Message body = cmd.getBody();
+                RegisterConsumer registerConsumer = (RegisterConsumer) body.getBody();
+                this.consumerManager.registerConsumer(registerConsumer, ctx);
                 break;
             case Pull_Message:
             default:
