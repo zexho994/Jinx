@@ -2,10 +2,11 @@ package netty.protocal;
 
 import lombok.Data;
 import lombok.ToString;
+import message.Message;
+import utils.ByteUtil;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -17,18 +18,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RemotingCommand implements Serializable {
     private static final long serialVersionUID = 6798972145219873378L;
 
-    private String traceId;
-
     private Map<String, String> properties = new ConcurrentHashMap<>();
 
     private byte[] body;
 
     public RemotingCommand() {
-        this.traceId = UUID.randomUUID().toString();
-    }
-
-    public RemotingCommand(String traceId) {
-        this.traceId = traceId;
     }
 
     public void addProperties(String key, String val) {
@@ -41,6 +35,10 @@ public class RemotingCommand implements Serializable {
 
     public void setBody(byte[] body) {
         this.body = body;
+    }
+
+    public void setBody(Message message) {
+        this.body = ByteUtil.to(message);
     }
 
     public byte[] getBody() {

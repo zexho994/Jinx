@@ -43,10 +43,10 @@ public class NamesrvServiceImpl implements RemotingService {
     public TopicRouteInfos getTopicRouteInfos(String topic) {
         RemotingCommand command = new RemotingCommand();
         command.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Get_Topic_Route.type);
-        command.setBody(ByteUtil.to(topic));
+        command.addProperties(PropertiesKeys.TOPIC, topic);
         try {
             RemotingCommand resp = this.client.sendSync(command);
-            return ByteUtil.to(resp.getBody(), TopicRouteInfos.class);
+            return (TopicRouteInfos) ByteUtil.toMessage(resp.getBody()).getBody();
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }

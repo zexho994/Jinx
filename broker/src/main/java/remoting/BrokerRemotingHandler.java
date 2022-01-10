@@ -79,7 +79,7 @@ public class BrokerRemotingHandler extends NettyServerHandler {
                 log.trace("Processing ordinary messages");
                 putMessageResult = producerManager.putMessage(message, FlushModel.SYNC);
             }
-            RemotingCommand resp = RemotingCommandFactory.putMessageResp(cmd.getTraceId(), ByteUtil.to(putMessageResult));
+            RemotingCommand resp = RemotingCommandFactory.putMessageResp(putMessageResult.code);
             ctx.writeAndFlush(resp);
         }
     }

@@ -4,6 +4,7 @@ import config.BrokerConfig;
 import enums.ClientType;
 import enums.MessageType;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
 import message.PropertiesKeys;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;
@@ -39,7 +40,9 @@ public class BrokerNamesrvService {
         heartbeat.addProperties(PropertiesKeys.BROKER_HOST, BrokerConfig.brokerHost);
         heartbeat.addProperties(PropertiesKeys.BROKER_NAME, BrokerConfig.brokerName);
         heartbeat.addProperties(PropertiesKeys.CLUSTER_NAME, BrokerConfig.clusterName);
-        heartbeat.setBody(ByteUtil.to(BrokerConfig.configBody));
+        Message message = new Message();
+        message.setBody(BrokerConfig.configBody);
+        heartbeat.setBody(message);
         return heartbeat;
     }
 

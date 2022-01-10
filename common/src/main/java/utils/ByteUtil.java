@@ -1,6 +1,7 @@
 package utils;
 
 import lombok.extern.log4j.Log4j2;
+import message.Message;
 
 import java.io.*;
 
@@ -52,5 +53,9 @@ public class ByteUtil {
             log.error(e);
             return null;
         }
+    }
+
+    public static Message toMessage(byte[] bytes) {
+        return to(bytes, Message.class);
     }
 }

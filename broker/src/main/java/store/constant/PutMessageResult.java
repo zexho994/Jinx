@@ -15,7 +15,7 @@ public enum PutMessageResult {
     FAILURE(2),
     ;
 
-    final int code;
+    public final int code;
 
     PutMessageResult(int code) {
         this.code = code;

@@ -33,22 +33,26 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
     }
 
     private RemotingCommand processCommand(RemotingCommand command) {
+        log.debug("nameserver process command. cmd = {}", command);
         MessageType messageType = MessageType.get(command.getProperty(PropertiesKeys.MESSAGE_TYPE));
         assert messageType != null;
-        RemotingCommand resp = new RemotingCommand(command.getTraceId());
+        Message reqMessage = ByteUtil.toMessage(command.getBody());
+        RemotingCommand resp = new RemotingCommand();
         switch (messageType) {
             case Register_Broker:
-                log.info("[NameServer] broker register => {}", ByteUtil.to(command.getBody(), ConfigBody.class));
+                log.info("[NameServer] broker register => {}", ByteUtil.to(command.getBody(), Message.class));
                 boolean result = this.doRegisterBroker(command);
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker_Resp.type);
                 resp.setBody(ByteUtil.to(result));
                 break;
             case Get_Topic_Route:
-                String topic = ByteUtil.to(command.getBody(), String.class);
+                String topic = command.getProperty(PropertiesKeys.TOPIC);
                 log.info("[NameServer] get topic route info => {}", topic);
                 TopicRouteInfos topicRouteInfos = this.doGetTopicRouteData(topic);
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Get_Topic_Route.type);
-                resp.setBody(ByteUtil.to(topicRouteInfos));
+                Message body = new Message(reqMessage.getMsgId());
+                body.setBody(topicRouteInfos);
+                resp.setBody(ByteUtil.to(body));
                 break;
             default:
                 break;
@@ -62,7 +66,8 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
         String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
         brokerManager.addBroker(brokerName, brokerHost, clusterName);
 
-        ConfigBody body = ByteUtil.to(command.getBody(), ConfigBody.class);
+        Message message = ByteUtil.toMessage(command.getBody());
+        ConfigBody body = (ConfigBody) message.getBody();
         List<TopicUnit> topics = body.getTopics();
         topicManager.addTopic(brokerName, topics);
 

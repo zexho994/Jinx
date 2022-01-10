@@ -5,7 +5,6 @@ import message.Message;
 import message.TopicRouteInfo;
 import netty.common.RemotingCommandHelper;
 import netty.protocal.RemotingCommand;
-import utils.ByteUtil;
 
 import java.util.concurrent.ExecutionException;
 
@@ -57,8 +56,7 @@ public class TransactionMQProducer extends Producer {
         if (message.getQueueId() == null) {
             message.setQueueId((int) (System.currentTimeMillis() % tf.getQueueNum()) + 1);
         }
-        command.setBody(ByteUtil.to(message));
-        // 发送
+        command.setBody(message);
         return brokerRemoteManager.sendSync(tf.getBrokerName(), command);
     }
 

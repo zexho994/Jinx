@@ -1,14 +1,24 @@
 package message;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.UUID;
 
 /**
  * @author Zexho
  * @date 2021/11/11 8:05 下午
  */
+@ToString
+@EqualsAndHashCode
 public class Message implements Serializable {
     private static final long serialVersionUID = 4450281597088189225L;
+
+    /**
+     * 消息id，每条消息特有
+     */
+    private final String msgId;
 
     /**
      * 消息所属topic
@@ -31,12 +41,21 @@ public class Message implements Serializable {
     private Object body;
 
     public Message() {
-        this(null, null);
+        this(null);
     }
 
-    public Message(String topic, byte[] body) {
+    public Message(String msgId) {
+        this(null, null, msgId);
+    }
+
+    public Message(String topic, byte[] body, String msgId) {
         this.topic = topic;
         this.body = body;
+        this.msgId = msgId == null ? UUID.randomUUID().toString() : msgId;
+    }
+
+    public String getMsgId() {
+        return msgId;
     }
 
     public String getTopic() {
@@ -69,28 +88,5 @@ public class Message implements Serializable {
 
     public void setQueueId(int queueId) {
         this.queueId = queueId;
-    }
-
-    @Override
-    public String toString() {
-        return "Message{" +
-                "topic='" + topic + '\'' +
-                ", queueId=" + queueId +
-                ", consumerGroup='" + consumerGroup + '\'' +
-                ", body=" + body +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Message)) return false;
-        Message message = (Message) o;
-        return Objects.equals(getTopic(), message.getTopic()) && Objects.equals(getQueueId(), message.getQueueId()) && Objects.equals(getConsumerGroup(), message.getConsumerGroup()) && Objects.equals(getBody(), message.getBody());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getTopic(), getQueueId(), getConsumerGroup(), getBody());
     }
 }
