@@ -23,4 +23,13 @@ public enum TranType {
     TranType(String type) {
         this.type = type;
     }
+
+    public static TranType get(String type) {
+        for (TranType value : values()) {
+            if (type.equals(value.type)) {
+                return value;
+            }
+        }
+        throw new RuntimeException("tranType error : " + type);
+    }
 }

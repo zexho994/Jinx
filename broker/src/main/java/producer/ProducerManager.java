@@ -51,8 +51,13 @@ public class ProducerManager {
         if (tranType.equals(TranType.Half.type)) {
             return this.halfMessageProcessor(message, model);
         } else {
-            return this.endMessageProcessor(message, model);
+            try {
+                return this.endMessageProcessor(message, TranType.get(tranType), model);
+            } catch (Exception e) {
+                log.error("process end message error.", e);
+            }
         }
+        return PutMessageResult.FAILURE;
     }
 
     /**
@@ -68,8 +73,16 @@ public class ProducerManager {
         return PutMessageResult.OK;
     }
 
-    private PutMessageResult endMessageProcessor(Message message, FlushModel model) {
+    private PutMessageResult endMessageProcessor(Message message, TranType tranType, FlushModel model) throws Exception {
         log.debug("process end message => {}", message);
+        switch (tranType) {
+            case Commit:
+                break;
+            case Rollback:
+                break;
+            default:
+                throw new Exception("tranType error : " + tranType.type);
+        }
 
         return PutMessageResult.OK;
     }

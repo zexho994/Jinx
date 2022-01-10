@@ -6,29 +6,26 @@ participant mqProducer
 participant mqBroker
 participant mqConsumer
 
-mqProducer -> mqProducer : 选择消息发送路由信息
+==1.获取路由信息==
+mqProducer -> mqProducer ++: 选择消息发送路由信息
 note left : half和end消息都使用同一个路由
+==2.发送half消息==
 mqProducer -> mqBroker ++: 发送half消息
 mqBroker -> mqBroker : 消息保存到halfQueue中
 return ack
-
+==3.执行本地事务==
 mqProducer -> localServer ++: 执行本地事务
-opt 事务完成
-    localServer -> mqProducer ++: commit
-    mqProducer -> mqBroker ++: 发送end(commit)消息
+localServer --\ mqProducer --: success / failure
+==4.发送end消息==
+mqProducer -> mqBroker ++: send end msg
+mqBroker -> mqBroker : 判断 commit / rollback
+opt commit
     mqBroker -> mqBroker : 消息保存到原本的queue中
     mqBroker -> mqBroker : 消息保存到opQueue
-    return ok
-    return ok
-else 事务失败
-    localServer -> mqProducer ++: rollback
-    mqProducer -> mqBroker ++: 发送end(rollback)消息
+else rollback
     mqBroker -> mqBroker : 消息保存到opQueue
-    return ok
-    return ok
 end
-note right: 如何根据end请求找到对应的消息？根据msgId
-
-return 执行结束
+note right : end请求中携带了message
+return ok
 
 @enduml
