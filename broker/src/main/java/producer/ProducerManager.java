@@ -56,7 +56,7 @@ public class ProducerManager {
             case Commit:
                 return this.commitProcessor(message, model);
             case Rollback:
-                return this.rollbackProcessor(message);
+                return this.rollbackProcessor(message, model);
             default:
                 return PutMessageResult.FAILURE;
         }
@@ -64,10 +64,11 @@ public class ProducerManager {
 
     /**
      * @param message 消息对象
+     * @param model
      * @return 处理结果
      */
-    private PutMessageResult rollbackProcessor(Message message) {
-        return null;
+    private PutMessageResult rollbackProcessor(Message message, FlushModel model) {
+        return this.messageStore.putOpMessage(message, model);
     }
 
     /**
@@ -80,7 +81,7 @@ public class ProducerManager {
      */
     private PutMessageResult commitProcessor(Message message, FlushModel model) {
         // 消息存储到正常的topic中
-        PutMessageResult putResult = messageStore.putMessage(message,model);
+        PutMessageResult putResult = messageStore.putMessage(message, model);
         if (putResult != PutMessageResult.OK) {
             return putResult;
         }
