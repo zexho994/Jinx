@@ -3,6 +3,7 @@ package store;
 import message.Message;
 import org.junit.jupiter.api.Test;
 import store.commitlog.Commitlog;
+import store.constant.FlushModel;
 import store.consumequeue.ConsumeQueue;
 
 class DefaultMessageStoreTest {
@@ -56,7 +57,7 @@ class DefaultMessageStoreTest {
         message.setConsumerGroup("consume group 1");
         message.setTopic("topic 1");
         message.setBody("{}");
-        defaultMessageStore.putMessage(message);
+        defaultMessageStore.putMessage(message, FlushModel.SYNC);
     }
 
     Message getMessage(String topic, String group) throws Exception {

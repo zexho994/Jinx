@@ -46,22 +46,52 @@ public class ProducerManager {
     }
 
     public PutMessageResult transactionMessageProcessor(RemotingCommand command, FlushModel model) {
-        String tranType = command.getProperty(PropertiesKeys.TRAN);
+        TranType tranType = TranType.get(command.getProperty(PropertiesKeys.TRAN));
         Message message = command.getBody();
-        if (tranType.equals(TranType.Half.type)) {
-            return this.halfMessageProcessor(message, model);
-        } else {
-            try {
-                return this.endMessageProcessor(message, TranType.get(tranType), model);
-            } catch (Exception e) {
-                log.error("process end message error.", e);
-            }
+
+        // 根据事务消息的类型进行处理
+        switch (tranType) {
+            case Half:
+                return this.halfMessageProcessor(message, model);
+            case Commit:
+                return this.commitProcessor(message, model);
+            case Rollback:
+                return this.rollbackProcessor(message);
+            default:
+                return PutMessageResult.FAILURE;
         }
-        return PutMessageResult.FAILURE;
+    }
+
+    /**
+     * @param message 消息对象
+     * @return 处理结果
+     */
+    private PutMessageResult rollbackProcessor(Message message) {
+        return null;
+    }
+
+    /**
+     * 事务commit提交
+     * step1: 消息保存一份到原本的队列中去
+     * step2: 消息保存一份到opQueue中
+     *
+     * @param message 消息对象
+     * @return 处理结果
+     */
+    private PutMessageResult commitProcessor(Message message, FlushModel model) {
+        // 消息存储到正常的topic中
+        PutMessageResult putResult = messageStore.putMessage(message,model);
+        if (putResult != PutMessageResult.OK) {
+            return putResult;
+        }
+
+        // 消息存储到opQueue中
+        return messageStore.putOpMessage(message, model);
     }
 
     /**
      * 投递事务消息
+     * step: 消息存储到TRANS_HALF_TOPIC队列中
      *
      * @param message half消息
      * @param model   消息刷盘模式
@@ -69,22 +99,7 @@ public class ProducerManager {
     private PutMessageResult halfMessageProcessor(Message message, FlushModel model) {
         log.debug("put half message : {}", message);
         // 消息持久化操作
-        messageStore.putHalfMessage(message, model);
-        return PutMessageResult.OK;
-    }
-
-    private PutMessageResult endMessageProcessor(Message message, TranType tranType, FlushModel model) throws Exception {
-        log.debug("process end message => {}", message);
-        switch (tranType) {
-            case Commit:
-                break;
-            case Rollback:
-                break;
-            default:
-                throw new Exception("tranType error : " + tranType.type);
-        }
-
-        return PutMessageResult.OK;
+        return messageStore.putHalfMessage(message, model);
     }
 
 }

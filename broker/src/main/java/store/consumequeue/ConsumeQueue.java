@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static common.Transaction.TRANS_HALF_OP_TOPIC;
 import static common.Transaction.TRANS_HALF_TOPIC;
 
 /**
@@ -122,12 +123,17 @@ public class ConsumeQueue {
      * 创建事务相关的文件
      */
     private void mkdirTranTopicDir() {
-        File topicDir = new File(CONSUMER_QUEUE_FOLDER, TRANS_HALF_TOPIC);
+        initTopicQueue(TRANS_HALF_TOPIC);
+        initTopicQueue(TRANS_HALF_OP_TOPIC);
+    }
+
+    private void initTopicQueue(String topicName) {
+        File topicDir = new File(CONSUMER_QUEUE_FOLDER, topicName);
         if (!topicDir.exists()) {
             topicDir.mkdir();
         }
-        this.mappedFileMap.put(TRANS_HALF_TOPIC, new ConcurrentHashMap<>(1));
-        this.mappedFileMap.get(TRANS_HALF_TOPIC).put(1, new MappedFileQueue());
+        this.mappedFileMap.put(topicName, new ConcurrentHashMap<>(1));
+        this.mappedFileMap.get(topicName).put(1, new MappedFileQueue());
         File queueDir = new File(topicDir, "1");
         if (!queueDir.exists()) {
             queueDir.mkdir();
@@ -143,7 +149,7 @@ public class ConsumeQueue {
         }
         try {
             MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
-            this.mappedFileMap.get(TRANS_HALF_TOPIC).get(1).addMappedFile(mappedFile);
+            this.mappedFileMap.get(topicName).get(1).addMappedFile(mappedFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
