@@ -17,7 +17,7 @@ public class TransactionTest {
 
     static Set<Message> set = new CopyOnWriteArraySet<>();
 
-    TransactionMQProducer startTransactionMQProducer() {
+    TransactionMQProducer startTransactionMQProducer(LocalTransactionState state) {
         TransactionMQProducer producer = new TransactionMQProducer("127.0.0.1");
         producer.setTransactionListener(new TransactionListener() {
             @Override
@@ -29,13 +29,13 @@ public class TransactionTest {
                     e.printStackTrace();
                 }
                 System.out.println("[Test] local Transaction success");
-                return LocalTransactionState.COMMIT;
+                return state;
             }
 
             @Override
             public LocalTransactionState checkLocalTransaction(Message msg) {
                 System.out.println("[Test] checkLocalTransaction, message => " + msg);
-                return LocalTransactionState.COMMIT;
+                return state;
             }
         });
         producer.start();
@@ -64,10 +64,10 @@ public class TransactionTest {
      * 测试点: 消费者收到消息
      */
     @Test
-    public void transactionTest1() throws InterruptedException {
+    public void transactionCommitTest() throws InterruptedException {
         // 启动消费者和生产者
         this.startConsumer("topic_1", "group_1", 1);
-        TransactionMQProducer producer = this.startTransactionMQProducer();
+        TransactionMQProducer producer = this.startTransactionMQProducer(LocalTransactionState.COMMIT);
         // 生产者发送消息
         Message message = new Message();
         message.setTopic("topic_1");
@@ -85,4 +85,34 @@ public class TransactionTest {
         Assertions.assertFalse(set.contains(message), "事务消息未被正确消费掉");
     }
 
+    /**
+     * 用例名称:rollback 测试
+     * 前置:一个生产者，一个消费者
+     * 步骤:
+     * step1 : producer send message to broker
+     * 测试点: 消费者此时收不到消息
+     * step2 : 生产者执行本地事务成功，发送commit end消息
+     * 测试点: 消费者收到消息
+     */
+    @Test
+    public void transactionRollbackTest() throws InterruptedException {
+        // 启动消费者和生产者
+        this.startConsumer("topic_1", "group_1", 1);
+        TransactionMQProducer producer = this.startTransactionMQProducer(LocalTransactionState.ROLLBACK);
+        // 生产者发送消息
+        Message message = new Message();
+        message.setTopic("topic_1");
+        set.add(message);
+        new Thread(() -> {
+            try {
+                producer.sendMessage(message);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+        Thread.sleep(1000);
+        Assertions.assertTrue(set.contains(message), "事务消息被提前消费");
+        Thread.sleep(2000);
+        Assertions.assertTrue(set.contains(message), "事务消息未被正确消费掉");
+    }
 }
