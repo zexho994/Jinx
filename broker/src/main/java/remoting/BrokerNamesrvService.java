@@ -4,11 +4,11 @@ import config.BrokerConfig;
 import enums.ClientType;
 import enums.MessageType;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
 import message.PropertiesKeys;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;
 import netty.protocal.RemotingCommand;
-import utils.ByteUtil;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -39,7 +39,9 @@ public class BrokerNamesrvService {
         heartbeat.addProperties(PropertiesKeys.BROKER_HOST, BrokerConfig.brokerHost);
         heartbeat.addProperties(PropertiesKeys.BROKER_NAME, BrokerConfig.brokerName);
         heartbeat.addProperties(PropertiesKeys.CLUSTER_NAME, BrokerConfig.clusterName);
-        heartbeat.setBody(ByteUtil.to(BrokerConfig.configBody));
+        Message message = new Message();
+        message.setBody(BrokerConfig.configBody);
+        heartbeat.setBody(message);
         return heartbeat;
     }
 
@@ -56,8 +58,9 @@ public class BrokerNamesrvService {
         try {
             RemotingCommand resp = this.client.sendSync(this.getHeartbeatCommand());
             if (resp.getProperty(PropertiesKeys.MESSAGE_TYPE).equals(MessageType.Register_Broker_Resp.type)) {
-                Boolean res = ByteUtil.to(resp.getBody(), Boolean.class);
-                if (res) {
+                Message res = resp.getBody();
+                boolean flag = (boolean) res.getBody();
+                if (flag) {
                     log.info("broker register success");
                 } else {
                     log.warn("broker register error");

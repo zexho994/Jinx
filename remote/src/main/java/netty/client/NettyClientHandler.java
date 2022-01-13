@@ -4,8 +4,10 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
 import netty.future.SyncFuture;
 import netty.protocal.RemotingCommand;
+import utils.ByteUtil;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -48,14 +50,20 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         RemotingCommand response = (RemotingCommand) msg;
+        log.debug("channel read msg => {}", msg);
 
         // 如果该请求是通过 sendSync() 发送的，需要设置resp
-        if (this.client.syncFutureMap.containsKey(response.getTraceId())) {
-            SyncFuture<RemotingCommand> remotingCommandSyncFuture = this.client.syncFutureMap.get(response.getTraceId());
+        if (response.getBody() == null) {
+            throw new Exception("response body is null, resp = " + response);
+        }
+        Message message = response.getBody();
+        String msgId = message.getMsgId();
+        if (this.client.syncFutureMap.containsKey(msgId)) {
+            SyncFuture<RemotingCommand> remotingCommandSyncFuture = this.client.syncFutureMap.get(msgId);
             remotingCommandSyncFuture.setResponse(response);
-            this.client.syncFutureMap.remove(response.getTraceId());
+            this.client.syncFutureMap.remove(msgId);
         }
     }
 }

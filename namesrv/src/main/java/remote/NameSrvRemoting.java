@@ -1,5 +1,6 @@
 package remote;
 
+import common.Host;
 import netty.server.NettyRemotingServerImpl;
 import netty.server.NettyServerConfig;
 
@@ -13,7 +14,7 @@ public class NameSrvRemoting {
 
     public NameSrvRemoting() {
         NettyServerConfig config = new NettyServerConfig();
-        config.setListenPort(9876);
+        config.setListenPort(Host.NAMESERVER_PORT);
         this.remotingServer = new NettyRemotingServerImpl(config);
         this.remotingServer.setServerHandler(new NameSrvRemotingHandler());
     }

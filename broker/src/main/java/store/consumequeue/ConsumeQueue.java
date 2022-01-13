@@ -19,6 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static common.Transaction.TRANS_HALF_OP_TOPIC;
+import static common.Transaction.TRANS_HALF_TOPIC;
+
 /**
  * @author Zexho
  * @date 2021/12/2 10:30 上午
@@ -41,11 +44,7 @@ public class ConsumeQueue {
 
     public static File CONSUMER_QUEUE_FOLDER;
 
-    /**
-     * Key: topic
-     * Val: Map<queueid,mappedfile>
-     */
-    private final Map<String, Map<Integer, MappedFileQueue>> mappedFileMap = new ConcurrentHashMap<>();
+    private final Map<String/*topic*/, Map<Integer/*queueId*/, MappedFileQueue>> mappedFileMap = new ConcurrentHashMap<>();
     private final ConsumeOffset consumeOffset = ConsumeOffset.getInstance();
 
     /**
@@ -78,6 +77,13 @@ public class ConsumeQueue {
      *
      */
     private void mkdirTopicDir() {
+        // 用户定义的topic
+        this.mkdirCustomTopicDir();
+        // 事务使用的topic
+        this.mkdirTranTopicDir();
+    }
+
+    private void mkdirCustomTopicDir() {
         List<TopicUnit> topics = BrokerConfig.configBody.getTopics();
         topics.forEach(topic -> {
             File topicDir = new File(CONSUMER_QUEUE_FOLDER, topic.getTopic());
@@ -111,6 +117,42 @@ public class ConsumeQueue {
                 }
             }
         });
+    }
+
+    /**
+     * 创建事务相关的文件
+     */
+    private void mkdirTranTopicDir() {
+        initTopicQueue(TRANS_HALF_TOPIC);
+        initTopicQueue(TRANS_HALF_OP_TOPIC);
+    }
+
+    private void initTopicQueue(String topicName) {
+        File topicDir = new File(CONSUMER_QUEUE_FOLDER, topicName);
+        if (!topicDir.exists()) {
+            topicDir.mkdir();
+        }
+        this.mappedFileMap.put(topicName, new ConcurrentHashMap<>(1));
+        this.mappedFileMap.get(topicName).put(1, new MappedFileQueue());
+        File queueDir = new File(topicDir, "1");
+        if (!queueDir.exists()) {
+            queueDir.mkdir();
+        }
+
+        File file = new File(queueDir, "0");
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            MappedFile mappedFile = new MappedFile(FileType.CONSUME_QUEUE, file);
+            this.mappedFileMap.get(topicName).get(1).addMappedFile(mappedFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -183,7 +225,9 @@ public class ConsumeQueue {
     private void ensureDirExist() {
         if (CONSUMER_QUEUE_FOLDER == null) {
             CONSUMER_QUEUE_FOLDER = new File(FileType.CONSUME_QUEUE.basePath);
-            CONSUMER_QUEUE_FOLDER.mkdirs();
+            if (!CONSUMER_QUEUE_FOLDER.exists()) {
+                CONSUMER_QUEUE_FOLDER.mkdirs();
+            }
         }
     }
 
@@ -196,11 +240,11 @@ public class ConsumeQueue {
     public PutMessageResult putMessage(String topic, int queueId, long commitlogOffset) {
         lock.lock();
         try {
+            log.trace("consumeQueue put message");
             ensureFileExist(topic);
 
-            MappedFileQueue mappedFileQueue = mappedFileMap.get(topic).get(queueId);
+            MappedFileQueue mappedFileQueue = this.getMappedQueue(topic, queueId);
             MappedFile mappedFile = mappedFileQueue.getLastMappedFile();
-
             byte[] data = ByteUtil.to(commitlogOffset);
 
             MessageAppendResult appendResult = mappedFile.append(data);
@@ -259,10 +303,6 @@ public class ConsumeQueue {
      * @throws IOException
      */
     private void ensureFileExist(String topic) throws IOException {
-        if (mappedFileMap.containsKey(topic)) {
-            return;
-        }
-
         this.lock.lock();
         try {
             if (mappedFileMap.containsKey(topic)) {

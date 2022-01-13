@@ -28,4 +28,10 @@ public class PropertiesKeys {
     public static final String BROKER_NAME = "brokerName";
     public static final String CLUSTER_NAME = "clusterName";
 
+    /**
+     * 事务标记
+     */
+    public static final String TRAN = "tran";
+    public static final String RESP_DATA = "respData";
+    public static final String TOPIC = "topic";
 }

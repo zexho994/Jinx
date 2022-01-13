@@ -3,6 +3,7 @@ import command.BrokerCommand;
 import config.BrokerConfig;
 import config.BrokerConfigFile;
 import config.ConfigFileReader;
+import consumer.ConsumerManager;
 import lombok.extern.log4j.Log4j2;
 import remoting.BrokerNamesrvService;
 import remoting.BrokerRemotingService;
@@ -58,6 +59,9 @@ public class BrokerStartup {
         // namesrv 连接服务
         BrokerNamesrvService brokerNamesrvService = new BrokerNamesrvService();
         brokerNamesrvService.start();
+
+        // consumer push 定时器
+        ConsumerManager.getInstance().startPushTask();
     }
 
     /**
@@ -87,7 +91,7 @@ public class BrokerStartup {
     }
 
     /**
-     * 初始化配置
+     * 文件初始化配置
      */
     private static void mappedFileInit() throws Exception {
         // 初始化 Commitlog

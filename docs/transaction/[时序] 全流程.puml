@@ -1,0 +1,31 @@
+@startuml
+autonumber
+
+participant 本地服务 as localServer
+participant mqProducer
+participant mqBroker
+participant mqConsumer
+
+==1.获取路由信息==
+mqProducer -> mqProducer ++: 选择消息发送路由信息
+note left : half和end消息都使用同一个路由
+==2.发送half消息==
+mqProducer -> mqBroker ++: 发送half消息
+mqBroker -> mqBroker : 消息保存到halfQueue中
+return ack
+==3.执行本地事务==
+mqProducer -> localServer ++: 执行本地事务
+localServer --\ mqProducer --: success / failure
+==4.发送end消息==
+mqProducer -> mqBroker ++: send end msg
+mqBroker -> mqBroker : 判断 commit / rollback
+opt commit
+    mqBroker -> mqBroker : 消息保存到原本的queue中
+    mqBroker -> mqBroker : 消息保存到opQueue
+else rollback
+    mqBroker -> mqBroker : 消息保存到opQueue
+end
+note right : end请求中携带了message
+return ok
+
+@enduml

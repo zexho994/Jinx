@@ -8,6 +8,7 @@ import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
 import netty.IRemotingService;
 import netty.future.SyncFuture;
 import netty.protocal.RemotingCommand;
@@ -99,7 +100,10 @@ public class NettyRemotingClientImpl implements IRemotingService {
      */
     public RemotingCommand sendSync(RemotingCommand command) throws ExecutionException, InterruptedException {
         SyncFuture<RemotingCommand> future = new SyncFuture<>();
-        syncFutureMap.put(command.getTraceId(), future);
+        if (command.getBody() == null) {
+            command.setBody(new Message());
+        }
+        syncFutureMap.put(command.getBody().getMsgId(), future);
         this.channel.writeAndFlush(command);
         return future.get();
     }

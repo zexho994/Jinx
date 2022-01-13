@@ -143,6 +143,7 @@ public class Commitlog {
     public CommitPutMessageResult putMessage(final Message message, final FlushModel flushModel) {
         lock.lock();
         try {
+            log.trace("commitlog put message");
             long fileWriteOffset = this.mappedFileQueue.getLastMappedFile().getFromOffset() + this.mappedFileQueue.getLastMappedFile().getWrotePos();
             byte[] messagebyte = ByteUtil.to(message);
             byte[] size = ByteUtil.to(messagebyte.length);
@@ -156,6 +157,7 @@ public class Commitlog {
                         this.mappedFileQueue.getLastMappedFile().flush();
                         break;
                     case INSUFFICIENT_SPACE:
+                        log.trace("commitlog insufficient space");
                         this.createNewMappedFile();
                         fileWriteOffset = this.mappedFileQueue.getLastMappedFile().getFromOffset();
                         this.mappedFileQueue.getLastMappedFile().append(data);

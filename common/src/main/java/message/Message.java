@@ -1,20 +1,24 @@
 package message;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
  * @author Zexho
  * @date 2021/11/11 8:05 下午
  */
+@ToString
+@EqualsAndHashCode
 public class Message implements Serializable {
     private static final long serialVersionUID = 4450281597088189225L;
 
     /**
-     * 每条消息唯一id
+     * 消息id，每条消息特有
      */
-    private String transactionId;
+    private final String msgId;
 
     /**
      * 消息所属topic
@@ -24,8 +28,11 @@ public class Message implements Serializable {
     /**
      * 消费队列id
      */
-    private int queueId;
+    private Integer queueId;
 
+    /**
+     * 消费组
+     */
     private String consumerGroup;
 
     /**
@@ -34,21 +41,21 @@ public class Message implements Serializable {
     private Object body;
 
     public Message() {
-        this(UUID.randomUUID().toString(), null, null);
+        this(null);
     }
 
-    public Message(String transactionId, String topic, byte[] body) {
-        this.transactionId = transactionId;
+    public Message(String msgId) {
+        this(null, null, msgId);
+    }
+
+    public Message(String topic, byte[] body, String msgId) {
         this.topic = topic;
         this.body = body;
+        this.msgId = msgId == null ? UUID.randomUUID().toString() : msgId;
     }
 
-    public String getTransactionId() {
-        return transactionId;
-    }
-
-    public void setTransactionId(String transactionId) {
-        this.transactionId = transactionId;
+    public String getMsgId() {
+        return msgId;
     }
 
     public String getTopic() {
@@ -57,10 +64,6 @@ public class Message implements Serializable {
 
     public void setTopic(String topic) {
         this.topic = topic;
-    }
-
-    public String getConsumerGroup() {
-        return consumerGroup;
     }
 
     public void setConsumerGroup(String consumerGroup) {
@@ -75,35 +78,11 @@ public class Message implements Serializable {
         this.body = data;
     }
 
-    public int getQueueId() {
+    public Integer getQueueId() {
         return queueId;
     }
 
     public void setQueueId(int queueId) {
         this.queueId = queueId;
-    }
-
-    @Override
-    public String toString() {
-        return "Message{" +
-                "transactionId='" + transactionId + '\'' +
-                ", topic='" + topic + '\'' +
-                ", queueId=" + queueId +
-                ", consumerGroup='" + consumerGroup + '\'' +
-                ", body=" + body +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Message)) return false;
-        Message message = (Message) o;
-        return getTransactionId().equals(message.getTransactionId()) && getTopic().equals(message.getTopic()) && Objects.equals(getConsumerGroup(), message.getConsumerGroup()) && Objects.equals(getBody(), message.getBody());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getTransactionId(), getTopic(), getConsumerGroup(), getBody());
     }
 }

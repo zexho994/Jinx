@@ -3,6 +3,7 @@ package store.consumequeue;
 import lombok.extern.log4j.Log4j2;
 import store.constant.FileType;
 import store.mappedfile.MappedFile;
+import utils.ByteUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +47,9 @@ class ConsumeOffset {
     private void ensureDirExist() {
         if (CONSUME_OFFSET_FOLDER == null) {
             CONSUME_OFFSET_FOLDER = new File(FileType.CONSUME_OFFSET.basePath);
-            CONSUME_OFFSET_FOLDER.mkdirs();
+            if (!CONSUME_OFFSET_FOLDER.exists()) {
+                CONSUME_OFFSET_FOLDER.mkdirs();
+            }
         }
     }
 
@@ -83,7 +86,7 @@ class ConsumeOffset {
         }
         File file = new File(FileType.CONSUME_OFFSET.basePath + topic);
         if (!file.exists()) {
-            file.mkdirs();
+            file.mkdir();
         }
         this.consumeOffsetMap.put(topic, new ConcurrentHashMap<>(4));
     }
@@ -95,7 +98,7 @@ class ConsumeOffset {
         }
         File file = new File(FileType.CONSUME_OFFSET.basePath + topic + File.separator + queueId);
         if (!file.exists()) {
-            file.mkdirs();
+            file.mkdir();
         }
         this.consumeOffsetMap.get(topic).put(queueId, new ConcurrentHashMap<>());
     }
@@ -111,6 +114,7 @@ class ConsumeOffset {
                 file.createNewFile();
                 if (mappedFile == null) {
                     mappedFile = new MappedFile(FileType.CONSUME_OFFSET, file);
+                    mappedFile.append(ByteUtil.to(0));
                 }
             } catch (IOException e) {
                 log.warn("failed to create consume offset file error. ", e);
@@ -142,6 +146,7 @@ class ConsumeOffset {
         MappedFile file = this.getFile(topic, queue, consumeGroup);
         try {
             int seq = file.getInt(0);
+            log.debug("inc offset ,topic = {}, queue = {}, group = {}, seq = {}", topic, queue, consumeGroup, seq);
             file.updateInt(0, seq + 1);
         } catch (IOException e) {
             throw new IOException("accumulation offset error, topic = " + topic + ", consumeGroup = " + consumeGroup, e);

@@ -9,7 +9,6 @@ import message.*;
 import meta.BrokerData;
 import netty.protocal.RemotingCommand;
 import netty.server.NettyServerHandler;
-import utils.ByteUtil;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -28,25 +27,33 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         RemotingCommand cmd = (RemotingCommand) msg;
-        log.info("[NameServer] remoting command => {}", msg);
         RemotingCommand response = this.processCommand(cmd);
         ctx.writeAndFlush(response);
     }
 
     private RemotingCommand processCommand(RemotingCommand command) {
+        log.debug("nameserver process command. cmd = {}", command);
         MessageType messageType = MessageType.get(command.getProperty(PropertiesKeys.MESSAGE_TYPE));
         assert messageType != null;
-        RemotingCommand resp = new RemotingCommand(command.getTraceId());
+        Message reqMessage = command.getBody();
+        RemotingCommand resp = new RemotingCommand();
         switch (messageType) {
             case Register_Broker:
+                log.info("[NameServer] broker register => {}", command.getBody());
                 boolean result = this.doRegisterBroker(command);
+                Message message = new Message();
+                message.setBody(result);
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker_Resp.type);
-                resp.setBody(ByteUtil.to(result));
+                resp.setBody(message);
                 break;
             case Get_Topic_Route:
-                TopicRouteInfos topicRouteInfos = this.doGetTopicRouteData(ByteUtil.to(command.getBody(), String.class));
+                String topic = command.getProperty(PropertiesKeys.TOPIC);
+                log.info("[NameServer] get topic route info => {}", topic);
+                TopicRouteInfos topicRouteInfos = this.doGetTopicRouteData(topic);
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Get_Topic_Route.type);
-                resp.setBody(ByteUtil.to(topicRouteInfos));
+                Message body = new Message(reqMessage.getMsgId());
+                body.setBody(topicRouteInfos);
+                resp.setBody(body);
                 break;
             default:
                 break;
@@ -60,7 +67,8 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
         String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
         brokerManager.addBroker(brokerName, brokerHost, clusterName);
 
-        ConfigBody body = ByteUtil.to(command.getBody(), ConfigBody.class);
+        Message message = command.getBody();
+        ConfigBody body = (ConfigBody) message.getBody();
         List<TopicUnit> topics = body.getTopics();
         topicManager.addTopic(brokerName, topics);
 

@@ -1,7 +1,7 @@
 import message.Message;
 import consumer.Consumer;
 import org.junit.jupiter.api.Assertions;
-import producer.Producer;
+import producer.DefaultMQProducer;
 
 import java.util.Queue;
 import java.util.UUID;
@@ -26,17 +26,16 @@ public class MessageOrderingTest {
     }
 
     public void send(String topic) {
-        Producer producer = new Producer( "127.0.0.1");
-        producer.start();
+        DefaultMQProducer defaultMQProducer = new DefaultMQProducer( "127.0.0.1");
+        defaultMQProducer.start();
 
         Message message = new Message();
         message.setTopic(topic);
         int n = 0;
         while (true) {
             String msgId = UUID.randomUUID().toString();
-            message.setTransactionId(msgId);
             message.setBody(++n);
-            producer.sendMessage(message);
+            defaultMQProducer.sendMessage(message);
             this.sendQueue.offer(msgId);
             try {
                 Thread.sleep(1000);
@@ -47,7 +46,7 @@ public class MessageOrderingTest {
     }
 
     public void consume(String topic, String group) {
-        Consumer consumer = new Consumer("127.0.0.1");
+        Consumer consumer = new Consumer("127.0.0.1",1);
         AtomicInteger n = new AtomicInteger(1);
         consumer.setConsumerListener(msg -> {
             System.out.printf("\n[CONSUME] Receiver message => %s \n\n", msg);
