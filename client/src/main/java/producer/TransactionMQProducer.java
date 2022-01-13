@@ -43,8 +43,10 @@ public class TransactionMQProducer extends Producer {
         // 发送half消息
         RemotingCommand halfResp = this.sendHalfMessage(message, tf);
         // 执行本地事务接口
+        log.debug("execute local transaction");
         LocalTransactionState localTransactionState = this.transactionListener.executeLocalTransaction(message);
         // 发送end消息
+        log.debug("send end message");
         RemotingCommand endResp = this.sendEndMessage(message, localTransactionState, tf);
     }
 
