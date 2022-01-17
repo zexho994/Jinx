@@ -3,7 +3,6 @@ package producer;
 import common.Host;
 import message.Message;
 import message.TopicRouteInfo;
-import message.TopicRouteInfos;
 import remoting.BrokerRemoteManager;
 import remoting.NamesrvServiceImpl;
 import remoting.RemotingService;
@@ -39,26 +38,9 @@ public abstract class Producer implements RemotingService {
      */
     public abstract void sendMessage(Message message) throws Exception;
 
-    /**
-     * 与topic路由信息中的所有broker客户端进行连接
-     * 已连接的不在重复连接
-     *
-     * @param topicRouteInfo 路由信息
-     */
-    protected void ensureBrokerConnected(TopicRouteInfos topicRouteInfo) {
-        topicRouteInfo.getData().stream()
-                .filter(tf -> !brokerRemoteManager.checkConnectStatus(tf.getBrokerName()))
-                .forEach(tf -> this.brokerRemoteManager.connect(tf.getBrokerName(), tf.getBrokerHost(), null));
-    }
-
-    /**
-     * {@link #ensureBrokerConnected(TopicRouteInfos)}
-     *
-     * @param topicRouteInfo 单个的路由信息
-     */
     protected void ensureBrokerConnected(TopicRouteInfo topicRouteInfo) {
         if (!brokerRemoteManager.checkConnectStatus(topicRouteInfo.getBrokerName())) {
-            this.brokerRemoteManager.connect(topicRouteInfo.getBrokerName(), topicRouteInfo.getBrokerHost(), null);
+            this.brokerRemoteManager.connect(topicRouteInfo.getBrokerName(), topicRouteInfo.getBrokerHost(), topicRouteInfo.getBrokerPort(), null);
         }
     }
 

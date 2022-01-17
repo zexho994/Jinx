@@ -1,6 +1,5 @@
 package remoting;
 
-import common.Host;
 import consumer.ConsumerHandler;
 import lombok.extern.log4j.Log4j2;
 import netty.client.NettyClientConfig;
@@ -31,8 +30,8 @@ public class BrokerRemoteManager {
      * @param brokerHost broker网络地址，用于建立连接
      * @param handler    如果需要自定义处理器
      */
-    public void connect(String brokerName, String brokerHost, ConsumerHandler handler) {
-        NettyRemotingClientImpl client = new NettyRemotingClientImpl(new NettyClientConfig(brokerHost, Host.BROKER_PORT));
+    public void connect(String brokerName, String brokerHost, int brokerPort, ConsumerHandler handler) {
+        NettyRemotingClientImpl client = new NettyRemotingClientImpl(new NettyClientConfig(brokerHost, brokerPort));
         if (handler != null) {
             client.setClientHandler(handler);
         }

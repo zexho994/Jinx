@@ -90,6 +90,7 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
                         tri.setBrokerName(brokerData.getBrokerName());
                         tri.setClusterName(brokerData.getClusterName());
                         tri.setBrokerHost(brokerData.getBrokerHost());
+                        tri.setBrokerPort(brokerData.getBrokerPort());
                         tri.setTopic(tu.getTopic());
                         tri.setQueueNum(tu.getQueue());
                         topicRouteInfoList.add(tri);
