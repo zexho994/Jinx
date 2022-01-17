@@ -1,0 +1,22 @@
+@startuml
+!theme vibrant
+|#AntiqueWhite|Master|
+:启动;
+:等待客户端连接;
+stop
+|Slave|
+:启动;
+-> 发起连接;
+|Master|
+:建立连接;
+|Slave|
+:开启定时任务;
+repeat :执行任务;
+:发送pull请求;
+|Master|
+:根据offset拉取一定量消息;
+|Slave|
+:更新offset;
+repeat while(等待5秒)
+
+@enduml

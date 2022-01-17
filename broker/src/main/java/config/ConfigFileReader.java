@@ -13,7 +13,7 @@ import java.io.IOException;
 public class ConfigFileReader {
 
     public static BrokerConfigFile readBrokerConfigFile() throws IOException {
-        FileReader fr = new FileReader(FileType.BROKER_CONFIG.basePath);
+        FileReader fr = new FileReader(BrokerConfig.brokerConfigPath);
         int i;
         StringBuilder str = new StringBuilder();
         while ((i = fr.read()) != -1) {

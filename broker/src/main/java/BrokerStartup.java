@@ -23,18 +23,18 @@ public class BrokerStartup {
     private static final ConsumeQueue CONSUME_QUEUE = ConsumeQueue.getInstance();
 
     public static void main(String[] args) throws Exception {
-        // 配置文件加载
-        try {
-            parseConfig();
-        } catch (Exception e) {
-            throw new Exception("parse config error.", e);
-        }
-
         // 启动参数解析
         try {
             parseCommander(args);
         } catch (Exception e) {
             throw new Exception("parse commander error.", e);
+        }
+
+        // 配置文件加载
+        try {
+            parseConfig();
+        } catch (Exception e) {
+            throw new Exception("parse config error.", e);
         }
 
         // 恢复文件
@@ -46,7 +46,9 @@ public class BrokerStartup {
 
         // 系统初始化
         try {
-            mappedFileInit();
+            if (BrokerConfig.brokerId == 0) {
+                mappedFileInit();
+            }
         } catch (Exception e) {
             throw new Exception("systemInit error.", e);
         }
@@ -87,6 +89,12 @@ public class BrokerStartup {
 
         if (startCommand.getBrokerName() != null) {
             BrokerConfig.brokerName = startCommand.getBrokerName();
+        }
+        if (startCommand.getBrokerConfigPath() != null) {
+            BrokerConfig.brokerConfigPath = startCommand.getBrokerConfigPath();
+        }
+        if (startCommand.getBrokerPort() != null) {
+            BrokerConfig.brokerPort = startCommand.getBrokerPort();
         }
     }
 
@@ -131,6 +139,7 @@ public class BrokerStartup {
             BrokerConfigFile brokerConfigFile = ConfigFileReader.readBrokerConfigFile();
             BrokerConfig.brokerName = brokerConfigFile.getBrokerName();
             BrokerConfig.clusterName = brokerConfigFile.getClusterName();
+            BrokerConfig.brokerId = brokerConfigFile.getBrokerId();
             BrokerConfig.configBody = brokerConfigFile.getBody();
         } catch (IOException e) {
             throw new Exception("read broker config file error.", e);

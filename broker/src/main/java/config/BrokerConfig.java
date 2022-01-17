@@ -1,6 +1,7 @@
 package config;
 
 import message.ConfigBody;
+import store.constant.FileType;
 
 /**
  * @author Zexho
@@ -24,11 +25,23 @@ public class BrokerConfig {
     public static String brokerHost;
 
     /**
+     * brokerId,0表示master,大于0表示slave
+     */
+    public static Integer brokerId = 0;
+
+    /**
+     * broker 服务的监听端口
+     */
+    public static Integer brokerPort = 9944;
+
+    /**
      * broker 实例名称
      */
     public static String brokerName = "default_broker";
 
     public static ConfigBody configBody;
+
+    public static String brokerConfigPath = FileType.BROKER_CONFIG.basePath;
 
     /**
      * nameserver 服务的端口

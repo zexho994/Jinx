@@ -16,6 +16,12 @@ public class BrokerCommand {
     @Parameter(names = {"-broker", "-B"}, description = "broker服务的公有ip地址")
     private String brokerHost;
 
+    @Parameter(names = {"-port", "-p"}, description = "broker的监听端口")
+    private Integer brokerPort;
+
     @Parameter(names = {"-name", "-n"}, description = "broker实例名称")
     private String brokerName;
+
+    @Parameter(names = {"-brokerConfigPath", "-bcp"}, description = "broker配置文件路径")
+    private String brokerConfigPath;
 }

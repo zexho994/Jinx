@@ -23,6 +23,11 @@ public class BrokerConfigFile {
     public String brokerName;
 
     /**
+     * broker标识
+     */
+    public Integer brokerId;
+
+    /**
      * topic配置
      */
     public ConfigBody body;
