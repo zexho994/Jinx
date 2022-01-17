@@ -64,8 +64,9 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
     private boolean doRegisterBroker(RemotingCommand command) {
         String brokerName = command.getProperty(PropertiesKeys.BROKER_NAME);
         String brokerHost = command.getProperty(PropertiesKeys.BROKER_HOST);
+        Integer brokerPort = Integer.valueOf(command.getProperty(PropertiesKeys.BROKER_PORT));
         String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
-        brokerManager.addBroker(brokerName, brokerHost, clusterName);
+        brokerManager.addBroker(brokerName, brokerHost, brokerPort, clusterName);
 
         Message message = command.getBody();
         ConfigBody body = (ConfigBody) message.getBody();

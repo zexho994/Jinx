@@ -38,6 +38,7 @@ public class BrokerNamesrvService {
         heartbeat.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker.type);
         heartbeat.addProperties(PropertiesKeys.BROKER_HOST, BrokerConfig.brokerHost);
         heartbeat.addProperties(PropertiesKeys.BROKER_NAME, BrokerConfig.brokerName);
+        heartbeat.addProperties(PropertiesKeys.BROKER_PORT, String.valueOf(BrokerConfig.brokerPort));
         heartbeat.addProperties(PropertiesKeys.CLUSTER_NAME, BrokerConfig.clusterName);
         Message message = new Message();
         message.setBody(BrokerConfig.configBody);

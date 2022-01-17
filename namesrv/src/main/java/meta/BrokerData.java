@@ -13,4 +13,5 @@ public class BrokerData {
     private String clusterName;
     private String brokerName;
     private String brokerHost;
+    private Integer brokerPort;
 }

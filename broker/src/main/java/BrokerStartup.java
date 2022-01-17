@@ -53,7 +53,6 @@ public class BrokerStartup {
             throw new Exception("systemInit error.", e);
         }
 
-
         // 启动broker
         BrokerRemotingService brokerRemotingService = new BrokerRemotingService();
         brokerRemotingService.start();

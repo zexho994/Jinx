@@ -27,6 +27,7 @@ public class PropertiesKeys {
      */
     public static final String BROKER_NAME = "brokerName";
     public static final String CLUSTER_NAME = "clusterName";
+    public static final String BROKER_PORT = "brokerPort";
 
     /**
      * 事务标记
