@@ -1,5 +1,6 @@
 package store.consumequeue;
 
+import config.StoreConfig;
 import lombok.extern.log4j.Log4j2;
 import store.constant.FileType;
 import store.mappedfile.MappedFile;
@@ -15,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/12/6 9:47 上午
  */
 @Log4j2
-class ConsumeOffset {
+public class ConsumeOffset {
 
     public static File CONSUME_OFFSET_FOLDER;
 
@@ -46,7 +47,7 @@ class ConsumeOffset {
 
     private void ensureDirExist() {
         if (CONSUME_OFFSET_FOLDER == null) {
-            CONSUME_OFFSET_FOLDER = new File(FileType.CONSUME_OFFSET.basePath);
+            CONSUME_OFFSET_FOLDER = new File(StoreConfig.consumeOffsetPath);
             if (!CONSUME_OFFSET_FOLDER.exists()) {
                 CONSUME_OFFSET_FOLDER.mkdirs();
             }
@@ -84,7 +85,7 @@ class ConsumeOffset {
         if (this.consumeOffsetMap.containsKey(topic)) {
             return;
         }
-        File file = new File(FileType.CONSUME_OFFSET.basePath + topic);
+        File file = new File(StoreConfig.consumeOffsetPath + topic);
         if (!file.exists()) {
             file.mkdir();
         }
@@ -96,7 +97,7 @@ class ConsumeOffset {
         if (this.consumeOffsetMap.get(topic).containsKey(queueId)) {
             return;
         }
-        File file = new File(FileType.CONSUME_OFFSET.basePath + topic + File.separator + queueId);
+        File file = new File(StoreConfig.consumeOffsetPath + topic + File.separator + queueId);
         if (!file.exists()) {
             file.mkdir();
         }
@@ -108,7 +109,7 @@ class ConsumeOffset {
         if (this.consumeOffsetMap.get(topic).get(queueId).containsKey(group)) {
             return;
         }
-        File file = new File(FileType.CONSUME_OFFSET.basePath + topic + File.separator + queueId + File.separator + group);
+        File file = new File(StoreConfig.consumeOffsetPath + topic + File.separator + queueId + File.separator + group);
         if (!file.exists()) {
             try {
                 file.createNewFile();

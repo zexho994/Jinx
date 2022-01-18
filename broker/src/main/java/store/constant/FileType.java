@@ -1,34 +1,50 @@
 package store.constant;
 
-import common.MemoryCapacity;
-import store.commitlog.Commitlog;
-import store.consumequeue.ConsumeQueue;
-
-import java.io.File;
+import config.StoreConfig;
 
 /**
  * @author Zexho
  * @date 2021/12/3 3:04 下午
  */
 public enum FileType {
-
-    // =================== 存储文件 ========================
     /**
-     * {@link Commitlog}
+     * commitlog 文件, {@link store.commitlog.Commitlog}
      */
-    COMMITLOG(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "commitlog" + File.separator, 8 * MemoryCapacity.KB),
+    COMMITLOG,
+
     /**
-     * {@link ConsumeQueue}
+     * consumeQueue 文件,{@link store.consumequeue.ConsumeQueue}
      */
-    CONSUME_QUEUE(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeQueue" + File.separator, MemoryCapacity.KB),
-    CONSUME_OFFSET(System.getProperty("user.home") + File.separator + "jinx" + File.separator + "consumeOffset" + File.separator, MemoryCapacity.B * 8),
-    ;
+    CONSUME_QUEUE,
 
-    public final String basePath;
-    public final int fileSize;
+    /**
+     * consumeOffset 文件,{@link store.consumequeue.ConsumeOffset}
+     */
+    CONSUME_OFFSET;
 
-    FileType(final String basePath, final int fileSize) {
-        this.basePath = basePath;
-        this.fileSize = fileSize;
+    public static String getFilePath(FileType type) {
+        if (type == COMMITLOG) {
+            return StoreConfig.commitlogPath;
+        }
+        if (type == CONSUME_OFFSET) {
+            return StoreConfig.consumeOffsetPath;
+        }
+        if (type == CONSUME_QUEUE) {
+            return StoreConfig.consumeQueuePath;
+        }
+        throw new RuntimeException("file type error");
+    }
+
+    public static int getFileSize(FileType type) {
+        if (type == COMMITLOG) {
+            return StoreConfig.commitlogSize;
+        }
+        if (type == CONSUME_OFFSET) {
+            return StoreConfig.consumeOffsetSize;
+        }
+        if (type == CONSUME_QUEUE) {
+            return StoreConfig.consumeQueueSize;
+        }
+        throw new RuntimeException("file type error");
     }
 }

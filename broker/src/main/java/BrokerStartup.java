@@ -73,6 +73,7 @@ public class BrokerStartup {
     private static void parseStoreConfig() throws Exception {
         try {
             StoreConfigFile storeConfigFile = ConfigFileReader.readStoreConfigFile();
+
         } catch (IOException e) {
             throw new Exception("read broker config file error.", e);
         }

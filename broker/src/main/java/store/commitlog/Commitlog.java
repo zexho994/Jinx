@@ -1,5 +1,6 @@
 package store.commitlog;
 
+import config.StoreConfig;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
 import store.MappedFileQueue;
@@ -73,7 +74,7 @@ public class Commitlog {
      */
     private void ensureDirExist() {
         if (COMMITLOG_FOLDER == null) {
-            COMMITLOG_FOLDER = new File(FileType.COMMITLOG.basePath);
+            COMMITLOG_FOLDER = new File(StoreConfig.commitlogPath);
             COMMITLOG_FOLDER.mkdirs();
         }
     }
