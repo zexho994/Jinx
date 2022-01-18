@@ -13,6 +13,8 @@ import store.consumequeue.ConsumeQueue;
 
 import java.io.IOException;
 
+import static config.StoreConfig.*;
+
 /**
  * @author Zexho
  * @date 2021/11/18 4:16 下午
@@ -73,9 +75,29 @@ public class BrokerStartup {
     private static void parseStoreConfig() throws Exception {
         try {
             StoreConfigFile storeConfigFile = ConfigFileReader.readStoreConfigFile();
-
+            if (storeConfigFile == null) {
+                return;
+            }
+            if (storeConfigFile.getCommitlogPath() != null) {
+                commitlogPath = storeConfigFile.getCommitlogPath();
+            }
+            if (storeConfigFile.getCommitlogSize() != null) {
+                commitlogSize = storeConfigFile.getCommitlogSize();
+            }
+            if (storeConfigFile.getConsumeQueuePath() != null) {
+                consumeQueuePath = storeConfigFile.getConsumeQueuePath();
+            }
+            if (storeConfigFile.getConsumeQueueSize() != null) {
+                consumeQueueSize = storeConfigFile.getConsumeQueueSize();
+            }
+            if (storeConfigFile.getConsumeOffsetPath() != null) {
+                consumeOffsetPath = storeConfigFile.getConsumeOffsetPath();
+            }
+            if (storeConfigFile.getConsumeOffsetSize() != null) {
+                consumeOffsetSize = storeConfigFile.getConsumeOffsetSize();
+            }
         } catch (IOException e) {
-            throw new Exception("read broker config file error.", e);
+            throw new Exception("read store config file error.", e);
         }
     }
 
