@@ -7,7 +7,6 @@ import lombok.extern.log4j.Log4j2;
 import message.Message;
 import netty.future.SyncFuture;
 import netty.protocal.RemotingCommand;
-import utils.ByteUtil;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;

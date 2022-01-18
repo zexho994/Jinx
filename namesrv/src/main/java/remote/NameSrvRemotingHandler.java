@@ -9,6 +9,7 @@ import message.*;
 import meta.BrokerData;
 import netty.protocal.RemotingCommand;
 import netty.server.NettyServerHandler;
+import utils.BrokerUtils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -41,7 +42,7 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
             case Register_Broker:
                 log.info("[NameServer] broker register => {}", command.getBody());
                 boolean result = this.doRegisterBroker(command);
-                Message message = new Message();
+                Message message = new Message(reqMessage.getMsgId());
                 message.setBody(result);
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker_Resp.type);
                 resp.setBody(message);
@@ -62,16 +63,19 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
     }
 
     private boolean doRegisterBroker(RemotingCommand command) {
+        String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
         String brokerName = command.getProperty(PropertiesKeys.BROKER_NAME);
         String brokerHost = command.getProperty(PropertiesKeys.BROKER_HOST);
-        Integer brokerPort = Integer.valueOf(command.getProperty(PropertiesKeys.BROKER_PORT));
-        String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
-        brokerManager.addBroker(brokerName, brokerHost, brokerPort, clusterName);
+        int brokerId = Integer.parseInt(command.getProperty(PropertiesKeys.BROKER_ID));
+        int brokerPort = Integer.parseInt(command.getProperty(PropertiesKeys.BROKER_PORT));
+        brokerManager.addBroker(brokerName, brokerHost, brokerPort, brokerId, clusterName);
 
-        Message message = command.getBody();
-        ConfigBody body = (ConfigBody) message.getBody();
-        List<TopicUnit> topics = body.getTopics();
-        topicManager.addTopic(brokerName, topics);
+        if (BrokerUtils.isMaster(brokerId)) {
+            Message message = command.getBody();
+            ConfigBody body = (ConfigBody) message.getBody();
+            List<TopicUnit> topics = body.getTopics();
+            topicManager.addTopic(brokerName, topics);
+        }
 
         return true;
     }
@@ -91,6 +95,7 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
                         tri.setClusterName(brokerData.getClusterName());
                         tri.setBrokerHost(brokerData.getBrokerHost());
                         tri.setBrokerPort(brokerData.getBrokerPort());
+                        tri.setBrokerId(brokerData.getBrokerId());
                         tri.setTopic(tu.getTopic());
                         tri.setQueueNum(tu.getQueue());
                         topicRouteInfoList.add(tri);

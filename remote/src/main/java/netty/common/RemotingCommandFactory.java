@@ -2,10 +2,13 @@ package netty.common;
 
 import enums.ClientType;
 import enums.MessageType;
+import message.ConfigBody;
 import message.Message;
 import message.PropertiesKeys;
 import message.RegisterConsumer;
 import netty.protocal.RemotingCommand;
+
+import java.util.UUID;
 
 /**
  * @author Zexho
@@ -36,7 +39,7 @@ public class RemotingCommandFactory {
         RemotingCommand remotingCommand = new RemotingCommand();
         remotingCommand.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Consumer.type);
         remotingCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Consumer.type);
-        Message message = new Message();
+        Message message = new Message(UUID.randomUUID().toString());
         RegisterConsumer registerConsumer = new RegisterConsumer(cid, topic, group);
         message.setBody(registerConsumer);
         remotingCommand.setBody(message);
@@ -65,5 +68,20 @@ public class RemotingCommandFactory {
         remotingCommand.setBody(msg);
         return remotingCommand;
 
+    }
+
+    public static RemotingCommand brokerHeartbeat(String host, String brokerName, int brokerPort, int brokerId, String clusterName, ConfigBody configBody) {
+        RemotingCommand heartbeat = new RemotingCommand();
+        heartbeat.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Broker.type);
+        heartbeat.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker.type);
+        heartbeat.addProperties(PropertiesKeys.BROKER_HOST, host);
+        heartbeat.addProperties(PropertiesKeys.BROKER_NAME, brokerName);
+        heartbeat.addProperties(PropertiesKeys.BROKER_PORT, String.valueOf(brokerPort));
+        heartbeat.addProperties(PropertiesKeys.BROKER_ID, String.valueOf(brokerId));
+        heartbeat.addProperties(PropertiesKeys.CLUSTER_NAME, clusterName);
+        Message message = new Message(UUID.randomUUID().toString());
+        message.setBody(configBody);
+        heartbeat.setBody(message);
+        return heartbeat;
     }
 }

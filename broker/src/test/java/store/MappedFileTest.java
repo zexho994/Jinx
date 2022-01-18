@@ -9,6 +9,7 @@ import utils.ByteUtil;
 
 import java.io.IOException;
 import java.util.Queue;
+import java.util.UUID;
 
 class MappedFileTest {
 
@@ -27,7 +28,7 @@ class MappedFileTest {
     @Test
     void loadMessage() throws IOException {
         MappedFile mappedFile = new MappedFile(FileType.COMMITLOG, "0");
-        Message message = new Message();
+        Message message = new Message(UUID.randomUUID().toString());
         byte[] bytes = ByteUtil.to(message);
         int size = bytes.length;
         byte[] s = ByteUtil.to(size);

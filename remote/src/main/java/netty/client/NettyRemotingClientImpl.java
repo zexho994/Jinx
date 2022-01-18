@@ -14,6 +14,7 @@ import netty.future.SyncFuture;
 import netty.protocal.RemotingCommand;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadFactory;
@@ -101,7 +102,7 @@ public class NettyRemotingClientImpl implements IRemotingService {
     public RemotingCommand sendSync(RemotingCommand command) throws ExecutionException, InterruptedException {
         SyncFuture<RemotingCommand> future = new SyncFuture<>();
         if (command.getBody() == null) {
-            command.setBody(new Message());
+            command.setBody(new Message(UUID.randomUUID().toString()));
         }
         syncFutureMap.put(command.getBody().getMsgId(), future);
         this.channel.writeAndFlush(command);

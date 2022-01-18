@@ -27,8 +27,8 @@ public class BrokerManager {
      */
     public final static Map<String, BrokerData> BROKER_INFO = new ConcurrentHashMap<>();
 
-    public void addBroker(String brokerName, String brokerHost, Integer brokerPort, String clusterName) {
-        BROKER_INFO.put(brokerName, new BrokerData(clusterName, brokerName, brokerHost, brokerPort));
+    public void addBroker(String brokerName, String brokerHost, Integer brokerPort, Integer brokerId, String clusterName) {
+        BROKER_INFO.put(brokerName, new BrokerData(clusterName, brokerName, brokerHost, brokerId, brokerPort));
     }
 
     public BrokerData getBrokerData(String brokerName) {

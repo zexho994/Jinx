@@ -1,0 +1,27 @@
+@startuml
+start
+:解析启动命令行;
+note
+启动命令参数的优先级最高
+其次是配置文件中的
+end note
+:解析配置文件;
+note
+文件默认路径在 ~/jinx/config 下
+也可以在启动命令定义 -bcp  xxx
+end note
+:恢复Commitlog file;
+:恢复ConsumeQueue file;
+:启动nameserver心跳线程;
+if (M/S ?) then (Master)
+    :启动Slave监听线程;
+    :启动consumer push线程;
+else (Slave)
+    :启动report线程;
+    note
+    汇报commitlog
+    end note
+endif
+-> 启动结束 ;
+stop
+@enduml

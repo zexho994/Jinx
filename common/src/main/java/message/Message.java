@@ -4,7 +4,6 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 /**
  * @author Zexho
@@ -40,10 +39,6 @@ public class Message implements Serializable {
      */
     private Object body;
 
-    public Message() {
-        this(null);
-    }
-
     public Message(String msgId) {
         this(null, null, msgId);
     }
@@ -51,7 +46,7 @@ public class Message implements Serializable {
     public Message(String topic, byte[] body, String msgId) {
         this.topic = topic;
         this.body = body;
-        this.msgId = msgId == null ? UUID.randomUUID().toString() : msgId;
+        this.msgId = msgId;
     }
 
     public String getMsgId() {

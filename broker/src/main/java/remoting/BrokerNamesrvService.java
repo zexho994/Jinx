@@ -1,13 +1,13 @@
 package remoting;
 
 import config.BrokerConfig;
-import enums.ClientType;
 import enums.MessageType;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
 import message.PropertiesKeys;
 import netty.client.NettyClientConfig;
 import netty.client.NettyRemotingClientImpl;
+import netty.common.RemotingCommandFactory;
 import netty.protocal.RemotingCommand;
 
 import java.util.concurrent.ExecutionException;
@@ -32,23 +32,9 @@ public class BrokerNamesrvService {
         this.client = new NettyRemotingClientImpl(nettyClientConfig);
     }
 
-    public RemotingCommand getHeartbeatCommand() {
-        RemotingCommand heartbeat = new RemotingCommand();
-        heartbeat.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Broker.type);
-        heartbeat.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker.type);
-        heartbeat.addProperties(PropertiesKeys.BROKER_HOST, BrokerConfig.brokerHost);
-        heartbeat.addProperties(PropertiesKeys.BROKER_NAME, BrokerConfig.brokerName);
-        heartbeat.addProperties(PropertiesKeys.BROKER_PORT, String.valueOf(BrokerConfig.brokerPort));
-        heartbeat.addProperties(PropertiesKeys.CLUSTER_NAME, BrokerConfig.clusterName);
-        Message message = new Message();
-        message.setBody(BrokerConfig.configBody);
-        heartbeat.setBody(message);
-        return heartbeat;
-    }
-
     public void start() {
         this.client.start();
-        this.scheduledExecutorService.scheduleAtFixedRate(this::heartbeat, 5000, 30000, TimeUnit.MILLISECONDS);
+        this.scheduledExecutorService.scheduleAtFixedRate(this::heartbeat, 3, 30, TimeUnit.SECONDS);
     }
 
     public void shutdown() {
@@ -57,7 +43,9 @@ public class BrokerNamesrvService {
 
     public void heartbeat() {
         try {
-            RemotingCommand resp = this.client.sendSync(this.getHeartbeatCommand());
+            RemotingCommand heartbeat = RemotingCommandFactory.brokerHeartbeat(BrokerConfig.brokerHost, BrokerConfig.brokerName,
+                    BrokerConfig.brokerPort, BrokerConfig.brokerId, BrokerConfig.clusterName, BrokerConfig.configBody);
+            RemotingCommand resp = this.client.sendSync(heartbeat);
             if (resp.getProperty(PropertiesKeys.MESSAGE_TYPE).equals(MessageType.Register_Broker_Resp.type)) {
                 Message res = resp.getBody();
                 boolean flag = (boolean) res.getBody();
