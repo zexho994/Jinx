@@ -1,7 +1,8 @@
 package config;
 
 import message.ConfigBody;
-import store.constant.FileType;
+
+import java.io.File;
 
 /**
  * @author Zexho
@@ -41,7 +42,8 @@ public class BrokerConfig {
 
     public static ConfigBody configBody;
 
-    public static String brokerConfigPath = FileType.BROKER_CONFIG.basePath;
+    public static String brokerConfigPath = System.getProperty("user.home") + File.separator + "jinx" + File.separator + "config" + File.separator + "broker";
+    public static String storeConfigPath = System.getProperty("user.home") + File.separator + "jinx" + File.separator + "config" + File.separator + "store";
 
     /**
      * nameserver 服务的端口

@@ -3,6 +3,7 @@ import command.BrokerCommand;
 import config.BrokerConfig;
 import config.BrokerConfigFile;
 import config.ConfigFileReader;
+import config.StoreConfigFile;
 import consumer.ConsumerManager;
 import lombok.extern.log4j.Log4j2;
 import remoting.BrokerNamesrvService;
@@ -32,7 +33,8 @@ public class BrokerStartup {
 
         // 配置文件加载
         try {
-            parseConfig();
+            parseBrokerConfig();
+            parseStoreConfig();
         } catch (Exception e) {
             throw new Exception("parse config error.", e);
         }
@@ -66,6 +68,17 @@ public class BrokerStartup {
     }
 
     /**
+     * 解析存储模块的配置文件
+     */
+    private static void parseStoreConfig() throws Exception {
+        try {
+            StoreConfigFile storeConfigFile = ConfigFileReader.readStoreConfigFile();
+        } catch (IOException e) {
+            throw new Exception("read broker config file error.", e);
+        }
+    }
+
+    /**
      * 解析启动命令参数
      *
      * @param args 启动参数
@@ -78,7 +91,6 @@ public class BrokerStartup {
         if (startCommand.getNamesrvHost() == null) {
             throw new Exception("nameserver host cannot be null");
         }
-
         BrokerConfig.nameSrvHost = startCommand.getNamesrvHost();
 
         if (startCommand.getBrokerHost() == null) {
@@ -89,11 +101,14 @@ public class BrokerStartup {
         if (startCommand.getBrokerName() != null) {
             BrokerConfig.brokerName = startCommand.getBrokerName();
         }
+        if (startCommand.getBrokerPort() != null) {
+            BrokerConfig.brokerPort = startCommand.getBrokerPort();
+        }
         if (startCommand.getBrokerConfigPath() != null) {
             BrokerConfig.brokerConfigPath = startCommand.getBrokerConfigPath();
         }
-        if (startCommand.getBrokerPort() != null) {
-            BrokerConfig.brokerPort = startCommand.getBrokerPort();
+        if (startCommand.getStoreConfigPath() != null) {
+            BrokerConfig.storeConfigPath = startCommand.getStoreConfigPath();
         }
     }
 
@@ -133,7 +148,7 @@ public class BrokerStartup {
         }
     }
 
-    private static void parseConfig() throws Exception {
+    private static void parseBrokerConfig() throws Exception {
         try {
             BrokerConfigFile brokerConfigFile = ConfigFileReader.readBrokerConfigFile();
             BrokerConfig.brokerName = brokerConfigFile.getBrokerName();

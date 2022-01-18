@@ -24,4 +24,7 @@ public class BrokerCommand {
 
     @Parameter(names = {"-brokerConfigPath", "-bcp"}, description = "broker配置文件路径")
     private String brokerConfigPath;
+
+    @Parameter(names = {"-storeConfigPath", "-scp"}, description = "store配置文件路径")
+    private String storeConfigPath;
 }
