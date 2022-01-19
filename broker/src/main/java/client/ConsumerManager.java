@@ -1,4 +1,4 @@
-package consumer;
+package client;
 
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;

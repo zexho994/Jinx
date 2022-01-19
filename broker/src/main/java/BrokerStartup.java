@@ -4,7 +4,7 @@ import config.BrokerConfig;
 import config.BrokerConfigFile;
 import config.ConfigFileReader;
 import config.StoreConfigFile;
-import consumer.ConsumerManager;
+import client.ConsumerManager;
 import lombok.extern.log4j.Log4j2;
 import remoting.BrokerNamesrvService;
 import remoting.BrokerRemotingService;

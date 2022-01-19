@@ -1,6 +1,6 @@
 package remoting;
 
-import consumer.ConsumerManager;
+import client.ConsumerManager;
 import enums.ClientType;
 import enums.MessageType;
 import io.netty.channel.ChannelHandlerContext;
@@ -11,7 +11,7 @@ import message.RegisterConsumer;
 import netty.common.RemotingCommandFactory;
 import netty.protocal.RemotingCommand;
 import netty.server.NettyServerHandler;
-import producer.ProducerManager;
+import client.ProducerManager;
 import store.constant.FlushModel;
 import store.constant.PutMessageResult;
 
