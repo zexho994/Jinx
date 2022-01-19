@@ -13,13 +13,16 @@ end note
 :恢复Commitlog file;
 :恢复ConsumeQueue file;
 :启动nameserver心跳线程;
+:启动consumer push线程;
 if (M/S ?) then (Master)
-    :启动Slave监听线程;
-    :启动consumer push线程;
+    :创建HAMaster对象;
+    :HAMaster#startListenSlave( );
+    note left : 监听slave的连接
 else (Slave)
-    :启动report线程;
-    note
-    汇报commitlog
+    :创建HASlave对象;
+    :HASlave#startReportOffset( );
+    note right
+    向master汇报commitlog
     end note
 endif
 -> 启动结束 ;

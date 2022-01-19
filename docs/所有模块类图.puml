@@ -1,28 +1,64 @@
 @startuml
 
+
 package Broker模块 <<Frame>> {
 
-    package consume{
+    package client as broker-client {
         class ConsumeManager{
-            + void pullMessage()
+            + doPush()
+            + pullMessage()
+            + registerConsumer()
+            + rebalanced()
         }
-    }
-    note top of consume : 与消息消费相关的功能
-
-    package produce{
+        note left of ConsumeManager {
+            记录与broker连接的consumer
+            给每个consumer分配消费队列,附带rebalanced功能
+            提供两种消费方式: pull & push
+        }
         class ProducerManager {
-            + void putMessage()
+            + messageProcessor()
+            + transactionMessageProcessor()
+            - halfMessageProcessor()
+            - commitProcessor()
+            - rollbackProcessor()
         }
+        note left of ProducerManager:处理生产者请求
     }
-    note top of produce : 与消息生产相关的功能
+
+    package ha {
+        class HAMaster{
+            + startListenSlave()
+        }
+        note left of HAMaster : master 持有该对象
+        note right of HAMaster::startListenSlave
+            监听slave的连接
+        end note
+        class HASlave{
+            + startReportOffset()
+        }
+        note left of HASlave : slave 持有该对象
+        note right of HASlave::startReportOffset
+            向master汇报同步进度
+        end note
+        class HAConnection
+        note left of HAConnection : master与slave的连接对象
+
+        HAMaster --> HAConnection
+        HASlave --> HAConnection
+    }
+    note top of ha : 主从
 
     package remoting{
         class BrokerRemotingHandler{
-            + void channelRead()
+            + channelRead()
         }
         class BrokerRemotingService{
-            + void start()
+            + start()
         }
+        class BrokerNamesrvService{
+            + heartbeat()
+        }
+        BrokerRemotingService --> BrokerRemotingHandler : handler
     }
     note top of remoting : 与网络相关的功能
 
@@ -63,8 +99,8 @@ package Broker模块 <<Frame>> {
        DefaultMessageStore --> CommitLog
     }
     note top of store : 与消息持久化相关的功能
-    ProducerManager --> MessageStore : putMessage
-    ConsumeManager --> MessageStore : findMessage
+    ProducerManager --> MessageStore : 存储消息
+    ConsumeManager --> MessageStore : 查找->消费消息
 }
 note top of Broker模块 : 为生产者/消费者提供服务
 
@@ -73,22 +109,35 @@ package Remote模块 <<Frame>> {
     note left of client : 客户端相关
     package server{}
     note left of server : 服务端相关
+
+    client <|--- BrokerNamesrvService
+    server <|--- BrokerRemotingService
 }
 note top of Remote模块 : 网络相关
 
 package Client模块 <<Frame>> {
     package producer{
         class Producer{}
-        class ProducerHandler{
-        }
-        class MessageRequestTable{
-        }
-        note top of MessageRequestTable : 请求记录表
+        class ProducerHandler{}
     }
     note left of producer : 生产者相关
-    package consumer{}
-    note left of consumer : 消费者相关
+
+    package consumer{
+        class Consumer{}
+        class ConsumerHandler{}
+    }
+    note bottom of consumer : 消费者相关
+
+    client <|-- Producer
+    Producer --> ProducerHandler
+    client <|-- Consumer
+    Consumer --> ConsumerHandler
 }
 note top of Client模块 : 客户端SDK相关
+
+package Nameserver模块 <<Frame>>{
+
+}
+Nameserver模块 <--- BrokerNamesrvService
 
 @enduml
