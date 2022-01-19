@@ -1,13 +1,17 @@
-package meta;
+package model;
 
 import lombok.Data;
+
+import java.io.Serializable;
 
 /**
  * @author Zexho
  * @date 2021/12/22 7:47 PM
  */
 @Data
-public class BrokerData {
+public class BrokerData implements Serializable {
+    private static final long serialVersionUID = 3702547387281811555L;
+
     private String clusterName;
     private String brokerName;
     private String brokerHost;

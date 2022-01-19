@@ -6,10 +6,10 @@ import lombok.extern.log4j.Log4j2;
 import manager.BrokerManager;
 import manager.TopicManager;
 import message.*;
-import meta.BrokerData;
+import model.BrokerData;
 import netty.protocal.RemotingCommand;
 import netty.server.NettyServerHandler;
-import utils.BrokerUtils;
+import utils.Broker;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -36,33 +36,42 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
         log.debug("nameserver process command. cmd = {}", command);
         MessageType messageType = MessageType.get(command.getProperty(PropertiesKeys.MESSAGE_TYPE));
         assert messageType != null;
-        Message reqMessage = command.getBody();
         RemotingCommand resp = new RemotingCommand();
+        Message respMessage = new Message(command.getBody().getMsgId());
         switch (messageType) {
             case Register_Broker:
                 log.info("[NameServer] broker register => {}", command.getBody());
-                boolean result = this.doRegisterBroker(command);
-                Message message = new Message(reqMessage.getMsgId());
-                message.setBody(result);
+                // 注册broker信息
+                this.doRegisterBroker(command);
+                // 返回信息
+                int brokerId = Integer.parseInt(command.getProperty(PropertiesKeys.BROKER_ID));
+                if (Broker.isMaster(brokerId)) {
+                    respMessage.setBody(true);
+                } else {
+                    // broker为slave，返回master的路由信息
+                    String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
+                    String brokerName = command.getProperty(PropertiesKeys.BROKER_NAME);
+                    BrokerData masterData = brokerManager.getMasterData(clusterName, brokerName);
+                    respMessage.setBody(masterData);
+                }
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker_Resp.type);
-                resp.setBody(message);
+                resp.setBody(respMessage);
                 break;
             case Get_Topic_Route:
                 String topic = command.getProperty(PropertiesKeys.TOPIC);
                 log.info("[NameServer] get topic route info => {}", topic);
                 TopicRouteInfos topicRouteInfos = this.doGetTopicRouteData(topic);
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Get_Topic_Route.type);
-                Message body = new Message(reqMessage.getMsgId());
-                body.setBody(topicRouteInfos);
-                resp.setBody(body);
+                respMessage.setBody(topicRouteInfos);
+                resp.setBody(respMessage);
                 break;
             default:
-                break;
+                throw new RuntimeException("message type error: " + messageType);
         }
         return resp;
     }
 
-    private boolean doRegisterBroker(RemotingCommand command) {
+    private void doRegisterBroker(RemotingCommand command) {
         String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
         String brokerName = command.getProperty(PropertiesKeys.BROKER_NAME);
         String brokerHost = command.getProperty(PropertiesKeys.BROKER_HOST);
@@ -70,14 +79,13 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
         int brokerPort = Integer.parseInt(command.getProperty(PropertiesKeys.BROKER_PORT));
         brokerManager.addBroker(brokerName, brokerHost, brokerPort, brokerId, clusterName);
 
-        if (BrokerUtils.isMaster(brokerId)) {
+        // master要保存topic的消息,slave不用
+        if (Broker.isMaster(brokerId)) {
             Message message = command.getBody();
             ConfigBody body = (ConfigBody) message.getBody();
             List<TopicUnit> topics = body.getTopics();
             topicManager.addTopic(brokerName, topics);
         }
-
-        return true;
     }
 
     private TopicRouteInfos doGetTopicRouteData(String topic) {

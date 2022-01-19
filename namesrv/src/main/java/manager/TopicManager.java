@@ -1,7 +1,6 @@
 package manager;
 
 import message.TopicUnit;
-import meta.BrokerData;
 
 import java.util.List;
 import java.util.Map;

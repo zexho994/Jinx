@@ -1,15 +1,18 @@
+import client.ConsumerManager;
 import com.beust.jcommander.JCommander;
 import command.BrokerCommand;
 import config.BrokerConfig;
 import config.BrokerConfigFile;
 import config.ConfigFileReader;
 import config.StoreConfigFile;
-import client.ConsumerManager;
+import ha.HAMaster;
+import ha.HASlave;
 import lombok.extern.log4j.Log4j2;
 import remoting.BrokerNamesrvService;
 import remoting.BrokerRemotingService;
 import store.commitlog.Commitlog;
 import store.consumequeue.ConsumeQueue;
+import utils.Broker;
 
 import java.io.IOException;
 
@@ -67,6 +70,14 @@ public class BrokerStartup {
 
         // consumer push 定时器
         ConsumerManager.getInstance().startPushTask();
+
+        // 启动ha
+        if (Broker.isMaster(BrokerConfig.brokerId)) {
+            HAMaster haMaster = new HAMaster();
+            haMaster.startListenSlave();
+        } else {
+            HASlave.getInstance().startReportOffset();
+        }
     }
 
     /**
