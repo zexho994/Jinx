@@ -87,6 +87,13 @@ public class RemotingCommandFactory {
 
     public static RemotingCommand slaveReportOffset() {
         RemotingCommand command = new RemotingCommand();
+        command.setBody(new Message(UUID.randomUUID().toString()));
+        return command;
+    }
+
+    public static RemotingCommand getCommitlogOffset() {
+        RemotingCommand command = new RemotingCommand();
+
         return command;
     }
 }

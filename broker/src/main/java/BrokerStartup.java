@@ -71,8 +71,7 @@ public class BrokerStartup {
 
         // 启动ha
         if (Broker.isMaster(BrokerConfig.brokerId)) {
-            HAMaster haMaster = new HAMaster();
-            haMaster.startListenSlave();
+            HAMaster.getInstance().startListenSlave();
         } else {
             HASlave.getInstance().startReportOffset();
         }

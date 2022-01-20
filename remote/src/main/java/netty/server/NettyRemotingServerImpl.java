@@ -77,7 +77,7 @@ public class NettyRemotingServerImpl implements IRemotingService {
         try {
             ChannelFuture sync = this.serverBootstrap.bind().sync();
             this.channel = sync.channel();
-            log.info("服务端启动成功");
+            log.trace("服务端启动成功");
         } catch (InterruptedException e) {
             throw new RuntimeException("bind fail. " + e);
         }

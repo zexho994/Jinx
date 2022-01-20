@@ -1,5 +1,6 @@
 package ha;
 
+import config.BrokerConfig;
 import lombok.extern.log4j.Log4j2;
 import model.BrokerData;
 import netty.client.NettyClientConfig;
@@ -9,6 +10,7 @@ import netty.protocal.RemotingCommand;
 import store.DefaultMessageStore;
 import store.commitlog.Commitlog;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -49,22 +51,30 @@ public class HASlave {
             return;
         }
         if (client == null) {
-            NettyClientConfig config = new NettyClientConfig(masterData.getBrokerHost(), masterData.getBrokerPort());
+            NettyClientConfig config = new NettyClientConfig(masterData.getBrokerHost(), BrokerConfig.MASTER_LISTER_PORT);
             client = new NettyRemotingClientImpl(config);
             client.start();
         }
+        long commitlogOffset = 0;
         if (commitlog.haveCommitlog()) {
             log.debug("slave have local commitlog");
-            long commitlogOffset = commitlog.getFileFormOffset();
+            commitlogOffset = commitlog.getFileFormOffset();
             log.debug("commitlog offset = {}", commitlogOffset);
         } else {
             log.debug("slave not have local commitlog");
-
+            RemotingCommand getOffset = RemotingCommandFactory.getCommitlogOffset();
+            try {
+                // todo 初始offset从master获取
+                RemotingCommand remotingCommand = client.sendSync(getOffset);
+//                commitlogOffset = (long) remotingCommand.getBody().getBody();
+                // todo 根据offset创建commitlog文件
+            } catch (ExecutionException | InterruptedException e) {
+                log.error("send getOffset message to master error.", e);
+                return;
+            }
         }
 
-        //
-
-        // 发送report
+        // todo 发送report
         RemotingCommand reportCommand = RemotingCommandFactory.slaveReportOffset();
         client.send(reportCommand);
     }

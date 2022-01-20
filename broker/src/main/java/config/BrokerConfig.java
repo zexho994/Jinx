@@ -53,4 +53,6 @@ public class BrokerConfig {
      */
     public static final int NAMESRV_PORT = 9876;
 
+    public static final int MASTER_LISTER_PORT = 11786;
+
 }
