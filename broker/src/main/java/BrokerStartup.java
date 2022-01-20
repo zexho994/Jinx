@@ -53,9 +53,7 @@ public class BrokerStartup {
 
         // 系统初始化
         try {
-            if (BrokerConfig.brokerId == 0) {
-                mappedFileInit();
-            }
+            mappedFileInit();
         } catch (Exception e) {
             throw new Exception("systemInit error.", e);
         }

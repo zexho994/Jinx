@@ -84,4 +84,9 @@ public class RemotingCommandFactory {
         heartbeat.setBody(message);
         return heartbeat;
     }
+
+    public static RemotingCommand slaveReportOffset() {
+        RemotingCommand command = new RemotingCommand();
+        return command;
+    }
 }

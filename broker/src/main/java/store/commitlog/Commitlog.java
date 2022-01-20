@@ -1,5 +1,6 @@
 package store.commitlog;
 
+import config.BrokerConfig;
 import config.StoreConfig;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
@@ -11,6 +12,7 @@ import store.constant.PutMessageResult;
 import store.mappedfile.MappedFile;
 import store.model.CommitPutMessageResult;
 import utils.ArrayUtils;
+import utils.Broker;
 import utils.ByteUtil;
 
 import java.io.File;
@@ -60,11 +62,16 @@ public class Commitlog {
      */
     public void init() throws Exception {
         ensureDirExist();
+        if (Broker.isMaster(BrokerConfig.brokerId)) {
+            createDefaultFile();
+        }
+    }
+
+    private void createDefaultFile() throws IOException {
         if (this.mappedFileQueue.isEmpty()) {
             File file = new File(COMMITLOG_FOLDER, "0");
             this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, file));
         }
-
     }
 
     /**
@@ -224,25 +231,12 @@ public class Commitlog {
         this.mappedFileQueue.addMappedFile(mappedFile);
     }
 
-    /**
-     * 创建第一个新文件
-     *
-     * @throws IOException
-     */
-    public void createFirstMappedFile() throws IOException {
-        if (COMMITLOG_FOLDER == null) {
-            log.error("commitlog folder is null");
-            return;
-        }
-        File[] files = COMMITLOG_FOLDER.listFiles();
-        if (files != null) {
-            if (Arrays.stream(files).anyMatch(f -> !f.getName().contains("."))) {
-                log.error("There are already files in commitlog");
-                return;
-            }
-        }
+    public long getFileFormOffset() {
+        return fileFormOffset.get();
+    }
 
-        this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, "0"));
+    public boolean haveCommitlog() {
+        return !this.mappedFileQueue.isEmpty();
     }
 
 }

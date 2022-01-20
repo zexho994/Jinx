@@ -10,6 +10,7 @@ import store.constant.MessageAppendResult;
 import store.constant.PutMessageResult;
 import store.mappedfile.MappedFile;
 import utils.ByteUtil;
+import utils.This;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,8 +68,10 @@ public class ConsumeQueue {
     public void init() throws Exception {
         try {
             this.ensureDirExist();
-            this.mkdirTopicDir();
-            this.consumeOffset.init();
+            if (This.isMaster()) {
+                this.mkdirTopicDir();
+                this.consumeOffset.init();
+            }
         } catch (Exception e) {
             throw new Exception("ConsumeQueue init error. ", e);
         }
