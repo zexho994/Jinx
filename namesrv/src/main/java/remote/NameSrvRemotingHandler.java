@@ -13,6 +13,7 @@ import utils.Broker;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -41,9 +42,7 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
         switch (messageType) {
             case Register_Broker:
                 log.info("[NameServer] broker register => {}", command.getBody());
-                // 注册broker信息
                 this.doRegisterBroker(command);
-                // 返回信息
                 int brokerId = Integer.parseInt(command.getProperty(PropertiesKeys.BROKER_ID));
                 if (Broker.isMaster(brokerId)) {
                     respMessage.setBody(true);
@@ -84,30 +83,32 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
             Message message = command.getBody();
             ConfigBody body = (ConfigBody) message.getBody();
             List<TopicUnit> topics = body.getTopics();
-            topicManager.addTopic(brokerName, topics);
+            topicManager.addTopic(clusterName, brokerName, topics);
         }
     }
 
     private TopicRouteInfos doGetTopicRouteData(String topic) {
-        log.info("Get topic <{}> route data", topic);
-        Set<String> brokerNames = this.topicManager.getBrokerNameByTopic(topic);
+        log.info("Get topic:{} route data", topic);
+        Map<String, Set<String>> clusterBrokerMap = this.topicManager.getBrokerNameByTopic(topic);
         List<TopicRouteInfo> topicRouteInfoList = new LinkedList<>();
 
-        brokerNames.forEach(e -> {
-            BrokerData brokerData = this.brokerManager.getBrokerData(e);
-            this.topicManager.getTopicsByBrokerName(e).stream()
-                    .filter(tu -> tu.getTopic().equals(topic))
-                    .forEach(tu -> {
-                        TopicRouteInfo tri = new TopicRouteInfo();
-                        tri.setBrokerName(brokerData.getBrokerName());
-                        tri.setClusterName(brokerData.getClusterName());
-                        tri.setBrokerHost(brokerData.getBrokerHost());
-                        tri.setBrokerPort(brokerData.getBrokerPort());
-                        tri.setBrokerId(brokerData.getBrokerId());
-                        tri.setTopic(tu.getTopic());
-                        tri.setQueueNum(tu.getQueue());
-                        topicRouteInfoList.add(tri);
-                    });
+        clusterBrokerMap.forEach((clusterName, set) -> {
+            set.forEach((brokerName) -> {
+                BrokerData brokerData = this.brokerManager.getMasterData(clusterName, brokerName);
+                this.topicManager.getTopicsByBrokerName(clusterName, brokerName).stream()
+                        .filter(tu -> tu.getTopic().equals(topic))
+                        .forEach(tu -> {
+                            TopicRouteInfo tri = new TopicRouteInfo();
+                            tri.setBrokerName(brokerData.getBrokerName());
+                            tri.setClusterName(brokerData.getClusterName());
+                            tri.setBrokerHost(brokerData.getBrokerHost());
+                            tri.setBrokerPort(brokerData.getBrokerPort());
+                            tri.setBrokerId(brokerData.getBrokerId());
+                            tri.setTopic(tu.getTopic());
+                            tri.setQueueNum(tu.getQueue());
+                            topicRouteInfoList.add(tri);
+                        });
+            });
         });
         return new TopicRouteInfos(topicRouteInfoList);
     }

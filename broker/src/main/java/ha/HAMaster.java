@@ -4,10 +4,15 @@ import config.BrokerConfig;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
+import message.PropertiesKeys;
 import netty.protocal.RemotingCommand;
 import netty.server.NettyRemotingServerImpl;
 import netty.server.NettyServerConfig;
 import netty.server.NettyServerHandler;
+import store.commitlog.Commitlog;
+
+import static enums.MessageType.Get_Commitlog_Max_Offset;
+import static enums.MessageType.Report_Offset;
 
 /**
  * @author Zexho
@@ -50,15 +55,32 @@ public class HAMaster {
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             RemotingCommand reqCommand = (RemotingCommand) msg;
-            log.info("New slave message => {}", reqCommand);
+            String messageType = reqCommand.getProperty(PropertiesKeys.MESSAGE_TYPE);
             Message reqMessage = reqCommand.getBody();
+            log.info("New slave message. type = {}, message = {}", messageType, reqMessage);
 
-
-
-            Message respMessage = new Message(reqMessage.getMsgId());
             RemotingCommand respCommand = new RemotingCommand();
+            Message respMessage = new Message(reqMessage.getMsgId());
+            if (Get_Commitlog_Max_Offset.type.equals(messageType)) {
+                long offset = this.doGetCommitlogMaxOffset();
+                respMessage.setBody(offset);
+            } else if (Report_Offset.type.equals(messageType)) {
+                this.doReportOffset(reqMessage);
+            } else {
+                log.warn("");
+            }
             respCommand.setBody(respMessage);
             ctx.writeAndFlush(respCommand);
+        }
+
+        private void doReportOffset(Message req) {
+            long slaveOffset = (long) req.getBody();
+            long masterOffset = Commitlog.getInstance().getFileFormOffset();
+            log.info("slave commitlog offset = {}, master commitlog offset = {}", slaveOffset, masterOffset);
+        }
+
+        private long doGetCommitlogMaxOffset() {
+            return Commitlog.getInstance().getFileFormOffset();
         }
 
     }

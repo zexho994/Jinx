@@ -30,8 +30,8 @@ public class ClusterTest {
 
         //step1: 启动consumer集群
         ConsumerTest.startConsumer(topic_1, group_1, 1, msgMap);
-        ConsumerTest.startConsumer(topic_1, group_1, 2, msgMap);
-        ConsumerTest.startConsumer(topic_1, group_1, 3, msgMap);
+//        ConsumerTest.startConsumer(topic_1, group_1, 2, msgMap);
+//        ConsumerTest.startConsumer(topic_1, group_1, 3, msgMap);
 
         //step2: producer 发送消息
         DefaultMQProducerTest.produceMessage(topic_1, 10, msgMap, 1);

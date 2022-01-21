@@ -7,6 +7,7 @@ import producer.TransactionListener;
 import producer.TransactionMQProducer;
 
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
@@ -69,7 +70,7 @@ public class TransactionTest {
         this.startConsumer("topic_1", "group_1", 1);
         TransactionMQProducer producer = this.startTransactionMQProducer(LocalTransactionState.COMMIT);
         // 生产者发送消息
-        Message message = new Message();
+        Message message = new Message(UUID.randomUUID().toString());
         message.setTopic("topic_1");
         set.add(message);
         new Thread(() -> {
@@ -100,7 +101,7 @@ public class TransactionTest {
         this.startConsumer("topic_1", "group_1", 1);
         TransactionMQProducer producer = this.startTransactionMQProducer(LocalTransactionState.ROLLBACK);
         // 生产者发送消息
-        Message message = new Message();
+        Message message = new Message(UUID.randomUUID().toString());
         message.setTopic("topic_1");
         set.add(message);
         new Thread(() -> {

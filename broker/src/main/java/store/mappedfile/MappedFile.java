@@ -104,7 +104,6 @@ public class MappedFile {
         this.byteBuffer.clear();
 
         this.wrotePos.getAndAdd(data.length);
-
         return MessageAppendResult.OK;
     }
 

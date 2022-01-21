@@ -66,7 +66,7 @@ public class HASlave {
             try {
                 // todo 初始offset从master获取
                 RemotingCommand remotingCommand = client.sendSync(getOffset);
-//                commitlogOffset = (long) remotingCommand.getBody().getBody();
+                commitlogOffset = (long) remotingCommand.getBody().getBody();
                 // todo 根据offset创建commitlog文件
             } catch (ExecutionException | InterruptedException e) {
                 log.error("send getOffset message to master error.", e);
@@ -75,7 +75,7 @@ public class HASlave {
         }
 
         // todo 发送report
-        RemotingCommand reportCommand = RemotingCommandFactory.slaveReportOffset();
+        RemotingCommand reportCommand = RemotingCommandFactory.slaveReportOffset(commitlogOffset);
         client.send(reportCommand);
     }
 

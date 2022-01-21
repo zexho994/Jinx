@@ -85,9 +85,13 @@ public class RemotingCommandFactory {
         return heartbeat;
     }
 
-    public static RemotingCommand slaveReportOffset() {
+    public static RemotingCommand slaveReportOffset(long offset) {
         RemotingCommand command = new RemotingCommand();
-        command.setBody(new Message(UUID.randomUUID().toString()));
+        command.addProperties(PropertiesKeys.CLIENT_TYPE, ClientType.Broker.type);
+        command.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Report_Offset.type);
+        Message message = new Message(UUID.randomUUID().toString());
+        message.setBody(offset);
+        command.setBody(message);
         return command;
     }
 

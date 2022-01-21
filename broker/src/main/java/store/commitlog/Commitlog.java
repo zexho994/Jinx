@@ -43,7 +43,7 @@ public class Commitlog {
     /**
      * 文件夹对象
      */
-    public static File COMMITLOG_FOLDER;
+    private static File COMMITLOG_FOLDER;
     /**
      * 存储 mappedFile 队列
      */
@@ -132,7 +132,7 @@ public class Commitlog {
             }
             try {
                 lastMappedFile.setWrotePos(offset);
-                this.fileFormOffset.set(offset);
+                this.fileFormOffset.set(lastMappedFile.getFromOffset() + offset);
             } catch (IOException e) {
                 log.error("set wrote position error. ", e);
             }
@@ -179,6 +179,7 @@ public class Commitlog {
                 // 异步刷盘
             }
 
+            this.fileFormOffset.getAndAdd(data.length);
             return CommitPutMessageResult.ok(fileWriteOffset, messagebyte.length);
         } catch (IOException e) {
             log.error("Failed to store message " + message, e);

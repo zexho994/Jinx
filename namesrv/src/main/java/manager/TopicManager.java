@@ -27,28 +27,36 @@ public class TopicManager {
         return TopicManager.Inner.INSTANCE;
     }
 
-    /**
-     * key = broker name , val = topics
-     */
-    private final Map<String, List<TopicUnit>> brokerTopicsTable;
+    private final Map<String/*cluster*/, Map<String/*broker name*/, Set<TopicUnit>>> brokerTopicsTable;
+    private final Map<String/*topic*/, Map<String/*cluster name*/, Set<String>/*broker name(master)*/>> topicBrokerTable;
 
-    private final Map<String, Set<String>> topicBrokerTable;
+    public void addTopic(String clusterName, String brokerName, List<TopicUnit> topics) {
+        if (!brokerTopicsTable.containsKey(clusterName)) {
+            brokerTopicsTable.put(clusterName, new ConcurrentHashMap<>(8));
+        }
+        if (!brokerTopicsTable.get(clusterName).containsKey(brokerName)) {
+            brokerTopicsTable.get(clusterName).put(brokerName, new CopyOnWriteArraySet<>());
+        }
+        Set<TopicUnit> existingTopics = brokerTopicsTable.get(clusterName).get(brokerName);
+        existingTopics.addAll(topics);
 
-    public void addTopic(String brokerName, List<TopicUnit> topics) {
-        brokerTopicsTable.put(brokerName, topics);
         for (TopicUnit tu : topics) {
             if (!topicBrokerTable.containsKey(tu.getTopic())) {
-                topicBrokerTable.put(tu.getTopic(), new CopyOnWriteArraySet<>());
+                topicBrokerTable.put(tu.getTopic(), new ConcurrentHashMap<>());
             }
-            topicBrokerTable.get(tu.getTopic()).add(brokerName);
+            if (!topicBrokerTable.get(tu.getTopic()).containsKey(clusterName)) {
+                topicBrokerTable.get(tu.getTopic()).put(clusterName, new CopyOnWriteArraySet<>());
+            }
+            topicBrokerTable.get(tu.getTopic()).get(clusterName).add(brokerName);
         }
+
     }
 
-    public List<TopicUnit> getTopicsByBrokerName(String brokerName) {
-        return brokerTopicsTable.get(brokerName);
+    public Set<TopicUnit> getTopicsByBrokerName(String clusterName, String brokerName) {
+        return brokerTopicsTable.get(clusterName).get(brokerName);
     }
 
-    public Set<String> getBrokerNameByTopic(String topic) {
+    public Map<String, Set<String>> getBrokerNameByTopic(String topic) {
         return topicBrokerTable.get(topic);
     }
 
