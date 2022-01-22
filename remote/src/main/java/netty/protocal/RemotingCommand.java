@@ -1,6 +1,5 @@
 package netty.protocal;
 
-import lombok.Data;
 import lombok.ToString;
 import message.Message;
 import utils.ByteUtil;
@@ -13,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Zexho
  * @date 2021/12/16 10:15 AM
  */
-@Data
 @ToString
 public class RemotingCommand implements Serializable {
     private static final long serialVersionUID = 6798972145219873378L;

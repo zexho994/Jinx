@@ -1,8 +1,11 @@
 package ha;
 
 import config.BrokerConfig;
+import enums.MessageType;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
+import message.Message;
+import message.PropertiesKeys;
 import model.BrokerData;
 import netty.client.NettyClientConfig;
 import netty.client.NettyClientHandler;
@@ -11,7 +14,10 @@ import netty.common.RemotingCommandFactory;
 import netty.protocal.RemotingCommand;
 import store.DefaultMessageStore;
 import store.commitlog.Commitlog;
+import store.constant.FlushModel;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -100,7 +106,19 @@ public class HASlave {
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
             RemotingCommand command = (RemotingCommand) msg;
-            log.info("slave => {}", command);
+            log.info(" HASlave received command => {}", command);
+            String messageType = command.getProperty(PropertiesKeys.MESSAGE_TYPE);
+            if (!Objects.equals(messageType, MessageType.Report_Offset.type)) {
+                throw new RuntimeException("message type error");
+            }
+            Message message = command.getBody();
+            List<Message> messages = (List<Message>) message.getBody();
+            if (messages.size() == 0) {
+                return;
+            }
+            for (Message m : messages) {
+                Commitlog.getInstance().putMessage(m, FlushModel.SYNC);
+            }
         }
     }
 

@@ -36,8 +36,6 @@ public class HAMaster {
     }
 
     private NettyRemotingServerImpl server;
-    final Commitlog commitlog = Commitlog.getInstance();
-
 
     /**
      * 监听slave的连接
@@ -68,9 +66,11 @@ public class HAMaster {
             RemotingCommand respCommand = new RemotingCommand();
             Message respMessage = new Message(reqMessage.getMsgId());
             if (Get_Commitlog_Max_Offset.type.equals(messageType)) {
+                respCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, Get_Commitlog_Max_Offset.type);
                 long offset = this.doGetCommitlogMaxOffset();
                 respMessage.setBody(offset);
             } else if (Report_Offset.type.equals(messageType)) {
+                respCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, Report_Offset.type);
                 respMessage.setBody(this.doReportOffset(reqMessage));
             } else {
                 log.warn("");
