@@ -18,6 +18,8 @@ import utils.ByteUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -31,6 +33,7 @@ public class Commitlog {
 
     private Commitlog() {
     }
+
 
     private static class Inner {
         private static final Commitlog INSTANCE = new Commitlog();
@@ -204,6 +207,27 @@ public class Commitlog {
         } catch (IOException e) {
             throw new IOException("load message error, offset = " + offset, e);
         }
+    }
+
+    private int getMessageSize(long offset) throws IOException {
+        MappedFile mappedFile = this.getFileByOffset(offset);
+        return mappedFile.getInt(offset - mappedFile.getFromOffset());
+    }
+
+    /**
+     * 获取offset之后的所有数据
+     *
+     * @param offset commitlog偏移量
+     */
+    public List<Message> getMessageByOffset(long offset) throws IOException {
+        List<Message> messages = new LinkedList<>();
+        while (offset < this.getFileFormOffset()) {
+            int messageSize = this.getMessageSize(offset);
+            Message message = this.getMessage(offset);
+            messages.add(message);
+            offset += messageSize + MappedFile.INT_LENGTH;
+        }
+        return messages;
     }
 
     private MappedFile getFileByOffset(long offset) {

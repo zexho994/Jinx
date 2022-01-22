@@ -1,9 +1,11 @@
 package ha;
 
 import config.BrokerConfig;
+import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.log4j.Log4j2;
 import model.BrokerData;
 import netty.client.NettyClientConfig;
+import netty.client.NettyClientHandler;
 import netty.client.NettyRemotingClientImpl;
 import netty.common.RemotingCommandFactory;
 import netty.protocal.RemotingCommand;
@@ -53,15 +55,14 @@ public class HASlave {
         if (client == null) {
             NettyClientConfig config = new NettyClientConfig(masterData.getBrokerHost(), BrokerConfig.MASTER_LISTER_PORT);
             client = new NettyRemotingClientImpl(config);
+            client.setClientHandler(new HASlaveHandler(client));
             client.start();
         }
         long commitlogOffset = 0;
         if (commitlog.haveCommitlog()) {
-            log.debug("slave have local commitlog");
             commitlogOffset = commitlog.getFileFormOffset();
             log.debug("commitlog offset = {}", commitlogOffset);
         } else {
-            log.debug("slave not have local commitlog");
             RemotingCommand getOffset = RemotingCommandFactory.getCommitlogOffset();
             try {
                 // todo 初始offset从master获取
@@ -87,6 +88,20 @@ public class HASlave {
     public void saveMasterRouteData(BrokerData masterData) {
         log.info("save master route data");
         this.masterData = masterData;
+    }
+
+    @Log4j2
+    static class HASlaveHandler extends NettyClientHandler {
+
+        public HASlaveHandler(NettyRemotingClientImpl client) {
+            super(client);
+        }
+
+        @Override
+        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            RemotingCommand command = (RemotingCommand) msg;
+            log.info("slave => {}", command);
+        }
     }
 
 }

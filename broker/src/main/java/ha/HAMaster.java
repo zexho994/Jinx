@@ -11,6 +11,10 @@ import netty.server.NettyServerConfig;
 import netty.server.NettyServerHandler;
 import store.commitlog.Commitlog;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
 import static enums.MessageType.Get_Commitlog_Max_Offset;
 import static enums.MessageType.Report_Offset;
 
@@ -31,7 +35,9 @@ public class HAMaster {
         return HAMaster.Inner.INSTANCE;
     }
 
-    NettyRemotingServerImpl server;
+    private NettyRemotingServerImpl server;
+    final Commitlog commitlog = Commitlog.getInstance();
+
 
     /**
      * 监听slave的连接
@@ -65,7 +71,7 @@ public class HAMaster {
                 long offset = this.doGetCommitlogMaxOffset();
                 respMessage.setBody(offset);
             } else if (Report_Offset.type.equals(messageType)) {
-                this.doReportOffset(reqMessage);
+                respMessage.setBody(this.doReportOffset(reqMessage));
             } else {
                 log.warn("");
             }
@@ -73,10 +79,17 @@ public class HAMaster {
             ctx.writeAndFlush(respCommand);
         }
 
-        private void doReportOffset(Message req) {
+        private List<Message> doReportOffset(Message req) {
             long slaveOffset = (long) req.getBody();
             long masterOffset = Commitlog.getInstance().getFileFormOffset();
             log.info("slave commitlog offset = {}, master commitlog offset = {}", slaveOffset, masterOffset);
+            // 获取未同步的数据
+            try {
+                return Commitlog.getInstance().getMessageByOffset(slaveOffset);
+            } catch (IOException e) {
+                log.error("do report offset error.", e);
+                return Collections.emptyList();
+            }
         }
 
         private long doGetCommitlogMaxOffset() {
