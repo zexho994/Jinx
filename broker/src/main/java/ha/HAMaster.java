@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import static enums.MessageType.Get_Commitlog_Max_Offset;
 import static enums.MessageType.Report_Offset;
 
 /**
@@ -65,15 +64,12 @@ public class HAMaster {
 
             RemotingCommand respCommand = new RemotingCommand();
             Message respMessage = new Message(reqMessage.getMsgId());
-            if (Get_Commitlog_Max_Offset.type.equals(messageType)) {
-                respCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, Get_Commitlog_Max_Offset.type);
-                long offset = this.doGetCommitlogMaxOffset();
-                respMessage.setBody(offset);
-            } else if (Report_Offset.type.equals(messageType)) {
+            if (Report_Offset.type.equals(messageType)) {
                 respCommand.addProperties(PropertiesKeys.MESSAGE_TYPE, Report_Offset.type);
                 respMessage.setBody(this.doReportOffset(reqMessage));
             } else {
-                log.warn("");
+                log.error("Unknown message type");
+                return;
             }
             respCommand.setBody(respMessage);
             ctx.writeAndFlush(respCommand);
@@ -91,12 +87,6 @@ public class HAMaster {
                 return Collections.emptyList();
             }
         }
-
-        private long doGetCommitlogMaxOffset() {
-            return Commitlog.getInstance().getCommitlogOffset();
-        }
-
     }
-
 
 }
