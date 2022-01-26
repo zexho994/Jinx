@@ -81,7 +81,7 @@ public class HAMaster {
 
         private List<Message> doReportOffset(Message req) {
             long slaveOffset = (long) req.getBody();
-            long masterOffset = Commitlog.getInstance().getFileFormOffset();
+            long masterOffset = Commitlog.getInstance().getCommitlogOffset();
             log.info("slave commitlog offset = {}, master commitlog offset = {}", slaveOffset, masterOffset);
             // 获取未同步的数据
             try {
@@ -93,7 +93,7 @@ public class HAMaster {
         }
 
         private long doGetCommitlogMaxOffset() {
-            return Commitlog.getInstance().getFileFormOffset();
+            return Commitlog.getInstance().getCommitlogOffset();
         }
 
     }

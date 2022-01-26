@@ -12,13 +12,11 @@ import netty.client.NettyClientHandler;
 import netty.client.NettyRemotingClientImpl;
 import netty.common.RemotingCommandFactory;
 import netty.protocal.RemotingCommand;
-import store.DefaultMessageStore;
 import store.commitlog.Commitlog;
 import store.constant.FlushModel;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +39,6 @@ public class HASlave {
         return HASlave.Inner.INSTANCE;
     }
 
-    private final DefaultMessageStore messageStore = DefaultMessageStore.getInstance();
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     private BrokerData masterData = null;
     private NettyRemotingClientImpl client;
@@ -64,24 +61,9 @@ public class HASlave {
             client.setClientHandler(new HASlaveHandler(client));
             client.start();
         }
-        long commitlogOffset = 0;
-        if (commitlog.haveCommitlog()) {
-            commitlogOffset = commitlog.getFileFormOffset();
-            log.debug("commitlog offset = {}", commitlogOffset);
-        } else {
-            RemotingCommand getOffset = RemotingCommandFactory.getCommitlogOffset();
-            try {
-                // todo 初始offset从master获取
-                RemotingCommand remotingCommand = client.sendSync(getOffset);
-                commitlogOffset = (long) remotingCommand.getBody().getBody();
-                // todo 根据offset创建commitlog文件
-            } catch (ExecutionException | InterruptedException e) {
-                log.error("send getOffset message to master error.", e);
-                return;
-            }
-        }
+        long commitlogOffset = commitlog.getCommitlogOffset();
+        log.debug("commitlog offset = {}", commitlogOffset);
 
-        // todo 发送report
         RemotingCommand reportCommand = RemotingCommandFactory.slaveReportOffset(commitlogOffset);
         client.send(reportCommand);
     }
