@@ -78,11 +78,4 @@ class ByteUtilTest {
         }
     }
 
-    @Test
-    void to() {
-        Message message = new Message();
-        byte[] to = ByteUtil.to(message);
-        Message to1 = ByteUtil.to(to, Message.class);
-        System.out.println(message);
-    }
 }

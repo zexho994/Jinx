@@ -39,7 +39,7 @@ public class Consumer implements RemotingService {
         TopicRouteInfos topicRouteInfo = this.namesrvService.getTopicRouteInfos(this.topic);
         // 和broker建立连接,并发送注册消息
         topicRouteInfo.getData().forEach(tf -> {
-            this.brokerRemoteManager.connect(tf.getBrokerName(), tf.getBrokerHost(), new ConsumerHandler(this.consumerListener));
+            this.brokerRemoteManager.connect(tf.getBrokerName(), tf.getBrokerHost(),tf.getBrokerPort(), new ConsumerHandler(this.consumerListener));
             this.brokerRemoteManager.send(tf.getBrokerName(), RemotingCommandFactory.registerConsumer(this.cid, this.topic, this.consumerGroup));
         });
     }

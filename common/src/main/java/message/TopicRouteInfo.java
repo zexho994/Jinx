@@ -16,6 +16,8 @@ public class TopicRouteInfo implements Serializable {
     private String clusterName;
     private String brokerName;
     private String brokerHost;
+    private Integer brokerPort;
+    private Integer brokerId;
     private String topic;
     private Integer queueNum;
 }

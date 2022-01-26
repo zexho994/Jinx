@@ -1,5 +1,7 @@
 package store.commitlog;
 
+import config.BrokerConfig;
+import config.StoreConfig;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
 import store.MappedFileQueue;
@@ -10,11 +12,14 @@ import store.constant.PutMessageResult;
 import store.mappedfile.MappedFile;
 import store.model.CommitPutMessageResult;
 import utils.ArrayUtils;
+import utils.Broker;
 import utils.ByteUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -29,6 +34,7 @@ public class Commitlog {
     private Commitlog() {
     }
 
+
     private static class Inner {
         private static final Commitlog INSTANCE = new Commitlog();
     }
@@ -40,7 +46,7 @@ public class Commitlog {
     /**
      * 文件夹对象
      */
-    public static File COMMITLOG_FOLDER;
+    private static File COMMITLOG_FOLDER;
     /**
      * 存储 mappedFile 队列
      */
@@ -59,11 +65,16 @@ public class Commitlog {
      */
     public void init() throws Exception {
         ensureDirExist();
+        if (Broker.isMaster(BrokerConfig.brokerId)) {
+            createDefaultFile();
+        }
+    }
+
+    private void createDefaultFile() throws IOException {
         if (this.mappedFileQueue.isEmpty()) {
             File file = new File(COMMITLOG_FOLDER, "0");
             this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, file));
         }
-
     }
 
     /**
@@ -73,7 +84,7 @@ public class Commitlog {
      */
     private void ensureDirExist() {
         if (COMMITLOG_FOLDER == null) {
-            COMMITLOG_FOLDER = new File(FileType.COMMITLOG.basePath);
+            COMMITLOG_FOLDER = new File(StoreConfig.commitlogPath);
             COMMITLOG_FOLDER.mkdirs();
         }
     }
@@ -124,7 +135,7 @@ public class Commitlog {
             }
             try {
                 lastMappedFile.setWrotePos(offset);
-                this.fileFormOffset.set(offset);
+                this.fileFormOffset.set(lastMappedFile.getFromOffset() + offset);
             } catch (IOException e) {
                 log.error("set wrote position error. ", e);
             }
@@ -171,6 +182,7 @@ public class Commitlog {
                 // 异步刷盘
             }
 
+            this.fileFormOffset.getAndAdd(data.length);
             return CommitPutMessageResult.ok(fileWriteOffset, messagebyte.length);
         } catch (IOException e) {
             log.error("Failed to store message " + message, e);
@@ -195,6 +207,27 @@ public class Commitlog {
         } catch (IOException e) {
             throw new IOException("load message error, offset = " + offset, e);
         }
+    }
+
+    private int getMessageSize(long offset) throws IOException {
+        MappedFile mappedFile = this.getFileByOffset(offset);
+        return mappedFile.getInt(offset - mappedFile.getFromOffset());
+    }
+
+    /**
+     * 获取offset之后的所有数据
+     *
+     * @param offset commitlog偏移量
+     */
+    public List<Message> getMessageByOffset(long offset) throws IOException {
+        List<Message> messages = new LinkedList<>();
+        while (offset < this.getFileFormOffset()) {
+            int messageSize = this.getMessageSize(offset);
+            Message message = this.getMessage(offset);
+            messages.add(message);
+            offset += messageSize + MappedFile.INT_LENGTH;
+        }
+        return messages;
     }
 
     private MappedFile getFileByOffset(long offset) {
@@ -223,25 +256,12 @@ public class Commitlog {
         this.mappedFileQueue.addMappedFile(mappedFile);
     }
 
-    /**
-     * 创建第一个新文件
-     *
-     * @throws IOException
-     */
-    public void createFirstMappedFile() throws IOException {
-        if (COMMITLOG_FOLDER == null) {
-            log.error("commitlog folder is null");
-            return;
-        }
-        File[] files = COMMITLOG_FOLDER.listFiles();
-        if (files != null) {
-            if (Arrays.stream(files).anyMatch(f -> !f.getName().contains("."))) {
-                log.error("There are already files in commitlog");
-                return;
-            }
-        }
+    public long getFileFormOffset() {
+        return fileFormOffset.get();
+    }
 
-        this.mappedFileQueue.addMappedFile(new MappedFile(FileType.COMMITLOG, "0"));
+    public boolean haveCommitlog() {
+        return !this.mappedFileQueue.isEmpty();
     }
 
 }

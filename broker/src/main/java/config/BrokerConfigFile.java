@@ -15,15 +15,20 @@ public class BrokerConfigFile {
     /**
      * 所属集群名称
      */
-    public String clusterName;
+    private String clusterName;
 
     /**
      * broker名称
      */
-    public String brokerName;
+    private String brokerName;
+
+    /**
+     * broker标识
+     */
+    private Integer brokerId;
 
     /**
      * topic配置
      */
-    public ConfigBody body;
+    private ConfigBody body;
 }

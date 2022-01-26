@@ -1,5 +1,6 @@
 package remoting;
 
+import config.BrokerConfig;
 import lombok.extern.log4j.Log4j2;
 import netty.server.NettyRemotingServerImpl;
 import netty.server.NettyServerConfig;
@@ -15,6 +16,7 @@ public class BrokerRemotingService {
 
     public BrokerRemotingService() {
         NettyServerConfig config = new NettyServerConfig();
+        config.setListenPort(BrokerConfig.brokerPort);
         this.remotingServer = new NettyRemotingServerImpl(config);
         this.remotingServer.setServerHandler(new BrokerRemotingHandler());
     }

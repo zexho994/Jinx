@@ -1,4 +1,4 @@
-package producer;
+package client;
 
 import lombok.extern.log4j.Log4j2;
 import message.Message;

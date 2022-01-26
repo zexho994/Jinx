@@ -6,12 +6,14 @@ import lombok.extern.log4j.Log4j2;
 import manager.BrokerManager;
 import manager.TopicManager;
 import message.*;
-import meta.BrokerData;
+import model.BrokerData;
 import netty.protocal.RemotingCommand;
 import netty.server.NettyServerHandler;
+import utils.Broker;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,64 +37,78 @@ public class NameSrvRemotingHandler extends NettyServerHandler {
         log.debug("nameserver process command. cmd = {}", command);
         MessageType messageType = MessageType.get(command.getProperty(PropertiesKeys.MESSAGE_TYPE));
         assert messageType != null;
-        Message reqMessage = command.getBody();
         RemotingCommand resp = new RemotingCommand();
+        Message respMessage = new Message(command.getBody().getMsgId());
         switch (messageType) {
             case Register_Broker:
                 log.info("[NameServer] broker register => {}", command.getBody());
-                boolean result = this.doRegisterBroker(command);
-                Message message = new Message();
-                message.setBody(result);
+                this.doRegisterBroker(command);
+                int brokerId = Integer.parseInt(command.getProperty(PropertiesKeys.BROKER_ID));
+                if (Broker.isMaster(brokerId)) {
+                    respMessage.setBody(true);
+                } else {
+                    // broker为slave，返回master的路由信息
+                    String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
+                    String brokerName = command.getProperty(PropertiesKeys.BROKER_NAME);
+                    BrokerData masterData = brokerManager.getMasterData(clusterName, brokerName);
+                    respMessage.setBody(masterData);
+                }
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Register_Broker_Resp.type);
-                resp.setBody(message);
+                resp.setBody(respMessage);
                 break;
             case Get_Topic_Route:
                 String topic = command.getProperty(PropertiesKeys.TOPIC);
                 log.info("[NameServer] get topic route info => {}", topic);
                 TopicRouteInfos topicRouteInfos = this.doGetTopicRouteData(topic);
                 resp.addProperties(PropertiesKeys.MESSAGE_TYPE, MessageType.Get_Topic_Route.type);
-                Message body = new Message(reqMessage.getMsgId());
-                body.setBody(topicRouteInfos);
-                resp.setBody(body);
+                respMessage.setBody(topicRouteInfos);
+                resp.setBody(respMessage);
                 break;
             default:
-                break;
+                throw new RuntimeException("message type error: " + messageType);
         }
         return resp;
     }
 
-    private boolean doRegisterBroker(RemotingCommand command) {
+    private void doRegisterBroker(RemotingCommand command) {
+        String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
         String brokerName = command.getProperty(PropertiesKeys.BROKER_NAME);
         String brokerHost = command.getProperty(PropertiesKeys.BROKER_HOST);
-        String clusterName = command.getProperty(PropertiesKeys.CLUSTER_NAME);
-        brokerManager.addBroker(brokerName, brokerHost, clusterName);
+        int brokerId = Integer.parseInt(command.getProperty(PropertiesKeys.BROKER_ID));
+        int brokerPort = Integer.parseInt(command.getProperty(PropertiesKeys.BROKER_PORT));
+        brokerManager.addBroker(brokerName, brokerHost, brokerPort, brokerId, clusterName);
 
-        Message message = command.getBody();
-        ConfigBody body = (ConfigBody) message.getBody();
-        List<TopicUnit> topics = body.getTopics();
-        topicManager.addTopic(brokerName, topics);
-
-        return true;
+        // master要保存topic的消息,slave不用
+        if (Broker.isMaster(brokerId)) {
+            Message message = command.getBody();
+            ConfigBody body = (ConfigBody) message.getBody();
+            List<TopicUnit> topics = body.getTopics();
+            topicManager.addTopic(clusterName, brokerName, topics);
+        }
     }
 
     private TopicRouteInfos doGetTopicRouteData(String topic) {
-        log.info("Get topic <{}> route data", topic);
-        Set<String> brokerNames = this.topicManager.getBrokerNameByTopic(topic);
+        log.info("Get topic:{} route data", topic);
+        Map<String, Set<String>> clusterBrokerMap = this.topicManager.getBrokerNameByTopic(topic);
         List<TopicRouteInfo> topicRouteInfoList = new LinkedList<>();
 
-        brokerNames.forEach(e -> {
-            BrokerData brokerData = this.brokerManager.getBrokerData(e);
-            this.topicManager.getTopicsByBrokerName(e).stream()
-                    .filter(tu -> tu.getTopic().equals(topic))
-                    .forEach(tu -> {
-                        TopicRouteInfo tri = new TopicRouteInfo();
-                        tri.setBrokerName(brokerData.getBrokerName());
-                        tri.setClusterName(brokerData.getClusterName());
-                        tri.setBrokerHost(brokerData.getBrokerHost());
-                        tri.setTopic(tu.getTopic());
-                        tri.setQueueNum(tu.getQueue());
-                        topicRouteInfoList.add(tri);
-                    });
+        clusterBrokerMap.forEach((clusterName, set) -> {
+            set.forEach((brokerName) -> {
+                BrokerData brokerData = this.brokerManager.getMasterData(clusterName, brokerName);
+                this.topicManager.getTopicsByBrokerName(clusterName, brokerName).stream()
+                        .filter(tu -> tu.getTopic().equals(topic))
+                        .forEach(tu -> {
+                            TopicRouteInfo tri = new TopicRouteInfo();
+                            tri.setBrokerName(brokerData.getBrokerName());
+                            tri.setClusterName(brokerData.getClusterName());
+                            tri.setBrokerHost(brokerData.getBrokerHost());
+                            tri.setBrokerPort(brokerData.getBrokerPort());
+                            tri.setBrokerId(brokerData.getBrokerId());
+                            tri.setTopic(tu.getTopic());
+                            tri.setQueueNum(tu.getQueue());
+                            topicRouteInfoList.add(tri);
+                        });
+            });
         });
         return new TopicRouteInfos(topicRouteInfoList);
     }

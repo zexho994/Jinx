@@ -29,8 +29,10 @@ public enum MessageType {
 
     /////////// Broker ///////////////
     Register_Broker("registerBroker"),
+    Register_Broker_Resp("registerBrokerResp"),
+    Get_Commitlog_Max_Offset("getCommitlogMaxOffset"),
+    Report_Offset("reportOffset");
 
-    Register_Broker_Resp("registerBrokerResp");
 
     public final String type;
 

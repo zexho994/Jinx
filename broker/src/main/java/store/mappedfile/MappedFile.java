@@ -43,26 +43,24 @@ public class MappedFile {
      * 文件写入偏移量
      */
     private final AtomicLong wrotePos = new AtomicLong(0);
-    /**
-     * 文件类型
-     */
-    private final FileType fileType;
 
     public MappedFile(final FileType fileType, final String fileName) throws IOException {
-        this(fileType, new File(fileType.basePath + fileName));
+        this(fileType, new File(FileType.getFilePath(fileType) + fileName));
     }
 
     public MappedFile(final FileType fileType, final File file) throws IOException {
-        this.fileType = fileType;
         this.file = file;
         this.fileName = file.getName();
-        if (fileType == FileType.COMMITLOG || fileType == FileType.CONSUME_QUEUE) {
+        this.fileSize = FileType.getFileSize(fileType);
+        if (fileType == FileType.COMMITLOG) {
             this.fromOffset = Integer.parseInt(fileName);
-        } else {
+        } else if (fileType == FileType.CONSUME_QUEUE) {
+            this.fromOffset = Integer.parseInt(fileName);
+        } else if (fileType == FileType.CONSUME_OFFSET) {
             this.fromOffset = 0;
+        } else {
+            throw new RuntimeException("fileType error");
         }
-        this.fileSize = fileType.fileSize;
-
         fieldsInit();
     }
 
@@ -106,7 +104,6 @@ public class MappedFile {
         this.byteBuffer.clear();
 
         this.wrotePos.getAndAdd(data.length);
-
         return MessageAppendResult.OK;
     }
 

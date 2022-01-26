@@ -1,4 +1,5 @@
 import consumer.Consumer;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
@@ -7,6 +8,11 @@ import java.util.Map;
  * @date 2021/11/16 8:56 上午
  */
 public class ConsumerTest {
+
+    @Test
+    public void start() {
+        startConsumer("topic_1", "group_1", 1, null);
+    }
 
     public static void startConsumer(String topic, String group, int cid, Map<String, Integer> msgMap) {
         Consumer consumer = new Consumer("127.0.0.1", cid);

@@ -36,7 +36,7 @@ public class DefaultMQProducer extends Producer {
         // 获取路由信息
         TopicRouteInfo tf = namesrvService.getTopicRouteInfo(message.getTopic());
         // 检查与broker的连接
-        ensureBrokerConnected(tf);
+        this.ensureBrokerConnected(tf);
         // 随机选择一个发送队列
         if (message.getQueueId() == null) {
             message.setQueueId((int) (System.currentTimeMillis() % tf.getQueueNum()) + 1);

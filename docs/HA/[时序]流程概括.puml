@@ -1,0 +1,19 @@
+@startuml
+!theme vibrant
+
+==步骤一: master 启动==
+master -> master ++: 启动
+master -> master : 启动slave监听线程
+==步骤二: slave 启动==
+slave -> slave ++: 启动
+slave -> master : 与master建立连接
+master -> slave : 连接成功
+==步骤三: 数据同步==
+loop 定时任务
+    slave -> master ++: 发送同步进度
+    master -> master : 处理请求
+    master -> slave --: 传输未同步数据
+    slave -> slave : 同步数据
+end
+
+@enduml

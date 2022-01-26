@@ -1,6 +1,7 @@
 package store.consumequeue;
 
 import config.BrokerConfig;
+import config.StoreConfig;
 import lombok.extern.log4j.Log4j2;
 import message.TopicUnit;
 import store.MappedFileQueue;
@@ -9,6 +10,7 @@ import store.constant.MessageAppendResult;
 import store.constant.PutMessageResult;
 import store.mappedfile.MappedFile;
 import utils.ByteUtil;
+import utils.This;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,8 +68,10 @@ public class ConsumeQueue {
     public void init() throws Exception {
         try {
             this.ensureDirExist();
-            this.mkdirTopicDir();
-            this.consumeOffset.init();
+            if (This.isMaster()) {
+                this.mkdirTopicDir();
+                this.consumeOffset.init();
+            }
         } catch (Exception e) {
             throw new Exception("ConsumeQueue init error. ", e);
         }
@@ -224,7 +228,7 @@ public class ConsumeQueue {
 
     private void ensureDirExist() {
         if (CONSUMER_QUEUE_FOLDER == null) {
-            CONSUMER_QUEUE_FOLDER = new File(FileType.CONSUME_QUEUE.basePath);
+            CONSUMER_QUEUE_FOLDER = new File(StoreConfig.consumeQueuePath);
             if (!CONSUMER_QUEUE_FOLDER.exists()) {
                 CONSUMER_QUEUE_FOLDER.mkdirs();
             }
@@ -314,7 +318,7 @@ public class ConsumeQueue {
                 if (!unit.getTopic().equals(topic)) {
                     continue;
                 }
-                File topicFolder = new File(FileType.CONSUME_QUEUE.basePath + topic);
+                File topicFolder = new File(StoreConfig.consumeQueuePath + topic);
                 topicFolder.mkdirs();
                 Map<Integer, MappedFileQueue> integerMappedFileQueueMap = new HashMap<>();
                 for (int i = 1; i < unit.getQueue(); i++) {

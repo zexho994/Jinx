@@ -6,6 +6,8 @@ import store.commitlog.Commitlog;
 import store.constant.FlushModel;
 import store.consumequeue.ConsumeQueue;
 
+import java.util.UUID;
+
 class DefaultMessageStoreTest {
 
     Commitlog commitlog = Commitlog.getInstance();
@@ -25,20 +27,20 @@ class DefaultMessageStoreTest {
     public void test() throws Exception {
         DefaultMessageStoreTest defaultMessageStoreTest = new DefaultMessageStoreTest();
 
-        Message message1 = new Message();
+        Message message1 = new Message(UUID.randomUUID().toString());
         message1.setBody(1);
         message1.setTopic("message 1");
         message1.setConsumerGroup("message 1");
         defaultMessageStoreTest.putMessage(message1); // offset = 0,size = 316,commitoffset = 0
 
-        Message message2 = new Message();
+        Message message2 = new Message(UUID.randomUUID().toString());
         message2.setBody("2");
         message2.setTopic("message 2");
         message2.setConsumerGroup("message 2");
         defaultMessageStoreTest.putMessage(message2); // offset =320,size = 316,commitlogoffset = 320
 
 
-        Message message3 = new Message();
+        Message message3 = new Message(UUID.randomUUID().toString());
         message3.setBody(3L);
         message3.setTopic("message 3");
         message3.setConsumerGroup("message 3");

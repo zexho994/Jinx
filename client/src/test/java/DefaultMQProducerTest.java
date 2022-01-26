@@ -26,13 +26,12 @@ public class DefaultMQProducerTest {
         int s = 0;
         while (s < count) {
             s++;
-            Message message = new Message();
+            Message message = new Message(UUID.randomUUID().toString());
             message.setTopic(topic);
             String msgId = UUID.randomUUID().toString();
             defaultMQProducer.sendMessage(message);
             set.put(msgId, clusterSize);
-
-            Thread.sleep(500);
+            Thread.sleep(1000);
         }
     }
 
@@ -50,7 +49,7 @@ public class DefaultMQProducerTest {
     public void producerTest() {
         DefaultMQProducer defaultMQProducer = new DefaultMQProducer("127.0.0.1");
         defaultMQProducer.start();
-        Message message = new Message();
+        Message message = new Message(UUID.randomUUID().toString());
         message.setTopic("topic_1");
         defaultMQProducer.sendMessage(message);
     }
@@ -66,7 +65,7 @@ public class DefaultMQProducerTest {
         int n = 1;
         sleep *= 1000;
         while (true) {
-            Message message = new Message();
+            Message message = new Message(UUID.randomUUID().toString());
             message.setTopic(topic);
             message.setBody(++n);
             defaultMQProducer.sendMessage(message);

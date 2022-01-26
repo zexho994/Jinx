@@ -1,16 +1,22 @@
+import client.ConsumerManager;
 import com.beust.jcommander.JCommander;
 import command.BrokerCommand;
 import config.BrokerConfig;
 import config.BrokerConfigFile;
 import config.ConfigFileReader;
-import consumer.ConsumerManager;
+import config.StoreConfigFile;
+import ha.HAMaster;
+import ha.HASlave;
 import lombok.extern.log4j.Log4j2;
 import remoting.BrokerNamesrvService;
 import remoting.BrokerRemotingService;
 import store.commitlog.Commitlog;
 import store.consumequeue.ConsumeQueue;
+import utils.Broker;
 
 import java.io.IOException;
+
+import static config.StoreConfig.*;
 
 /**
  * @author Zexho
@@ -23,18 +29,19 @@ public class BrokerStartup {
     private static final ConsumeQueue CONSUME_QUEUE = ConsumeQueue.getInstance();
 
     public static void main(String[] args) throws Exception {
-        // 配置文件加载
-        try {
-            parseConfig();
-        } catch (Exception e) {
-            throw new Exception("parse config error.", e);
-        }
-
         // 启动参数解析
         try {
             parseCommander(args);
         } catch (Exception e) {
             throw new Exception("parse commander error.", e);
+        }
+
+        // 配置文件加载
+        try {
+            parseBrokerConfig();
+            parseStoreConfig();
+        } catch (Exception e) {
+            throw new Exception("parse config error.", e);
         }
 
         // 恢复文件
@@ -51,7 +58,6 @@ public class BrokerStartup {
             throw new Exception("systemInit error.", e);
         }
 
-
         // 启动broker
         BrokerRemotingService brokerRemotingService = new BrokerRemotingService();
         brokerRemotingService.start();
@@ -62,6 +68,45 @@ public class BrokerStartup {
 
         // consumer push 定时器
         ConsumerManager.getInstance().startPushTask();
+
+        // 启动ha
+        if (Broker.isMaster(BrokerConfig.brokerId)) {
+            HAMaster.getInstance().startListenSlave();
+        } else {
+            HASlave.getInstance().startReportOffset();
+        }
+    }
+
+    /**
+     * 解析存储模块的配置文件
+     */
+    private static void parseStoreConfig() throws Exception {
+        try {
+            StoreConfigFile storeConfigFile = ConfigFileReader.readStoreConfigFile();
+            if (storeConfigFile == null) {
+                return;
+            }
+            if (storeConfigFile.getCommitlogPath() != null) {
+                commitlogPath = storeConfigFile.getCommitlogPath();
+            }
+            if (storeConfigFile.getCommitlogSize() != null) {
+                commitlogSize = storeConfigFile.getCommitlogSize();
+            }
+            if (storeConfigFile.getConsumeQueuePath() != null) {
+                consumeQueuePath = storeConfigFile.getConsumeQueuePath();
+            }
+            if (storeConfigFile.getConsumeQueueSize() != null) {
+                consumeQueueSize = storeConfigFile.getConsumeQueueSize();
+            }
+            if (storeConfigFile.getConsumeOffsetPath() != null) {
+                consumeOffsetPath = storeConfigFile.getConsumeOffsetPath();
+            }
+            if (storeConfigFile.getConsumeOffsetSize() != null) {
+                consumeOffsetSize = storeConfigFile.getConsumeOffsetSize();
+            }
+        } catch (IOException e) {
+            throw new Exception("read store config file error.", e);
+        }
     }
 
     /**
@@ -77,7 +122,6 @@ public class BrokerStartup {
         if (startCommand.getNamesrvHost() == null) {
             throw new Exception("nameserver host cannot be null");
         }
-
         BrokerConfig.nameSrvHost = startCommand.getNamesrvHost();
 
         if (startCommand.getBrokerHost() == null) {
@@ -87,6 +131,15 @@ public class BrokerStartup {
 
         if (startCommand.getBrokerName() != null) {
             BrokerConfig.brokerName = startCommand.getBrokerName();
+        }
+        if (startCommand.getBrokerPort() != null) {
+            BrokerConfig.brokerPort = startCommand.getBrokerPort();
+        }
+        if (startCommand.getBrokerConfigPath() != null) {
+            BrokerConfig.brokerConfigPath = startCommand.getBrokerConfigPath();
+        }
+        if (startCommand.getStoreConfigPath() != null) {
+            BrokerConfig.storeConfigPath = startCommand.getStoreConfigPath();
         }
     }
 
@@ -126,11 +179,12 @@ public class BrokerStartup {
         }
     }
 
-    private static void parseConfig() throws Exception {
+    private static void parseBrokerConfig() throws Exception {
         try {
             BrokerConfigFile brokerConfigFile = ConfigFileReader.readBrokerConfigFile();
             BrokerConfig.brokerName = brokerConfigFile.getBrokerName();
             BrokerConfig.clusterName = brokerConfigFile.getClusterName();
+            BrokerConfig.brokerId = brokerConfigFile.getBrokerId();
             BrokerConfig.configBody = brokerConfigFile.getBody();
         } catch (IOException e) {
             throw new Exception("read broker config file error.", e);
