@@ -1,6 +1,5 @@
 package store.commitlog;
 
-import config.BrokerConfig;
 import config.StoreConfig;
 import lombok.extern.log4j.Log4j2;
 import message.Message;
@@ -12,7 +11,6 @@ import store.constant.PutMessageResult;
 import store.mappedfile.MappedFile;
 import store.model.CommitPutMessageResult;
 import utils.ArrayUtils;
-import utils.Broker;
 import utils.ByteUtil;
 
 import java.io.File;
@@ -54,7 +52,7 @@ public class Commitlog {
     /**
      * 所有文件总字节偏移量
      */
-    private final AtomicLong fileFormOffset = new AtomicLong(0);
+    private final AtomicLong commitlogOffset = new AtomicLong(0);
     private final Lock lock = new ReentrantLock();
 
     /**
@@ -65,9 +63,7 @@ public class Commitlog {
      */
     public void init() throws Exception {
         ensureDirExist();
-        if (Broker.isMaster(BrokerConfig.brokerId)) {
-            createDefaultFile();
-        }
+        createDefaultFile();
     }
 
     private void createDefaultFile() throws IOException {
@@ -135,7 +131,7 @@ public class Commitlog {
             }
             try {
                 lastMappedFile.setWrotePos(offset);
-                this.fileFormOffset.set(lastMappedFile.getFromOffset() + offset);
+                this.commitlogOffset.set(lastMappedFile.getFromOffset() + offset);
             } catch (IOException e) {
                 log.error("set wrote position error. ", e);
             }
@@ -182,7 +178,7 @@ public class Commitlog {
                 // 异步刷盘
             }
 
-            this.fileFormOffset.getAndAdd(data.length);
+            this.commitlogOffset.getAndAdd(data.length);
             return CommitPutMessageResult.ok(fileWriteOffset, messagebyte.length);
         } catch (IOException e) {
             log.error("Failed to store message " + message, e);
@@ -221,7 +217,7 @@ public class Commitlog {
      */
     public List<Message> getMessageByOffset(long offset) throws IOException {
         List<Message> messages = new LinkedList<>();
-        while (offset < this.getFileFormOffset()) {
+        while (offset < this.getCommitlogOffset()) {
             int messageSize = this.getMessageSize(offset);
             Message message = this.getMessage(offset);
             messages.add(message);
@@ -256,8 +252,8 @@ public class Commitlog {
         this.mappedFileQueue.addMappedFile(mappedFile);
     }
 
-    public long getFileFormOffset() {
-        return fileFormOffset.get();
+    public long getCommitlogOffset() {
+        return commitlogOffset.get();
     }
 
     public boolean haveCommitlog() {

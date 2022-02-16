@@ -1,0 +1,33 @@
+@startuml
+!theme vibrant
+
+node Jinx{
+
+component remote
+note top of remote : 网络通信基础模块
+component client
+note top of client : 客户端模块
+component broker
+note top of broker : broker的实现
+component common
+note top of common : 通用组件
+component namesrv
+note top of namesrv : 路由中心模块
+
+package consumer
+note bottom of consumer : 消费者实现
+package producer
+note bottom of producer : 生产者实现
+client --> consumer
+client --> producer
+
+package ha
+note bottom of ha : 主从同步实现
+package store
+note bottom of store : 存储实现
+broker --> ha
+broker --> store
+
+}
+
+@enduml

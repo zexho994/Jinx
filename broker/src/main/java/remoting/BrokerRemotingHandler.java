@@ -27,9 +27,6 @@ public class BrokerRemotingHandler extends NettyServerHandler {
 
     /**
      * 有新的producer或者consumer接入
-     *
-     * @param ctx
-     * @throws Exception
      */
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
@@ -38,10 +35,6 @@ public class BrokerRemotingHandler extends NettyServerHandler {
 
     /**
      * 接收到新的request
-     *
-     * @param ctx
-     * @param msg
-     * @throws Exception
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
