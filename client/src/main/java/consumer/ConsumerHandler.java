@@ -5,7 +5,6 @@ import lombok.extern.log4j.Log4j2;
 import message.Message;
 import netty.client.NettyClientHandler;
 import netty.protocal.RemotingCommand;
-import utils.ByteUtil;
 
 /**
  * @author Zexho
@@ -17,6 +16,7 @@ public class ConsumerHandler extends NettyClientHandler {
     private final ConsumerListener consumerListener;
 
     public ConsumerHandler(ConsumerListener consumerListener) {
+        super();
         this.consumerListener = consumerListener;
     }
 

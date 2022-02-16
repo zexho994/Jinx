@@ -23,6 +23,10 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
         this.client = client;
     }
 
+    public NettyClientHandler() {
+
+    }
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         log.info("客户端连接成功");
