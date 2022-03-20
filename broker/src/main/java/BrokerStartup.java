@@ -29,6 +29,11 @@ public class BrokerStartup {
     private static final ConsumeQueue CONSUME_QUEUE = ConsumeQueue.getInstance();
 
     public static void main(String[] args) throws Exception {
+        BrokerStartup brokerStartup = new BrokerStartup();
+        brokerStartup.start0(args);
+    }
+
+    public void start0(String[] args) throws Exception {
         // 启动参数解析
         try {
             parseCommander(args);
@@ -75,6 +80,7 @@ public class BrokerStartup {
         } else {
             HASlave.getInstance().startReportOffset();
         }
+
     }
 
     /**
