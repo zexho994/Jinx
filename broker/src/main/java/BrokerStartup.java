@@ -22,7 +22,6 @@ import static config.StoreConfig.*;
  * @author Zexho
  * @date 2021/11/18 4:16 下午
  */
-@Log4j2
 public class BrokerStartup {
 
     private static final Commitlog COMMITLOG = Commitlog.getInstance();
